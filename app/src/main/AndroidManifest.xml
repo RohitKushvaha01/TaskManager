@@ -2,8 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="rikka.shizuku.permission.API_V23" />
+
     <application
         android:allowBackup="true"
+        android:name=".TaskManager"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -12,6 +15,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TaskManager"
         tools:targetApi="31">
+
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:multiprocess="false"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
+        <!-- android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" is to protect this provider from accessing by normal apps -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

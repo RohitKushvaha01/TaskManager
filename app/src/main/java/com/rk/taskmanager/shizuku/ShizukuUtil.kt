@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.os.IBinder
 import android.util.Log
 import com.rk.taskmanager.TaskManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 import rikka.shizuku.Shizuku.UserServiceArgs
 
@@ -54,7 +56,8 @@ object ShizukuUtil {
         NO_ERROR,
     }
 
-    fun withService(ServiceCallback: Error.(TaskManagerService?)-> Unit){
+    suspend fun withService(ServiceCallback: Error.(TaskManagerService?)-> Unit) = withContext(
+        Dispatchers.IO){
         if (isShizukuRunning()){
             requestPermission { granted ->
                 if (granted.not()){

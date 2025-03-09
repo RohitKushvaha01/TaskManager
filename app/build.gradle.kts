@@ -52,5 +52,7 @@ dependencies {
     implementation(libs.navigation.compose)
 
     implementation("dev.rikka.shizuku:api:13.1.0")
+    implementation("androidx.compose.foundation:foundation:1.7.8")
+
     implementation("dev.rikka.shizuku:provider:13.1.0")
 }

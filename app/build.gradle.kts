@@ -1,58 +1,135 @@
+import java.util.Properties
+
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.compose.compiler)
 }
+
 
 android {
     namespace = "com.rk.taskmanager"
     compileSdk = 35
 
-    defaultConfig {
-        applicationId = "com.rk.taskmanager"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+    signingConfigs {
+        create("release") {
+            val isGITHUB_ACTION = System.getenv("GITHUB_ACTIONS") == "true"
+
+            val propertiesFilePath = if (isGITHUB_ACTION) {
+                "/tmp/signing.properties"
+            } else {
+                "/home/rohit/Android/xed-signing/signing.properties"
+            }
+
+            val propertiesFile = File(propertiesFilePath)
+            if (propertiesFile.exists()) {
+                val properties = Properties()
+                properties.load(propertiesFile.inputStream())
+                keyAlias = properties["keyAlias"] as String?
+                keyPassword = properties["keyPassword"] as String?
+                storeFile = if (isGITHUB_ACTION) {
+                    File("/tmp/xed.keystore")
+                } else {
+                    (properties["storeFile"] as String?)?.let { File(it) }
+                }
+
+                storePassword = properties["storePassword"] as String?
+            } else {
+                println("Signing properties file not found at $propertiesFilePath")
+            }
         }
     }
+
+
+    buildTypes {
+        release{
+            isMinifyEnabled = false
+            isCrunchPngs = false
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
+            resValue("string","app_name","ReTerminal")
+        }
+        debug{
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-DEBUG"
+            resValue("string","app_name","ReTerminal-Debug")
+        }
+    }
+
+    defaultConfig {
+        applicationId = "com.rk.terminal"
+        minSdk = 26
+        targetSdk = 35
+
+        //versioning
+        versionCode = 5
+        versionName = "1.0.4"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // isCoreLibraryDesugaringEnabled = true
     }
+
+    buildFeatures {
+        viewBinding = true
+        compose = true
+    }
+
     kotlinOptions {
         jvmTarget = "17"
     }
-    buildFeatures {
-        compose = true
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.15"
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.appcompat)
+    implementation(libs.material)
+    implementation(libs.constraintlayout)
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
+    implementation(libs.asynclayoutinflater)
+    implementation(libs.navigation.fragment.ktx)
+    implementation(libs.navigation.ui.ktx)
+    implementation(libs.activity)
+    implementation(libs.lifecycle.livedata.ktx)
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.activity.compose)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.ui)
+    implementation(libs.ui.graphics)
+    implementation(libs.material3)
     implementation(libs.navigation.compose)
+    implementation(libs.terminal.view)
+    implementation(libs.terminal.emulator)
+    implementation(libs.utilcode)
 
-    implementation("dev.rikka.shizuku:api:13.1.0")
-    implementation("androidx.compose.foundation:foundation:1.7.8")
 
-    implementation("dev.rikka.shizuku:provider:13.1.0")
+
+    implementation(project(":components"))
+    implementation(libs.api)
+    implementation(libs.androidx.foundation.v178)
+
+    implementation(libs.provider)
+    implementation(libs.androidx.material.icons.extended)
 }

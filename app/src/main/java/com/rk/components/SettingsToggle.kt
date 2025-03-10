@@ -34,6 +34,8 @@ fun SettingsToggle(
     isEnabled: Boolean = true,
     isSwitchLocked: Boolean = false,
     endWidget: (@Composable () -> Unit)? = null,
+    startWidget: (@Composable () -> Unit)? = null,
+    applyPaddings: Boolean = false
 ) {
     var state by remember {
         mutableStateOf(default)
@@ -89,7 +91,8 @@ fun SettingsToggle(
             description = { description?.let { Text(text = it) } },
             enabled = true,
             applyPaddings = false,
-            endWidget = endWidget
+            endWidget = endWidget,
+            startWidget = startWidget
         )
     }
 

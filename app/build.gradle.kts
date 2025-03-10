@@ -55,17 +55,15 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
-            resValue("string","app_name","ReTerminal")
         }
         debug{
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
-            resValue("string","app_name","ReTerminal-Debug")
         }
     }
 
     defaultConfig {
-        applicationId = "com.rk.terminal"
+        applicationId = "com.rk.taskmanager"
         minSdk = 26
         targetSdk = 35
 

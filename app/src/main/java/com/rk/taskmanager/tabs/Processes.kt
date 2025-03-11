@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rk.components.compose.preferences.base.PreferenceGroup
+import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.shizuku.Proc
 import com.rk.taskmanager.shizuku.ShizukuUtil
 import com.rk.terminal.ui.components.SettingsToggle
@@ -35,58 +36,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-
-class ProcessViewModel : ViewModel() {
-
-    private val _state = MutableStateFlow(ShizukuUtil.Error.NO_ERROR)
-    val state: StateFlow<ShizukuUtil.Error> = _state
-
-    var processes = mutableStateListOf<Proc>()
-        private set
-
-    var isLoading = mutableStateOf(true)
-        private set
-
-    init {
-        fetchProcesses()
-    }
-
-    private fun fetchProcesses() {
-        println("loading...")
-        viewModelScope.launch(Dispatchers.IO) {
-            ShizukuUtil.withService { service ->
-                _state.value = this
-
-                // If there is any error, stop loading immediately
-                if (this != ShizukuUtil.Error.NO_ERROR) {
-                    isLoading.value = false
-                    return@withService
-                }
-
-                val newProcesses = service!!.listPs()
-                println("done...")
-
-                // Update the list only if processes changed
-                if (processes.size != newProcesses.size ||
-                    processes.zip(newProcesses).any { it.first.pid != it.second.pid }) {
-
-                    println("gggggg...")
-                    viewModelScope.launch(Dispatchers.Main) {
-                        processes.clear()
-                        processes.addAll(newProcesses)
-                        isLoading.value = false
-                    }
-                }
-            }
-        }
-    }
-
-    fun refreshProcesses() {
-        isLoading.value = true
-        fetchProcesses()
-    }
-}
 
 
 //todo fix infinite loading
@@ -96,12 +48,18 @@ class ProcessViewModel : ViewModel() {
 @Composable
 fun Processes(
     modifier: Modifier = Modifier,
-    viewModel: ProcessViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ProcessViewModel
 ) {
     val state by viewModel.state.collectAsState()
     val processes = viewModel.processes
     val isLoading = viewModel.isLoading.value
     val listState = rememberLazyListState()
+
+
+    LaunchedEffect(Unit){
+        println("lll")
+        viewModel.refreshAuto()
+    }
 
     Box(
         modifier = modifier.fillMaxSize(),
@@ -119,7 +77,12 @@ fun Processes(
                         items(processes.size, key = { processes[it].pid }) { index ->
                             ProcessItem(processes[index])
                         }
+
+                        item(key = null){
+                            Spacer(modifier = Modifier.padding(bottom = 32.dp))
+                        }
                     }
+
                 }
             }
 
@@ -140,30 +103,12 @@ fun Processes(
 
 @Composable
 fun ProcessItem(proc: Proc) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp).clickable(enabled = true, onClick = {}),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+    PreferenceGroup {
+        SettingsToggle(
+            label = proc.name,
+            description = proc.cmdLine,
+            showSwitch = false,
+            default = false
         )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp).padding(horizontal = 12.dp)
-        ) {
-            Text(
-                text = proc.name,
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Text(
-                text = "PID: ${proc.pid}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
     }
 }

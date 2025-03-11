@@ -23,13 +23,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.tabs.Processes
 import com.rk.taskmanager.tabs.Resources
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(modifier: Modifier = Modifier,navController: NavController) {
+fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewModel: ProcessViewModel) {
     var selectedscreen by remember { mutableIntStateOf(0) }
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         TopAppBar(title = {
@@ -70,7 +71,9 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController) {
         Box(modifier = Modifier.padding(innerPadding)){
             when(selectedscreen){
                 0 -> {
-                    Processes()
+                    println("0")
+                    viewModel.refreshAuto()
+                    Processes(viewModel = viewModel)
                 }
                 1 -> {
                     Resources()

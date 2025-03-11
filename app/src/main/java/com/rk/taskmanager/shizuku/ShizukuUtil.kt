@@ -7,13 +7,19 @@ import android.os.IBinder
 import android.util.Log
 import com.rk.taskmanager.TaskManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 import rikka.shizuku.Shizuku.UserServiceArgs
+import java.lang.ref.WeakReference
 
 object ShizukuUtil {
+    var serviceBinder = WeakReference<TaskManagerService?>(null)
+
+
     const val SHIZUKU_PERMISSION_REQUEST_CODE = 872837
     var callback:((Boolean)-> Unit)? = null
+
 
     init {
         Shizuku.addRequestPermissionResultListener(object : Shizuku.OnRequestPermissionResultListener{
@@ -56,9 +62,19 @@ object ShizukuUtil {
         NO_ERROR,
     }
 
-    suspend fun withService(ServiceCallback: Error.(TaskManagerService?)-> Unit) = withContext(
-        Dispatchers.IO){
+    private var isWaiting = false
+    suspend fun withService(ServiceCallback: Error.(TaskManagerService?)-> Unit) = withContext(Dispatchers.IO){
         if (isShizukuRunning()){
+
+            while (isWaiting && serviceBinder.get() == null){
+                delay(100)
+            }
+
+            if (serviceBinder.get() != null){
+                ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
+                return@withContext
+            }
+
             requestPermission { granted ->
                 if (granted.not()){
                     ServiceCallback.invoke(Error.PERMISSION_DENIED,null)
@@ -74,7 +90,8 @@ object ShizukuUtil {
                             .version(1),
                         object : ServiceConnection {
                             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                                ServiceCallback.invoke(Error.NO_ERROR,TaskManagerService.CREATOR.asInterface(service!!))
+                                serviceBinder = WeakReference(TaskManagerService.CREATOR.asInterface(service!!))
+                                ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
                             }
 
                             override fun onServiceDisconnected(name: ComponentName?) {
@@ -82,6 +99,7 @@ object ShizukuUtil {
                             }
                         }
                     )
+                    isWaiting = true
                 }.onFailure {
                     ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)
                 }

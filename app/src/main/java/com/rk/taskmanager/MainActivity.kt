@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,6 +18,8 @@ import com.rk.taskmanager.shizuku.ShizukuUtil
 
 
 class MainActivity : ComponentActivity() {
+
+    val viewModel: ProcessViewModel by viewModels()
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +38,7 @@ class MainActivity : ComponentActivity() {
                         popExitTransition = { NavigationAnimationTransitions.popExitTransition },
                     ) {
                         composable(SettingsRoutes.Home.route){
-                            MainScreen(navController = navController)
+                            MainScreen(navController = navController, viewModel = viewModel)
                         }
 
                         composable(SettingsRoutes.Settings.route){
@@ -45,6 +48,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshAuto()
     }
 }
 

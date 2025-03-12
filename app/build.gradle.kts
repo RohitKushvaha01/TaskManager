@@ -121,13 +121,13 @@ dependencies {
     implementation(libs.terminal.view)
     implementation(libs.terminal.emulator)
     implementation(libs.utilcode)
-
-
-
-    implementation(project(":components"))
     implementation(libs.api)
     implementation(libs.androidx.foundation.v178)
-
     implementation(libs.provider)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+
+    implementation(project(":components"))
+
 }

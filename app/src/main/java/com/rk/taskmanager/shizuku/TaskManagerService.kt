@@ -10,6 +10,8 @@ import java.io.InputStreamReader
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
+import kotlin.random.Random
+import kotlin.random.asJavaRandom
 
 interface IInterfaceCreator<T : IInterface> {
     fun asInterface(binder: IBinder): T
@@ -17,10 +19,12 @@ interface IInterfaceCreator<T : IInterface> {
 
 interface TaskManagerService : IInterface {
     fun listPs(): List<Proc>
+    fun getCpuUsage(): Byte
 
     companion object {
         const val DESCRIPTOR = "com.rk.taskmanager.TaskManagerService"
         const val TRANSACTION_listPs = IBinder.FIRST_CALL_TRANSACTION
+        const val TRANSACTION_getCpuUsage = IBinder.FIRST_CALL_TRANSACTION + 1
 
         val CREATOR = object : IInterfaceCreator<TaskManagerService> {
             override fun asInterface(binder: IBinder): TaskManagerService {
@@ -48,6 +52,21 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
         }
     }
 
+
+    override fun getCpuUsage(): Byte {
+        val data = Parcel.obtain()
+        val reply = Parcel.obtain()
+        return try {
+            data.writeInterfaceToken(TaskManagerService.DESCRIPTOR)
+            binder.transact(TaskManagerService.TRANSACTION_getCpuUsage, data, reply, 0)
+            reply.readException()
+            reply.readByte()
+        } finally {
+            data.recycle()
+            reply.recycle()
+        }
+    }
+
     override fun asBinder(): IBinder {
         return binder
     }
@@ -58,6 +77,40 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
 class TaskManagerServiceImpl : Binder() {
     override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
         when (code) {
+            TaskManagerService.TRANSACTION_getCpuUsage -> {
+                data.enforceInterface(TaskManagerService.DESCRIPTOR)
+
+                fun calculateCpuUsage(): Int {
+                    data class CpuStat(val user: Long, val nice: Long, val system: Long, val idle: Long,
+                                       val iowait: Long, val irq: Long, val softirq: Long, val steal: Long) {
+                        fun total() = user + nice + system + idle + iowait + irq + softirq + steal
+                        fun active() = total() - idle
+                    }
+
+                    fun readCpuStat(): CpuStat? {
+                        val line = File("/proc/stat").useLines { it.firstOrNull { line -> line.startsWith("cpu ") } }
+                        return line?.split("\\s+".toRegex())?.drop(1)?.mapNotNull { it.toLongOrNull() }?.takeIf { it.size >= 8 }?.let {
+                            CpuStat(it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7])
+                        }
+                    }
+
+                    val prev = readCpuStat() ?: return 0
+                    Thread.sleep(300)
+                    val curr = readCpuStat() ?: return 0
+
+                    val totalDiff = (curr.total() - prev.total()).toDouble()
+                    val activeDiff = (curr.active() - prev.active()).toDouble()
+
+                    return if (totalDiff > 0) ((activeDiff / totalDiff) * 100).toInt() else 0
+                }
+
+
+                val cpuUsage = calculateCpuUsage().toByte()
+                reply?.writeNoException()
+                reply?.writeByte(cpuUsage)
+                return true
+            }
+
             TaskManagerService.TRANSACTION_listPs -> {
                 data.enforceInterface(TaskManagerService.DESCRIPTOR)
 

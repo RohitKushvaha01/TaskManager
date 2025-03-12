@@ -68,10 +68,12 @@ object ShizukuUtil {
 
             while (isWaiting && serviceBinder.get() == null){
                 delay(100)
+                println("waitling...")
             }
 
             if (serviceBinder.get() != null){
                 ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
+                println("reusing...")
                 return@withContext
             }
 
@@ -91,6 +93,7 @@ object ShizukuUtil {
                         object : ServiceConnection {
                             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                                 serviceBinder = WeakReference(TaskManagerService.CREATOR.asInterface(service!!))
+                                isWaiting = false
                                 ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
                             }
 

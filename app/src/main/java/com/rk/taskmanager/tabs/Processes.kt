@@ -41,7 +41,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 
-//todo fix infinite loading
 //todo start loading on activity resume
 //todo mmove process to the second button
 

@@ -20,8 +20,10 @@ import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import com.rk.components.compose.preferences.base.PreferenceGroup
+import com.rk.components.rememberMarker
 import com.rk.taskmanager.shizuku.ShizukuUtil
 import com.rk.terminal.ui.components.SettingsToggle
 import kotlinx.coroutines.Dispatchers
@@ -31,13 +33,15 @@ import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.util.concurrent.atomic.AtomicBoolean
 
-private const val MAX_POINTS = 60 // Number of visible data points
+private const val MAX_POINTS = 100 // Number of visible data points
 private val lineColor = Color(0xffa485e0)
 
 
 private val YDecimalFormat = DecimalFormat("#.##'%'")
 private val StartAxisValueFormatter =
     com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter.decimal(YDecimalFormat)
+private val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default(YDecimalFormat)
+
 
 @Composable
 fun Resources(modifier: Modifier = Modifier) {
@@ -73,7 +77,7 @@ fun Resources(modifier: Modifier = Modifier) {
                 }
 
                 val cpuUsage = it!!.getCpuUsage()
-                val smoothingFactor = 0.7f
+                val smoothingFactor = 0.1f
                 val smoothedCpuUsage = (cpuUsage * smoothingFactor) + (lastCpuUsage * (1 - smoothingFactor))
                 lastCpuUsage = smoothedCpuUsage
 
@@ -95,9 +99,8 @@ fun Resources(modifier: Modifier = Modifier) {
         while (isActive) {
             if (updating.get().not()){
                 update()
-                delay(200)
             }else{
-                delay(50)
+                delay(10)
             }
         }
     }
@@ -127,12 +130,14 @@ fun Resources(modifier: Modifier = Modifier) {
                         startAxis = VerticalAxis.rememberStart(
                             valueFormatter = StartAxisValueFormatter,
                         ),
-                        bottomAxis = null
+                        bottomAxis = null,
+                        marker = rememberMarker(MarkerValueFormatter),
                     ),
                     modelProducer,
                     modifier.padding(8.dp),
-                    rememberVicoScrollState(scrollEnabled = true),
+                    rememberVicoScrollState(scrollEnabled = false),
                     animateIn = false,
+                    animationSpec = null
                 )
             }
             ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> {

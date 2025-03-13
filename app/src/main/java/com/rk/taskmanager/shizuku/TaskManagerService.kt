@@ -95,7 +95,7 @@ class TaskManagerServiceImpl : Binder() {
                     }
 
                     val prev = readCpuStat() ?: return 0
-                    Thread.sleep(300)
+                    Thread.sleep(100)
                     val curr = readCpuStat() ?: return 0
 
                     val totalDiff = (curr.total() - prev.total()).toDouble()

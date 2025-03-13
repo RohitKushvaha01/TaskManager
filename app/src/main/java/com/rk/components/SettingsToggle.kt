@@ -1,4 +1,4 @@
-package com.rk.terminal.ui.components
+package com.rk.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.components.compose.preferences.switch.PreferenceSwitch
@@ -34,8 +35,6 @@ fun SettingsToggle(
     isEnabled: Boolean = true,
     isSwitchLocked: Boolean = false,
     endWidget: (@Composable () -> Unit)? = null,
-    startWidget: (@Composable () -> Unit)? = null,
-    applyPaddings: Boolean = false
 ) {
     var state by remember {
         mutableStateOf(default)
@@ -87,12 +86,11 @@ fun SettingsToggle(
                 .fillMaxHeight()
                 .padding(vertical = 16.dp)
                 .padding(start = 16.dp),
-            title = { Text(fontWeight = FontWeight.Bold, text = label) },
+            title = { Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             description = { description?.let { Text(text = it) } },
             enabled = true,
             applyPaddings = false,
-            endWidget = endWidget,
-            startWidget = startWidget
+            endWidget = endWidget
         )
     }
 

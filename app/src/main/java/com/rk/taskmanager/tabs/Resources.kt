@@ -6,6 +6,7 @@ import android.content.Context.ACTIVITY_SERVICE
 import android.graphics.PointF
 import android.os.Debug
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -35,7 +36,7 @@ import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.rememberMarker
 import com.rk.taskmanager.shizuku.ShizukuUtil
-import com.rk.terminal.ui.components.SettingsToggle
+import com.rk.components.SettingsToggle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -153,7 +154,7 @@ fun Resources(modifier: Modifier = Modifier) {
 
     }
 
-    Column(modifier.padding(vertical = 32.dp).verticalScroll(rememberScrollState())) {
+    Column(modifier.verticalScroll(rememberScrollState())) {
         PreferenceGroup(heading = "CPU - ${if (CpuUsage <= 0){"No Data"}else{"$CpuUsage%"}}") {
             when (state.value) {
                 ShizukuUtil.Error.NO_ERROR -> {
@@ -253,10 +254,12 @@ fun Resources(modifier: Modifier = Modifier) {
         }
 
         PreferenceGroup {
-            SettingsToggle(label = "RAM : ${Ram}",
+            SettingsToggle(label = "RAM : $Ram",
                 showSwitch = false,
                 default = false)
         }
+
+        Spacer(modifier = Modifier.padding(vertical = 16.dp))
     }
 
 

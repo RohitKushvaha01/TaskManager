@@ -38,7 +38,7 @@ object ShizukuUtil {
     }
 
     fun isShizukuRunning(): Boolean{
-        return Shizuku.pingBinder()
+        return Shizuku.pingBinder() && Shizuku.getBinder() != null
     }
 
     fun isPermissionGranted(): Boolean{
@@ -65,49 +65,53 @@ object ShizukuUtil {
     private var isWaiting = false
     suspend fun withService(ServiceCallback: Error.(TaskManagerService?)-> Unit) = withContext(Dispatchers.IO){
         if (isShizukuRunning()){
-
-            while (isWaiting && serviceBinder.get() == null){
-                delay(100)
-                println("waitling...")
-            }
-
-            if (serviceBinder.get() != null){
-                ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
-                println("reusing...")
-                return@withContext
-            }
-
-            requestPermission { granted ->
-                if (granted.not()){
-                    ServiceCallback.invoke(Error.PERMISSION_DENIED,null)
-                    return@requestPermission
+            runCatching {
+                while (isWaiting && serviceBinder.get() == null){
+                    delay(100)
+                    println("waitling...")
                 }
 
-                runCatching {
-                    Shizuku.bindUserService(
-                        UserServiceArgs(ComponentName(TaskManager.Companion.getContext().packageName, TaskManagerServiceImpl::class.java.name))
-                            .daemon(false)
-                            .debuggable(true)
-                            .processNameSuffix("task_manager")
-                            .version(1),
-                        object : ServiceConnection {
-                            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                                serviceBinder = WeakReference(TaskManagerService.CREATOR.asInterface(service!!))
-                                isWaiting = false
-                                ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
-                            }
-
-                            override fun onServiceDisconnected(name: ComponentName?) {
-                                Log.d("ShizukuService", "Service disconnected")
-                            }
-                        }
-                    )
-                    isWaiting = true
-                }.onFailure {
-                    ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)
+                if (serviceBinder.get() != null){
+                    ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
+                    return@withContext
                 }
 
+                requestPermission { granted ->
+                    if (granted.not()){
+                        ServiceCallback.invoke(Error.PERMISSION_DENIED,null)
+                        return@requestPermission
+                    }
 
+                    runCatching {
+                        Shizuku.bindUserService(
+                            UserServiceArgs(ComponentName(TaskManager.Companion.getContext().packageName, TaskManagerServiceImpl::class.java.name))
+                                .daemon(false)
+                                .debuggable(true)
+                                .processNameSuffix("task_manager")
+                                .version(1),
+                            object : ServiceConnection {
+                                override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                                    serviceBinder = WeakReference(TaskManagerService.CREATOR.asInterface(service!!))
+                                    isWaiting = false
+                                    ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
+                                }
+
+                                override fun onServiceDisconnected(name: ComponentName?) {
+                                    Log.d("ShizukuService", "Service disconnected")
+                                }
+                            }
+                        )
+                        isWaiting = true
+                    }.onFailure {
+                        ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)
+                    }
+
+
+                }
+
+            }.onFailure {
+                it.printStackTrace()
+                ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)
             }
         }else{
             ServiceCallback.invoke(Error.SHIZUKU_NOT_RUNNNING,null)

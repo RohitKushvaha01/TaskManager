@@ -1,15 +1,25 @@
 package com.rk.taskmanager.tabs
 
+import android.app.ActivityManager
+import android.app.ActivityManager.MemoryInfo
+import android.content.Context.ACTIVITY_SERVICE
 import android.graphics.PointF
+import android.os.Debug
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat.getSystemService
 import com.patrykandpatrick.vico.compose.cartesian.*
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
@@ -30,12 +40,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
 import java.util.concurrent.atomic.AtomicBoolean
 
-private const val MAX_POINTS = 100 // Number of visible data points
-private val lineColor = Color(0xffa485e0)
-
+private const val MAX_POINTS = 100
 
 private val YDecimalFormat = DecimalFormat("#.##'%'")
 private val StartAxisValueFormatter =
@@ -45,15 +54,23 @@ private val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default
 
 @Composable
 fun Resources(modifier: Modifier = Modifier) {
+    val lineColor = MaterialTheme.colorScheme.primary
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val modelProducer = remember { CartesianChartModelProducer() }
+    val RamModelProducer = remember { CartesianChartModelProducer() }
     val updating = remember { AtomicBoolean(false) }
 
     // Keep X values static (0 to MAX_POINTS-1)
     val xValues = remember { List(MAX_POINTS) { it.toDouble() } }
-    val yValues = remember { mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } } }
+    // Separate yValues lists
+    val cpuYValues = remember { mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } } }
+    val ramYValues = remember { mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } } }
+
     var lastCpuUsage by remember { mutableFloatStateOf(0f) }
     var CpuUsage by remember { mutableIntStateOf(0) }
+    var RamUsage by remember { mutableIntStateOf(0) }
+    var Ram by remember { mutableStateOf("0mb of 0mb") }
     var state = remember { mutableStateOf(ShizukuUtil.Error.NO_ERROR) }
 
 
@@ -64,12 +81,12 @@ fun Resources(modifier: Modifier = Modifier) {
                 state.value = this
                 if (this != ShizukuUtil.Error.NO_ERROR) {
                     scope.launch(Dispatchers.Main) {
-                        if (yValues.size >= MAX_POINTS) {
-                            yValues.removeAt(0)
+                        if (cpuYValues.size >= MAX_POINTS) {
+                            cpuYValues.removeAt(0)
                         }
-                        yValues.add(0) // Set CPU usage to 0% if service fails
+                        cpuYValues.add(0) // Set CPU usage to 0% if service fails
                         modelProducer.runTransaction {
-                            lineSeries { series(xValues, yValues) }
+                            lineSeries { series(xValues,cpuYValues) }
                         }
                     }
                     updating.set(false)
@@ -82,18 +99,47 @@ fun Resources(modifier: Modifier = Modifier) {
                 lastCpuUsage = smoothedCpuUsage
 
                 scope.launch(Dispatchers.Main) {
-                    if (yValues.size >= MAX_POINTS) {
-                        yValues.removeAt(0) // Always remove exactly one element
+                    if (cpuYValues.size >= MAX_POINTS) {
+                        cpuYValues.removeAt(0) // Always remove exactly one element
                     }
-                    yValues.add(smoothedCpuUsage)
+                    cpuYValues.add(smoothedCpuUsage)
                     modelProducer.runTransaction {
-                        lineSeries { series(xValues, yValues) }
+                        lineSeries { series(xValues, cpuYValues) }
                     }
                     CpuUsage = cpuUsage.toInt()
                 }
                 updating.set(false)
             }
 
+        }
+
+        scope.launch{
+            while (isActive){
+                delay(100)
+                val mi = MemoryInfo()
+                val activityManger = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
+                activityManger.getMemoryInfo(mi)
+
+                val percentAvail = mi.availMem.toDouble() / mi.totalMem.toDouble() * 100.0
+
+                val percentUsed = 100.0 - percentAvail
+
+                withContext(Dispatchers.Main) {
+                    Ram = "${(mi.totalMem - mi.availMem) / (1024 * 1024)}MB of ${mi.totalMem / (1024 * 1024)}MB"
+
+                    RamUsage = percentUsed.toInt()
+
+                    RamModelProducer.runTransaction {
+                        lineSeries {
+                            series(xValues, ramYValues.apply {
+                                if (size >= MAX_POINTS) removeAt(0)
+                                add(RamUsage)
+                            })
+                        }
+                    }
+                }
+
+            }
         }
 
         while (isActive) {
@@ -103,68 +149,115 @@ fun Resources(modifier: Modifier = Modifier) {
                 delay(10)
             }
         }
+
+
     }
 
-    PreferenceGroup(heading = "CPU - ${if (CpuUsage <= 0){"No Data"}else{"$CpuUsage%"}}") {
-        when (state.value) {
-            ShizukuUtil.Error.NO_ERROR -> {
-                CartesianChartHost(
-                    rememberCartesianChart(
-                        rememberLineCartesianLayer(
-                            lineProvider = LineCartesianLayer.LineProvider.series(
-                                LineCartesianLayer.rememberLine(
-                                    fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                                    areaFill = LineCartesianLayer.AreaFill.single(
-                                        fill(
-                                            ShaderProvider.verticalGradient(
-                                                intArrayOf(
-                                                    lineColor.copy(alpha = 0.4f).toArgb(),
-                                                    Color.Transparent.toArgb()
+    Column(modifier.padding(vertical = 32.dp).verticalScroll(rememberScrollState())) {
+        PreferenceGroup(heading = "CPU - ${if (CpuUsage <= 0){"No Data"}else{"$CpuUsage%"}}") {
+            when (state.value) {
+                ShizukuUtil.Error.NO_ERROR -> {
+                    CartesianChartHost(
+                        rememberCartesianChart(
+                            rememberLineCartesianLayer(
+                                lineProvider = LineCartesianLayer.LineProvider.series(
+                                    LineCartesianLayer.rememberLine(
+                                        fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                                        areaFill = LineCartesianLayer.AreaFill.single(
+                                            fill(
+                                                ShaderProvider.verticalGradient(
+                                                    intArrayOf(
+                                                        lineColor.copy(alpha = 0.4f).toArgb(),
+                                                        Color.Transparent.toArgb()
+                                                    )
                                                 )
                                             )
                                         )
                                     )
                                 )
-                            )
+                            ),
+                            startAxis = VerticalAxis.rememberStart(
+                                valueFormatter = StartAxisValueFormatter,
+                            ),
+                            bottomAxis = null,
+                            marker = rememberMarker(MarkerValueFormatter),
                         ),
-                        startAxis = VerticalAxis.rememberStart(
-                            valueFormatter = StartAxisValueFormatter,
-                        ),
-                        bottomAxis = null,
-                        marker = rememberMarker(MarkerValueFormatter),
-                    ),
-                    modelProducer,
-                    modifier.padding(8.dp),
-                    rememberVicoScrollState(scrollEnabled = false),
-                    animateIn = false,
-                    animationSpec = null
-                )
+                        modelProducer,
+                        modifier.padding(8.dp),
+                        rememberVicoScrollState(scrollEnabled = false),
+                        animateIn = false,
+                        animationSpec = null
+                    )
+                }
+                ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> {
+                    SettingsToggle(
+                        label = "No Data",
+                        description = "Shizuku not running",
+                        showSwitch = false,
+                        default = false
+                    )
+                }
+                ShizukuUtil.Error.PERMISSION_DENIED -> {
+                    SettingsToggle(
+                        label = "No Data",
+                        description = "Shizuku permission not granted",
+                        showSwitch = false,
+                        default = false
+                    )
+                }
+                else -> {
+                    SettingsToggle(
+                        label = "No Data",
+                        description = "Unknown Error please logcat for more info",
+                        showSwitch = false,
+                        default = false
+                    )
+                }
             }
-            ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> {
-                SettingsToggle(
-                    label = "No Data",
-                    description = "Shizuku not running",
-                    showSwitch = false,
-                    default = false
-                )
-            }
-            ShizukuUtil.Error.PERMISSION_DENIED -> {
-                SettingsToggle(
-                    label = "No Data",
-                    description = "Shizuku permission not granted",
-                    showSwitch = false,
-                    default = false
-                )
-            }
-            else -> {
-                SettingsToggle(
-                    label = "No Data",
-                    description = "Unknown Error please logcat for more info",
-                    showSwitch = false,
-                    default = false
-                )
-            }
+
         }
 
+
+        PreferenceGroup(heading = "RAM - ${if (RamUsage <= 0){"No Data"}else{"$RamUsage%"}}") {
+            CartesianChartHost(
+                rememberCartesianChart(
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.rememberLine(
+                                fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                                areaFill = LineCartesianLayer.AreaFill.single(
+                                    fill(
+                                        ShaderProvider.verticalGradient(
+                                            intArrayOf(
+                                                lineColor.copy(alpha = 0.4f).toArgb(),
+                                                Color.Transparent.toArgb()
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    startAxis = VerticalAxis.rememberStart(
+                        valueFormatter = StartAxisValueFormatter,
+                    ),
+                    bottomAxis = null,
+                    marker = rememberMarker(MarkerValueFormatter),
+                ),
+                RamModelProducer,
+                modifier.padding(8.dp),
+                rememberVicoScrollState(scrollEnabled = false),
+                animateIn = false,
+                animationSpec = null
+            )
+        }
+
+        PreferenceGroup {
+            SettingsToggle(label = "RAM : ${Ram}",
+                showSwitch = false,
+                default = false)
+        }
     }
+
+
 }

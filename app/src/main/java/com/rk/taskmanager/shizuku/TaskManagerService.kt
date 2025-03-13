@@ -20,11 +20,13 @@ interface IInterfaceCreator<T : IInterface> {
 interface TaskManagerService : IInterface {
     fun listPs(): List<Proc>
     fun getCpuUsage(): Byte
+    fun getRamUsageMB(): Int
 
     companion object {
         const val DESCRIPTOR = "com.rk.taskmanager.TaskManagerService"
         const val TRANSACTION_listPs = IBinder.FIRST_CALL_TRANSACTION
         const val TRANSACTION_getCpuUsage = IBinder.FIRST_CALL_TRANSACTION + 1
+        const val TRANSACTION_getRamUsage = IBinder.FIRST_CALL_TRANSACTION + 2
 
         val CREATOR = object : IInterfaceCreator<TaskManagerService> {
             override fun asInterface(binder: IBinder): TaskManagerService {
@@ -67,6 +69,20 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
         }
     }
 
+    override fun getRamUsageMB(): Int {
+        val data = Parcel.obtain()
+        val reply = Parcel.obtain()
+        return try {
+            data.writeInterfaceToken(TaskManagerService.DESCRIPTOR)
+            binder.transact(TaskManagerService.TRANSACTION_getRamUsage, data, reply, 0)
+            reply.readException()
+            reply.readInt()
+        } finally {
+            data.recycle()
+            reply.recycle()
+        }
+    }
+
     override fun asBinder(): IBinder {
         return binder
     }
@@ -77,6 +93,16 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
 class TaskManagerServiceImpl : Binder() {
     override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
         when (code) {
+            TaskManagerService.TRANSACTION_getRamUsage -> {
+                data.enforceInterface(TaskManagerService.DESCRIPTOR)
+
+                //TODO
+                reply?.writeNoException()
+                reply?.writeInt(0)
+                return true
+            }
+
+
             TaskManagerService.TRANSACTION_getCpuUsage -> {
                 data.enforceInterface(TaskManagerService.DESCRIPTOR)
 

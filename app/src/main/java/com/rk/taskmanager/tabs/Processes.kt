@@ -79,7 +79,7 @@ fun Processes(
     }
 }
 
-const val textLimit = 16
+const val textLimit = 40
 
 @Composable
 fun ProcessItem(proc: Proc) {
@@ -91,9 +91,9 @@ fun ProcessItem(proc: Proc) {
                 proc.name
             },
             description = if (proc.cmdLine.length > textLimit) {
-                proc.cmdLine.substring(0, textLimit) + "..."
+                (proc.cmdLine.substring(0, textLimit) + "...").removePrefix("/system/bin/")
             } else {
-                proc.cmdLine
+                proc.cmdLine.removePrefix("/system/bin/")
             },
             showSwitch = false,
             default = false

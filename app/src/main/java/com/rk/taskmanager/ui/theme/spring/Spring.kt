@@ -5,6 +5,7 @@ import androidx.compose.material3.lightColorScheme
 import com.rk.taskmanager.ui.theme.Theme
 
 object Spring : Theme() {
+
     override val lightScheme = lightColorScheme(
         primary = primaryLight,
         onPrimary = onPrimaryLight,

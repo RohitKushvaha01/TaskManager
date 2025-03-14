@@ -73,7 +73,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                 0 -> {
                     println("0")
                     viewModel.refreshAuto()
-                    Processes(viewModel = viewModel)
+                    Processes(viewModel = viewModel, navController = navController)
                 }
                 1 -> {
                     Resources()

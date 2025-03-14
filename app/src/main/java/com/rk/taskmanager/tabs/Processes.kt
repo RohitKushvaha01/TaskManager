@@ -14,20 +14,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavOptions
+import androidx.navigation.Navigator
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.taskmanager.ProcessViewModel
+import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.shizuku.Proc
 import com.rk.taskmanager.shizuku.ShizukuUtil
 
 
-//todo start loading on activity resume
-//todo mmove process to the second button
-
 @Composable
 fun Processes(
     modifier: Modifier = Modifier,
-    viewModel: ProcessViewModel
+    viewModel: ProcessViewModel,
+    navController: NavController
 ) {
     val state by viewModel.state.collectAsState()
     val processes = viewModel.processes
@@ -53,7 +55,7 @@ fun Processes(
                         state = listState
                     ) {
                         items(processes.size, key = { processes[it].pid }) { index ->
-                            ProcessItem(processes[index])
+                            ProcessItem(processes[index],navController = navController)
                         }
 
                         item(key = null) {
@@ -82,7 +84,7 @@ fun Processes(
 const val textLimit = 40
 
 @Composable
-fun ProcessItem(proc: Proc) {
+fun ProcessItem(proc: Proc,navController: NavController) {
     PreferenceGroup {
         SettingsToggle(
             label = if (proc.name.length > textLimit) {
@@ -96,7 +98,10 @@ fun ProcessItem(proc: Proc) {
                 proc.cmdLine.removePrefix("/system/bin/")
             },
             showSwitch = false,
-            default = false
+            default = false,
+            sideEffect = {
+                navController.navigate(SettingsRoutes.ProcessInfo.createRoute(proc.pid))
+            }
         )
     }
 }

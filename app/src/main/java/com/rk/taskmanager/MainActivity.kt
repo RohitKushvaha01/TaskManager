@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.rk.taskmanager.animations.NavigationAnimationTransitions
 import com.rk.taskmanager.screens.MainScreen
+import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SettingsScreen
 import com.rk.taskmanager.shizuku.ShizukuUtil
 
@@ -44,6 +45,10 @@ class MainActivity : ComponentActivity() {
                         composable(SettingsRoutes.Settings.route){
                             SettingsScreen(navController = navController)
                         }
+                        composable("proc/{pid}"){
+                            val pid = it.arguments?.getString("pid")!!.toInt()
+                            ProcessInfo(pid = pid, navController = navController, viewModel = viewModel)
+                        }
                     }
                 }
             }
@@ -59,4 +64,7 @@ class MainActivity : ComponentActivity() {
 sealed class SettingsRoutes(val route: String){
     data object Home : SettingsRoutes("home")
     data object Settings : SettingsRoutes("settings")
+    data object ProcessInfo : SettingsRoutes("proc/{pid}"){
+        fun createRoute(pid: Int) = "proc/$pid"
+    }
 }

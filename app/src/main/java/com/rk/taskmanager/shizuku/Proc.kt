@@ -5,27 +5,28 @@ import android.os.Parcelable
 
 data class Proc(
     val name: String,
+    val nice: Int,
     val pid: Int,
     val uid: Int,
     val cpuUsage: Float,
     val parentPid: Int,
     val isForeground: Boolean,
     val memoryUsageKb: Long,
-    val cmdLine: String
+    val cmdLine: String,
+    val state: String,
+    val threads: Int,
+    val startTime: Long,
+    val elapsedTime: Float,
+    val residentSetSizeKb: Long,
+    val virtualMemoryKb: Long,
+    val cgroup: String,
+    val executablePath: String
 ) : Parcelable {
-    constructor(parcel: Parcel) : this(
-        parcel.readString() ?: "",
-        parcel.readInt(),
-        parcel.readInt(),
-        parcel.readFloat(),
-        parcel.readInt(),
-        parcel.readByte() != 0.toByte(),
-        parcel.readLong(),
-        parcel.readString() ?: ""
-    )
+    override fun describeContents(): Int = 0
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(name)
+        parcel.writeInt(nice)
         parcel.writeInt(pid)
         parcel.writeInt(uid)
         parcel.writeFloat(cpuUsage)
@@ -33,41 +34,39 @@ data class Proc(
         parcel.writeByte(if (isForeground) 1 else 0)
         parcel.writeLong(memoryUsageKb)
         parcel.writeString(cmdLine)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is Proc){return false}
-        return other.pid == pid
-    }
-
-    override fun toString(): String {
-        return cmdLine
+        parcel.writeString(state)
+        parcel.writeInt(threads)
+        parcel.writeLong(startTime)
+        parcel.writeFloat(elapsedTime)
+        parcel.writeLong(residentSetSizeKb)
+        parcel.writeLong(virtualMemoryKb)
+        parcel.writeString(cgroup)
+        parcel.writeString(executablePath)
     }
 
     companion object CREATOR : Parcelable.Creator<Proc> {
         override fun createFromParcel(parcel: Parcel): Proc {
-            return Proc(parcel)
+            return Proc(
+                parcel.readString()!!,
+                parcel.readInt(),
+                parcel.readInt(),
+                parcel.readInt(),
+                parcel.readFloat(),
+                parcel.readInt(),
+                parcel.readByte() != 0.toByte(),
+                parcel.readLong(),
+                parcel.readString()!!,
+                parcel.readString()!!,
+                parcel.readInt(),
+                parcel.readLong(),
+                parcel.readFloat(),
+                parcel.readLong(),
+                parcel.readLong(),
+                parcel.readString()!!,
+                parcel.readString()!!
+            )
         }
 
-        override fun newArray(size: Int): Array<Proc?> {
-            return arrayOfNulls(size)
-        }
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + name.hashCode()
-        result = 31 * result + pid
-        result = 31 * result + uid
-        result = 31 * result + cpuUsage.hashCode()
-        result = 31 * result + parentPid
-        result = 31 * result + isForeground.hashCode()
-        result = 31 * result + memoryUsageKb.hashCode()
-        result = 31 * result + cmdLine.hashCode()
-        return result
+        override fun newArray(size: Int): Array<Proc?> = arrayOfNulls(size)
     }
 }

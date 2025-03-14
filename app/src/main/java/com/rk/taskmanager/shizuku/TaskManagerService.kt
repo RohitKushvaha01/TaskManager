@@ -1,9 +1,11 @@
 package com.rk.taskmanager.shizuku
 
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import android.os.IInterface
 import android.os.Parcel
+import androidx.annotation.RequiresApi
 import com.rk.taskmanager.TaskManager
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -47,7 +49,9 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
             data.writeInterfaceToken(TaskManagerService.DESCRIPTOR)
             binder.transact(TaskManagerService.TRANSACTION_listPs, data, reply, 0)
             reply.readException()
-            return reply.createTypedArrayList(Proc.CREATOR) ?: emptyList()
+            return mutableListOf<Proc>().apply {
+                reply.readTypedList(this, Proc.CREATOR)
+            }
         } finally {
             data.recycle()
             reply.recycle()
@@ -149,15 +153,23 @@ class TaskManagerServiceImpl : Binder() {
                     val pid = dir.name.toInt()
 
                     // Read cmdline and strip null bytes
-                    val cmdlineFile = File(dir, "cmdline").readBytes()
-                        .takeWhile { it != 0.toByte() }
-                        .toByteArray()
-                        .toString(Charsets.UTF_8)
+                    val cmdlineFile = if (File(dir, "cmdline").exists()){
+                        File(dir, "cmdline").readBytes()
+                            .takeWhile { it != 0.toByte() }
+                            .toByteArray()
+                            .toString(Charsets.UTF_8)
+                    }else{
+                        ""
+                    }
 
-                    val name = File(dir, "comm").readBytes()
-                        .takeWhile { it != 0.toByte() }
-                        .toByteArray()
-                        .toString(Charsets.UTF_8)
+                    val name = if (File(dir, "comm").exists()){
+                        File(dir, "comm").readBytes()
+                            .takeWhile { it != 0.toByte() }
+                            .toByteArray()
+                            .toString(Charsets.UTF_8)
+                    }else{
+                        ""
+                    }
 
                     // Read status file
                     val statusFile = File(dir, "status").readLines()
@@ -170,6 +182,14 @@ class TaskManagerServiceImpl : Binder() {
                     val memoryUsageKb = statusFile.firstOrNull { it.startsWith("VmRSS:") }
                         ?.split(Regex("\\s+"))?.get(1)?.toLongOrNull() ?: 0
 
+                    // Get process state
+                    val state = statusFile.firstOrNull { it.startsWith("State:") }
+                        ?.split(Regex("\\s+"))?.get(1) ?: "?"
+
+                    // Get number of threads
+                    val threads = statusFile.firstOrNull { it.startsWith("Threads:") }
+                        ?.split(Regex("\\s+"))?.get(1)?.toIntOrNull() ?: 1
+
                     // Check if the process is foreground
                     val oomScoreAdjFile = File(dir, "oom_score_adj")
                     val isForeground =
@@ -181,24 +201,65 @@ class TaskManagerServiceImpl : Binder() {
                     val utime = statFile.getOrNull(13)?.toLongOrNull() ?: 0
                     val stime = statFile.getOrNull(14)?.toLongOrNull() ?: 0
                     val startTime = statFile.getOrNull(21)?.toLongOrNull() ?: 0
+                    val niceness = statFile.getOrNull(17)?.toIntOrNull() ?: 0
 
                     // Calculate CPU usage percentage
                     val totalTime = utime + stime
                     val seconds = uptimeSeconds - (startTime / 100f)
                     val cpuUsage = if (seconds > 0) ((totalTime.toFloat() / 100f) / seconds) * 100 else 0f
 
+                    val clockTicksPerSecond = 100  // Usually 100 on Linux
+                    val elapsedTime = uptimeSeconds - (startTime / clockTicksPerSecond)
+
+                    fun getPageSizeKb(): Int {
+                        val statusFile = "/proc/self/status"
+                        val pageSizeLine = "VmPageSize:"
+
+                        val pageSize = File(statusFile).useLines { lines ->
+                            lines.firstOrNull { it.startsWith(pageSizeLine) }
+                                ?.split("\\s+".toRegex())?.get(1)?.toIntOrNull()
+                        }
+
+                        return pageSize ?: 4
+                    }
+
+                    val pageSizeKb = getPageSizeKb()
+                    val residentSetSizeKb = (statFile.getOrNull(23)?.toLongOrNull() ?: 0) * pageSizeKb
+
+                    val cgroupFile = File(dir, "cgroup")
+                    val cgroup = if (cgroupFile.exists()) cgroupFile.readLines().joinToString("; ") else "unknown"
+
+                    val exeFile = File(dir, "exe")
+                    val executablePath = if (exeFile.exists()) exeFile.canonicalPath else "null"
+
+                    val virtualMemoryKb = File(dir, "status").readLines()
+                        .firstOrNull { it.startsWith("VmSize:") }
+                        ?.split(Regex("\\s+"))?.get(1)?.toLongOrNull()  // Extract value in KB
+
+
+
                     // Return the fully filled Proc object
                     Proc(
                         name = name,
+                        nice = niceness,
                         pid = pid,
                         uid = uid,
                         cpuUsage = cpuUsage,
                         parentPid = parentPid,
                         isForeground = isForeground,
                         memoryUsageKb = memoryUsageKb,
-                        cmdLine = cmdlineFile
+                        cmdLine = cmdlineFile,
+                        state = state,
+                        threads = threads,
+                        startTime = startTime,
+                        elapsedTime = elapsedTime,
+                        residentSetSizeKb = residentSetSizeKb,
+                        virtualMemoryKb = virtualMemoryKb ?: 0,
+                        cgroup = cgroup,
+                        executablePath = executablePath,
                     )
                 }
+
 
 
                 reply?.writeNoException()

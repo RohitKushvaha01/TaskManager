@@ -30,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rk.components.SettingsToggle
@@ -113,6 +115,36 @@ fun ProcessInfo(
                             text = "RAM Usage",
                             description = "${proc.value!!.memoryUsageKb}KB"
                         )
+                        TextCard(
+                            text = "Nice",
+                            description = "${proc.value!!.nice}"
+                        )
+
+                        TextCard(
+                            text = "Status",
+                            description = when(proc.value!!.state.toString().toLowerCase(Locale.current)){
+                                "r" -> "Running"
+                                "s" -> "Sleeping"
+                                "d" -> "Uninterruptible sleep"
+                                "z" -> "Sleeping"
+                                "t" -> "Stopped"
+                                "x" -> "Dead"
+                                else -> "Unknown"
+                            }
+                        )
+
+                        TextCard(text = "Threads", description = proc.value!!.threads.toString())
+                        TextCard(text = "Start Time", description = proc.value!!.startTime.toString())
+                        TextCard(text = "Elapsed Time", description = proc.value!!.elapsedTime.toString())
+                        TextCard(text = "Actual Ram Usage (RSS)", description = "${proc.value!!.residentSetSizeKb}KB")
+                        TextCard(text = "Virtual Memory", description = "${proc.value!!.virtualMemoryKb}KB")
+
+                        TextCard(text = "Cgroup", description = proc.value!!.cgroup)
+                        if (proc.value!!.executablePath != "null"){
+                            TextCard(text = "Executable", description = proc.value!!.executablePath)
+                        }
+
+
                     }
                     PreferenceGroup {
                         val enabled = proc.value!!.pid > 1

@@ -88,7 +88,7 @@ object ShizukuUtil {
                                 .daemon(false)
                                 .debuggable(true)
                                 .processNameSuffix("task_manager")
-                                .version(1),
+                                .version(2),
                             object : ServiceConnection {
                                 override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                                     serviceBinder = WeakReference(TaskManagerService.CREATOR.asInterface(service!!))

@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.kotlinParcelize)
     alias(libs.plugins.compose.compiler)
 }
 
@@ -64,7 +65,7 @@ android {
 
     defaultConfig {
         applicationId = "com.rk.taskmanager"
-        minSdk = 26
+        minSdk = 29
         targetSdk = 35
 
         //versioning

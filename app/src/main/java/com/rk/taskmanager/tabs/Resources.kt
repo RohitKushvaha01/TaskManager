@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.ActivityManager.MemoryInfo
 import android.content.Context.ACTIVITY_SERVICE
 import android.graphics.PointF
+import android.graphics.Typeface
 import android.os.Debug
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat.getSystemService
 import com.patrykandpatrick.vico.compose.cartesian.*
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.*
@@ -29,9 +31,11 @@ import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.rememberMarker
@@ -47,6 +51,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private const val MAX_POINTS = 100
 
+
+private val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = 100.0)
 private val YDecimalFormat = DecimalFormat("#.##'%'")
 private val StartAxisValueFormatter =
     com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter.decimal(YDecimalFormat)
@@ -175,10 +181,18 @@ fun Resources(modifier: Modifier = Modifier) {
                                             )
                                         )
                                     )
-                                )
+                                ),
+                                rangeProvider = RangeProvider,
                             ),
                             startAxis = VerticalAxis.rememberStart(
                                 valueFormatter = StartAxisValueFormatter,
+                                label = TextComponent(
+                                    color = MaterialTheme.colorScheme.onSurface.toArgb(),
+                                    textSizeSp = 10f,
+                                    lineCount = 1,
+                                    typeface = Typeface.DEFAULT
+                                ),
+                                guideline = rememberAxisGuidelineComponent(),
                             ),
                             bottomAxis = null,
                             marker = rememberMarker(MarkerValueFormatter),
@@ -187,7 +201,7 @@ fun Resources(modifier: Modifier = Modifier) {
                         modifier.padding(8.dp),
                         rememberVicoScrollState(scrollEnabled = false),
                         animateIn = false,
-                        animationSpec = null
+                        animationSpec = null,
                     )
                 }
                 ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> {
@@ -237,10 +251,18 @@ fun Resources(modifier: Modifier = Modifier) {
                                     )
                                 )
                             )
-                        )
+                        ),
+                        rangeProvider = RangeProvider,
                     ),
                     startAxis = VerticalAxis.rememberStart(
                         valueFormatter = StartAxisValueFormatter,
+                        label = TextComponent(
+                            color = MaterialTheme.colorScheme.onSurface.toArgb(),
+                            textSizeSp = 10f,
+                            lineCount = 1,
+                            typeface = Typeface.DEFAULT
+                        ),
+                        guideline = rememberAxisGuidelineComponent(),
                     ),
                     bottomAxis = null,
                     marker = rememberMarker(MarkerValueFormatter),

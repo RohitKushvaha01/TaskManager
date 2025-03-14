@@ -4,29 +4,20 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
-import androidx.appcompat.app.AppCompatDelegate
 import com.rk.taskmanager.TaskManager
 
 object Settings {
-    //Boolean
-
     var theme
+        //0 is the id of the theme in the themes hashmap
         get() = Preference.getInt(key = "theme",0)
         set(value) = Preference.setInt(key = "theme",value)
 
-    var amoled
-        get() = Preference.getBoolean(key = "oled", default = false)
-        set(value) = Preference.setBoolean(key = "oled",value)
     var monet
         get() = Preference.getBoolean(
             key = "monet",
             default = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         )
         set(value) = Preference.setBoolean(key = "monet",value)
-
-
-
-
 }
 
 object Preference {

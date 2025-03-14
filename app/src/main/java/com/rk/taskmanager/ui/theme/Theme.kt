@@ -18,17 +18,16 @@ import com.rk.taskmanager.ui.theme.spring.Spring
 abstract class Theme{
     abstract val lightScheme: ColorScheme
     abstract val darkScheme: ColorScheme
-    abstract val mediumContrastLightColorScheme: ColorScheme
-    abstract val highContrastLightColorScheme: ColorScheme
-    abstract val mediumContrastDarkColorScheme: ColorScheme
-    abstract val highContrastDarkColorScheme: ColorScheme
 }
 
-val themes = hashMapOf(0 to Autumn,1 to Frostfall,2 to Spring)
+val themes = hashMapOf(
+    0 to Frostfall,
+    1 to Autumn,
+    2 to Spring
+)
+
 var currentTheme = mutableIntStateOf(Settings.theme)
 var dynamicTheme = mutableStateOf(Settings.monet)
-
-var amoledTheme = mutableStateOf(Settings.amoled)
 
 @Composable
 fun TaskManagerTheme(
@@ -41,18 +40,9 @@ fun TaskManagerTheme(
         if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     }else{
         if (darkTheme){
-            if (amoledTheme.value){
-                themes[currentTheme.intValue]!!.highContrastDarkColorScheme
-            }else{
-                themes[currentTheme.intValue]!!.darkScheme
-            }
+            themes[currentTheme.intValue]!!.darkScheme
         }else{
-            if (amoledTheme.value){
-                themes[currentTheme.intValue]!!.highContrastLightColorScheme
-            }else{
-                themes[currentTheme.intValue]!!.lightScheme
-            }
-
+            themes[currentTheme.intValue]!!.lightScheme
         }
     }
 

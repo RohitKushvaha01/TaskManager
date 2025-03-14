@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
@@ -36,7 +37,6 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
     PreferenceLayout(label = "Settings") {
         PreferenceGroup(heading = "Customization") {
-
 
             SelectableCard(selected = dynamicTheme.value, label = "Dynamic Theme", description = null, isEnaled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S, onClick = {
                 GlobalScope.launch{

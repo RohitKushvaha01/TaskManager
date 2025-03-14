@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -49,34 +50,36 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
         })
     },bottomBar = {
         NavigationBar {
+
             NavigationBarItem(selected = selectedscreen == 0, onClick = {
                 selectedscreen = 0
-            }, icon = {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = "Processes"
-                )
-            }, label = {Text("Processes")})
-
-            NavigationBarItem(selected = selectedscreen == 1, onClick = {
-                selectedscreen = 1
             }, icon = {
                 Icon(
                     imageVector = Icons.Filled.Speed,
                     contentDescription = "Resources"
                 )
             }, label = {Text("Resources")})
+
+            NavigationBarItem(selected = selectedscreen == 1, onClick = {
+                selectedscreen = 1
+            }, icon = {
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = "Processes"
+                )
+            }, label = {Text("Processes")})
         }
     }) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)){
+            LaunchedEffect(Unit) {
+                viewModel.refreshAuto()
+            }
             when(selectedscreen){
                 0 -> {
-                    println("0")
-                    viewModel.refreshAuto()
-                    Processes(viewModel = viewModel, navController = navController)
+                    Resources()
                 }
                 1 -> {
-                    Resources()
+                    Processes(viewModel = viewModel, navController = navController)
                 }
             }
         }

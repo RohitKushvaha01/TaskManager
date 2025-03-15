@@ -1,19 +1,11 @@
 package com.rk.taskmanager.shizuku
 
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
 import android.os.IInterface
 import android.os.Parcel
-import androidx.annotation.RequiresApi
-import com.rk.taskmanager.TaskManager
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import android.system.Os
 import java.io.File
-import java.io.Serializable
-import java.nio.file.Files
-import kotlin.random.Random
-import kotlin.random.asJavaRandom
 
 interface IInterfaceCreator<T : IInterface> {
     fun asInterface(binder: IBinder): T
@@ -22,13 +14,13 @@ interface IInterfaceCreator<T : IInterface> {
 interface TaskManagerService : IInterface {
     fun listPs(): List<Proc>
     fun getCpuUsage(): Byte
-    fun getRamUsageMB(): Int
+    fun killPid(pid: Int, signal: Int): Boolean
 
     companion object {
         const val DESCRIPTOR = "com.rk.taskmanager.TaskManagerService"
         const val TRANSACTION_listPs = IBinder.FIRST_CALL_TRANSACTION
         const val TRANSACTION_getCpuUsage = IBinder.FIRST_CALL_TRANSACTION + 1
-        const val TRANSACTION_getRamUsage = IBinder.FIRST_CALL_TRANSACTION + 2
+        const val TRANSACTION_killPid = IBinder.FIRST_CALL_TRANSACTION + 2
 
         val CREATOR = object : IInterfaceCreator<TaskManagerService> {
             override fun asInterface(binder: IBinder): TaskManagerService {
@@ -73,19 +65,25 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
         }
     }
 
-    override fun getRamUsageMB(): Int {
+
+    override fun killPid(pid: Int,signal: Int): Boolean {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
         return try {
             data.writeInterfaceToken(TaskManagerService.DESCRIPTOR)
-            binder.transact(TaskManagerService.TRANSACTION_getRamUsage, data, reply, 0)
+            data.writeInt(pid)
+            data.writeInt(signal)
+            println("dndndkd")
+            binder.transact(TaskManagerService.TRANSACTION_killPid, data, reply, IBinder.FLAG_ONEWAY)
+            println("transation done")
             reply.readException()
-            reply.readInt()
+            reply.readBoolean()
         } finally {
             data.recycle()
             reply.recycle()
         }
     }
+
 
     override fun asBinder(): IBinder {
         return binder
@@ -97,12 +95,21 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
 class TaskManagerServiceImpl : Binder() {
     override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
         when (code) {
-            TaskManagerService.TRANSACTION_getRamUsage -> {
+            TaskManagerService.TRANSACTION_killPid -> {
                 data.enforceInterface(TaskManagerService.DESCRIPTOR)
 
-                //TODO
+                val pid = data.readInt()
+                val signal = data.readInt()
+
+                val result = try {
+                    Os.kill(pid, signal)
+                    true
+                } catch (_: Exception) {
+                    false
+                }
+
                 reply?.writeNoException()
-                reply?.writeInt(0)
+                reply?.writeBoolean(result)
                 return true
             }
 
@@ -171,8 +178,9 @@ class TaskManagerServiceImpl : Binder() {
                         ""
                     }
 
-                    // Read status file
-                    val statusFile = File(dir, "status").readLines()
+
+                    val statusFile = if (File(dir, "status").exists()){File(dir, "status").readLines()}else{emptyList()}
+
                     val uid = statusFile.firstOrNull { it.startsWith("Uid:") }
                         ?.split(Regex("\\s+"))?.get(1)?.toIntOrNull() ?: 0
 
@@ -197,7 +205,7 @@ class TaskManagerServiceImpl : Binder() {
                             ?: 1000) <= 0
 
                     // Read the stat file for CPU usage
-                    val statFile = File(dir, "stat").readText().split(" ")
+                    val statFile = if (File(dir, "stat").exists()){File(dir, "stat").readText().split(" ")}else{emptyList()}
                     val utime = statFile.getOrNull(13)?.toLongOrNull() ?: 0
                     val stime = statFile.getOrNull(14)?.toLongOrNull() ?: 0
                     val startTime = statFile.getOrNull(21)?.toLongOrNull() ?: 0

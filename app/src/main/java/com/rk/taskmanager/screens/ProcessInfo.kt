@@ -13,7 +13,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -35,18 +38,30 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.rk.components.SettingsToggle
 import com.rk.components.TextCard
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.shizuku.Proc
+import com.rk.taskmanager.shizuku.SP
+import com.rk.taskmanager.shizuku.ShizukuUtil
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import rikka.shizuku.Shizuku
+import rikka.shizuku.ShizukuRemoteProcess
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
+import java.lang.reflect.Method
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    DelicateCoroutinesApi::class
+)
 @Composable
 fun ProcessInfo(
     modifier: Modifier = Modifier,
@@ -56,9 +71,13 @@ fun ProcessInfo(
 ) {
     var proc = remember { mutableStateOf<Proc?>(null) }
     var username = remember { mutableStateOf("Unknown") }
+    var kill_result = remember { mutableStateOf<Boolean?>(null) }
+    var killing = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         proc.value = withContext(Dispatchers.IO) {
+            delay(700)
             viewModel.processes.toList().find { it.pid == pid }
         }
         if (proc.value != null) {
@@ -83,11 +102,101 @@ fun ProcessInfo(
     }) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding), contentAlignment = Alignment.Center) {
             if (proc.value == null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else {
                 Column(modifier.verticalScroll(rememberScrollState())) {
+                    PreferenceGroup {
+                        val enabled = proc.value!!.pid > 1
+                        val interactionSource = remember { MutableInteractionSource() }
+                        PreferenceTemplate(
+                            modifier = modifier.combinedClickable(
+                                enabled = enabled,
+                                indication = ripple(),
+                                interactionSource = interactionSource,
+                                onClick = {
+                                    if ((kill_result.value != true) && !killing.value){
+                                        val pid = proc.value!!.pid
+                                        val signal = 9
+                                        GlobalScope.launch(Dispatchers.IO) {
+                                            killing.value = true
+
+                                            val cmd: Array<String> = arrayOf("kill", "-$signal", pid.toString())
+                                            val result = SP.newProcess(cmd,emptyArray<String>(),"/")
+                                            println(result)
+                                            kill_result.value = result == 0
+                                            killing.value = false
+                                            if (kill_result.value == true){
+                                                viewModel.processes.remove(proc.value)
+                                            }
+                                        }
+                                    }
+                                }
+                            ),
+                            contentModifier = Modifier
+                                .fillMaxHeight()
+                                .padding(vertical = 16.dp)
+                                .padding(start = 16.dp),
+                            title = {
+                                Text(
+                                    fontWeight = FontWeight.Bold,
+                                    text = if (killing.value){"Killing..."}else{
+                                        kill_result.value?.let {
+                                            if (it) {
+                                                "Killed"
+                                            } else {
+                                                if (ShizukuUtil.isShell()){
+                                                    "Kill failed (Permission denied)"
+                                                }else{
+                                                    "Kill failed (try again?)"
+                                                }
+                                            }
+                                        } ?: "Kill"
+                                    },
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                            description = { Text("Kill Process") },
+                            enabled = enabled,
+                            applyPaddings = false,
+                            endWidget = null,
+                            startWidget = {
+                                if (killing.value) {
+                                    CircularProgressIndicator(modifier = Modifier.padding(start = 16.dp).alpha(if (enabled) 1f else 0.3f),)
+                                } else {
+                                    kill_result.value?.let {
+                                        if (it) {
+                                            Icon(
+                                                modifier = Modifier
+                                                    .padding(start = 16.dp)
+                                                    .alpha(if (enabled) 1f else 0.3f),
+                                                imageVector = Icons.Rounded.Check,
+                                                contentDescription = null
+                                            )
+                                        } else {
+                                            Icon(
+                                                modifier = Modifier
+                                                    .padding(start = 16.dp)
+                                                    .alpha(if (enabled) 1f else 0.3f),
+                                                imageVector = Icons.Rounded.ErrorOutline,
+                                                contentDescription = null
+                                            )
+                                        }
+                                    } ?: Icon(
+                                        modifier = Modifier
+                                            .padding(start = 16.dp)
+                                            .alpha(if (enabled) 1f else 0.3f),
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+
                     PreferenceGroup {
                         TextCard(text = "Name", description = proc.value!!.name.trimEnd())
                         TextCard(text = "PID", description = proc.value!!.pid.toString())
@@ -122,7 +231,8 @@ fun ProcessInfo(
 
                         TextCard(
                             text = "Status",
-                            description = when(proc.value!!.state.toString().toLowerCase(Locale.current)){
+                            description = when (proc.value!!.state.toString()
+                                .toLowerCase(Locale.current)) {
                                 "r" -> "Running"
                                 "s" -> "Sleeping"
                                 "d" -> "Uninterruptible sleep"
@@ -134,45 +244,30 @@ fun ProcessInfo(
                         )
 
                         TextCard(text = "Threads", description = proc.value!!.threads.toString())
-                        TextCard(text = "Start Time", description = proc.value!!.startTime.toString())
-                        TextCard(text = "Elapsed Time", description = proc.value!!.elapsedTime.toString())
-                        TextCard(text = "Actual Ram Usage (RSS)", description = "${proc.value!!.residentSetSizeKb}KB")
-                        TextCard(text = "Virtual Memory", description = "${proc.value!!.virtualMemoryKb}KB")
+                        TextCard(
+                            text = "Start Time",
+                            description = proc.value!!.startTime.toString()
+                        )
+                        TextCard(
+                            text = "Elapsed Time",
+                            description = proc.value!!.elapsedTime.toString()
+                        )
+                        TextCard(
+                            text = "Actual Ram Usage (RSS)",
+                            description = "${proc.value!!.residentSetSizeKb}KB"
+                        )
+                        TextCard(
+                            text = "Virtual Memory",
+                            description = "${proc.value!!.virtualMemoryKb}KB"
+                        )
 
                         TextCard(text = "Cgroup", description = proc.value!!.cgroup)
-                        if (proc.value!!.executablePath != "null"){
+                        if (proc.value!!.executablePath != "null") {
                             TextCard(text = "Executable", description = proc.value!!.executablePath)
                         }
 
 
                     }
-                    PreferenceGroup {
-                        val enabled = proc.value!!.pid > 1
-                        val interactionSource = remember { MutableInteractionSource() }
-                        PreferenceTemplate(
-                            modifier = modifier.combinedClickable(
-                                enabled = enabled,
-                                indication = ripple(),
-                                interactionSource = interactionSource,
-                                onClick = {
-                                    println("killed")
-                                }
-                            ),
-                            contentModifier = Modifier
-                                .fillMaxHeight()
-                                .padding(vertical = 16.dp)
-                                .padding(start = 16.dp),
-                            title = { Text(fontWeight = FontWeight.Bold, text = "Kill", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                            description = { Text("Kill Process") },
-                            enabled = enabled,
-                            applyPaddings = false,
-                            endWidget = null,
-                            startWidget = {
-                                Icon(modifier = Modifier.padding(start = 16.dp).alpha(if (enabled) 1f else 0.3f),imageVector = Icons.Rounded.Close,contentDescription = null)
-                            }
-                        )
-                    }
-
 
                     Spacer(modifier = Modifier.padding(16.dp))
                 }

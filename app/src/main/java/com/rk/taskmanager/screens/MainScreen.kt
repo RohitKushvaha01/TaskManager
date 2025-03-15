@@ -29,10 +29,10 @@ import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.tabs.Processes
 import com.rk.taskmanager.tabs.Resources
 
+private var selectedscreen = mutableIntStateOf(0)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewModel: ProcessViewModel) {
-    var selectedscreen by remember { mutableIntStateOf(0) }
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         TopAppBar(title = {
             Text("Task Manager")
@@ -51,8 +51,8 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
     },bottomBar = {
         NavigationBar {
 
-            NavigationBarItem(selected = selectedscreen == 0, onClick = {
-                selectedscreen = 0
+            NavigationBarItem(selected = selectedscreen.intValue == 0, onClick = {
+                selectedscreen.intValue = 0
             }, icon = {
                 Icon(
                     imageVector = Icons.Filled.Speed,
@@ -60,8 +60,8 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                 )
             }, label = {Text("Resources")})
 
-            NavigationBarItem(selected = selectedscreen == 1, onClick = {
-                selectedscreen = 1
+            NavigationBarItem(selected = selectedscreen.intValue == 1, onClick = {
+                selectedscreen.intValue = 1
             }, icon = {
                 Icon(
                     imageVector = Icons.Filled.PlayArrow,
@@ -74,7 +74,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
             LaunchedEffect(Unit) {
                 viewModel.refreshAuto()
             }
-            when(selectedscreen){
+            when(selectedscreen.intValue){
                 0 -> {
                     Resources()
                 }

@@ -5,7 +5,7 @@ import android.os.Parcelable
 
 data class Proc(
     val name: String,
-    val nice: Int,
+    var nice: Int,
     val pid: Int,
     val uid: Int,
     val cpuUsage: Float,

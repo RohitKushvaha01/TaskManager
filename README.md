@@ -14,8 +14,8 @@ Task Manager requires shizuku to work
 
 # Screenshots
 <div>
+<img src="https://github.com/user-attachments/assets/426834f4-d7c1-4207-b324-125b8dc1dc26" width="32%" />
   <img src="https://github.com/user-attachments/assets/f5f587dc-4ca4-46d1-8930-7da91a8bca4e" width="32%" />
-  <img src="https://github.com/user-attachments/assets/426834f4-d7c1-4207-b324-125b8dc1dc26" width="32%" />
     <img src="https://github.com/user-attachments/assets/ae1c360c-bf9b-40dc-8275-18522275dfe7" width="32%" />
 </div>
 

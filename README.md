@@ -13,8 +13,11 @@ Task Manager requires shizuku to work
 - [x] Change Process priority (Needs shizuku to be started by root)
 
 # Screenshots
-![photo_2025-03-16_09-05-49](https://github.com/user-attachments/assets/d1634569-bf59-4411-83f7-abba2c93b2e8)
-![photo_2025-03-16_09-05-54](https://github.com/user-attachments/assets/f70064e8-7d65-49e8-b86c-1585779f1460)
+<div>
+  <img src="https://github.com/user-attachments/assets/d1634569-bf59-4411-83f7-abba2c93b2e8" width="32%" />
+  <img src="https://github.com/user-attachments/assets/f70064e8-7d65-49e8-b86c-1585779f1460" width="32%" />
+</div>
+
 
 
 ## Find this app useful? :heart:

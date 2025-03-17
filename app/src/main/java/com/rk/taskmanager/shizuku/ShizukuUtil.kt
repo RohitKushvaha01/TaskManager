@@ -5,6 +5,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
 import android.util.Log
+import androidx.annotation.Keep
 import com.rk.taskmanager.TaskManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,7 @@ import rikka.shizuku.Shizuku
 import rikka.shizuku.Shizuku.UserServiceArgs
 import java.lang.ref.WeakReference
 
+@Keep
 object ShizukuUtil {
     var serviceBinder = WeakReference<TaskManagerService?>(null)
 

@@ -19,3 +19,26 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep all classes, methods, and fields that contain "shizuku" or "rikka"
+-keep class *.*shizuku** { *; }
+-keep class *.*rikka** { *; }
+
+# Keep any packages that contain "shizuku" or "rikka"
+-keep class *shizuku.** { *; }
+-keep class *rikka.** { *; }
+
+# Keep all methods that reference "shizuku" or "rikka"
+-keepclassmembers class * {
+    * shizuku*;
+    * rikka*;
+}
+
+# Keep annotations with "shizuku" or "rikka"
+-keepattributes *Annotation*
+
+# Keep native methods if any exist
+-keepclasseswithmembernames class * {
+    native * shizuku* (...);
+    native * rikka* (...);
+}

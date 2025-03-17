@@ -2,7 +2,9 @@ package com.rk.taskmanager.shizuku
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.annotation.Keep
 
+@Keep
 data class Proc(
     val name: String,
     var nice: Int,

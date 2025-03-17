@@ -5,16 +5,19 @@ import android.os.IBinder
 import android.os.IInterface
 import android.os.Parcel
 import android.system.Os
+import androidx.annotation.Keep
 import java.io.File
 
+@Keep
 interface IInterfaceCreator<T : IInterface> {
-    fun asInterface(binder: IBinder): T
+    @Keep fun asInterface(binder: IBinder): T
 }
 
+@Keep
 interface TaskManagerService : IInterface {
-    fun listPs(): List<Proc>
-    fun getCpuUsage(): Byte
-    fun killPid(pid: Int, signal: Int): Boolean
+    @Keep fun listPs(): List<Proc>
+    @Keep fun getCpuUsage(): Byte
+    @Keep fun killPid(pid: Int, signal: Int): Boolean
 
     companion object {
         const val DESCRIPTOR = "com.rk.taskmanager.TaskManagerService"
@@ -23,7 +26,7 @@ interface TaskManagerService : IInterface {
         const val TRANSACTION_killPid = IBinder.FIRST_CALL_TRANSACTION + 2
 
         val CREATOR = object : IInterfaceCreator<TaskManagerService> {
-            override fun asInterface(binder: IBinder): TaskManagerService {
+            override @Keep fun asInterface(binder: IBinder): TaskManagerService {
                 return ServiceStub(binder)
             }
         }
@@ -32,8 +35,8 @@ interface TaskManagerService : IInterface {
 
 
 // Client-side implementation
-private class ServiceStub(private val binder: IBinder) : TaskManagerService {
-    override fun listPs(): List<Proc> {
+private @Keep class ServiceStub(private val binder: IBinder) : TaskManagerService {
+    override @Keep fun listPs(): List<Proc> {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
 
@@ -51,7 +54,7 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
     }
 
 
-    override fun getCpuUsage(): Byte {
+    override @Keep fun getCpuUsage(): Byte {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
         return try {
@@ -66,7 +69,8 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
     }
 
 
-    override fun killPid(pid: Int,signal: Int): Boolean {
+    @Keep
+    override fun killPid(pid: Int, signal: Int): Boolean {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
         return try {
@@ -85,15 +89,15 @@ private class ServiceStub(private val binder: IBinder) : TaskManagerService {
     }
 
 
-    override fun asBinder(): IBinder {
+    override @Keep fun asBinder(): IBinder {
         return binder
     }
 }
 
 
 // Server-side implementation
-class TaskManagerServiceImpl : Binder() {
-    override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
+@Keep class TaskManagerServiceImpl : Binder() {
+    override @Keep fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
         when (code) {
             TaskManagerService.TRANSACTION_killPid -> {
                 data.enforceInterface(TaskManagerService.DESCRIPTOR)
@@ -117,14 +121,14 @@ class TaskManagerServiceImpl : Binder() {
             TaskManagerService.TRANSACTION_getCpuUsage -> {
                 data.enforceInterface(TaskManagerService.DESCRIPTOR)
 
-                fun calculateCpuUsage(): Int {
-                    data class CpuStat(val user: Long, val nice: Long, val system: Long, val idle: Long,
+                @Keep fun calculateCpuUsage(): Int {
+                    data @Keep class CpuStat(val user: Long, val nice: Long, val system: Long, val idle: Long,
                                        val iowait: Long, val irq: Long, val softirq: Long, val steal: Long) {
-                        fun total() = user + nice + system + idle + iowait + irq + softirq + steal
-                        fun active() = total() - idle
+                        @Keep fun total() = user + nice + system + idle + iowait + irq + softirq + steal
+                        @Keep fun active() = total() - idle
                     }
 
-                    fun readCpuStat(): CpuStat? {
+                    @Keep fun readCpuStat(): CpuStat? {
                         val line = File("/proc/stat").useLines { it.firstOrNull { line -> line.startsWith("cpu ") } }
                         return line?.split("\\s+".toRegex())?.drop(1)?.mapNotNull { it.toLongOrNull() }?.takeIf { it.size >= 8 }?.let {
                             CpuStat(it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7])
@@ -219,7 +223,7 @@ class TaskManagerServiceImpl : Binder() {
                     val clockTicksPerSecond = 100  // Usually 100 on Linux
                     val elapsedTime = uptimeSeconds - (startTime / clockTicksPerSecond)
 
-                    fun getPageSizeKb(): Int {
+                    @Keep fun getPageSizeKb(): Int {
                         val statusFile = "/proc/self/status"
                         val pageSizeLine = "VmPageSize:"
 

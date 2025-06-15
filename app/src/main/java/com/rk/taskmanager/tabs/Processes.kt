@@ -1,5 +1,6 @@
 package com.rk.taskmanager.tabs
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +22,9 @@ import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
+import com.rk.taskmanager.TaskManager
+import com.rk.taskmanager.screens.getApkNameFromPackage
+import com.rk.taskmanager.screens.isAppInstalled
 import com.rk.taskmanager.shizuku.Proc
 import com.rk.taskmanager.shizuku.ShizukuUtil
 
@@ -67,7 +71,7 @@ fun Processes(
             }
 
             ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> {
-                Text("Shizuku Server not running")
+                Text("Shizuku not running")
             }
 
             ShizukuUtil.Error.PERMISSION_DENIED -> {
@@ -86,11 +90,17 @@ const val textLimit = 40
 @Composable
 fun ProcessItem(proc: Proc,navController: NavController) {
     PreferenceGroup {
+        var name by remember { mutableStateOf("Loading") }
+
+        LaunchedEffect(Unit) {
+            name = getApkNameFromPackage(TaskManager.getContext(), proc.cmdLine) ?: proc.name
+        }
+
         SettingsToggle(
-            label = if (proc.name.length > textLimit) {
-                proc.name.substring(0, textLimit) + "..."
+            label = if (name.length > textLimit) {
+                name.substring(0, textLimit) + "..."
             } else {
-                proc.name
+                name
             },
             description = if (proc.cmdLine.length > textLimit) {
                 (proc.cmdLine.substring(0, textLimit) + "...").removePrefix("/system/bin/")

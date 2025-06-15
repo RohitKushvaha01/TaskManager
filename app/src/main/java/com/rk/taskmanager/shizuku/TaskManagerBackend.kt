@@ -75,14 +75,15 @@ import java.io.File
                     val pid = dir.name.toInt()
 
                     // Read cmdline and strip null bytes
-                    val cmdlineFile = if (File(dir, "cmdline").exists()){
+                    val cmdlineFile = if (File(dir, "cmdline").exists()) {
                         File(dir, "cmdline").readBytes()
-                            .takeWhile { it != 0.toByte() }
-                            .toByteArray()
                             .toString(Charsets.UTF_8)
-                    }else{
+                            .split('\u0000')
+                            .firstOrNull() ?: ""
+                    } else {
                         ""
                     }
+
 
                     val name = if (File(dir, "comm").exists()){
                         File(dir, "comm").readBytes()

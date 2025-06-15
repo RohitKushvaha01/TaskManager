@@ -1,5 +1,7 @@
 package com.rk.taskmanager.screens
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -76,6 +78,28 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import java.lang.reflect.Method
+import kotlin.math.round
+import kotlin.math.roundToInt
+
+
+fun isAppInstalled(context: Context, packageName: String): Boolean {
+    return try {
+        context.packageManager.getPackageInfo(packageName, 0)
+        true
+    } catch (e: PackageManager.NameNotFoundException) {
+        false
+    }
+}
+
+fun getApkNameFromPackage(context: Context, packageName: String): String? {
+    return try {
+        context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(packageName,
+            PackageManager.GET_META_DATA)).toString()
+    } catch (e: PackageManager.NameNotFoundException) {
+        null
+    }
+}
+
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
@@ -93,6 +117,8 @@ fun ProcessInfo(
     var kill_result = remember { mutableStateOf<Boolean?>(null) }
     var killing = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    var isApk = remember { mutableStateOf<Boolean>(false) }
+    var isApkForceStopped = remember { mutableStateOf<Boolean?>(false) }
 
     var showNiceNessDialog by remember { mutableStateOf(false) }
 
@@ -104,7 +130,7 @@ fun ProcessInfo(
         if (proc.value != null) {
             username.value = getUsernameFromUid(proc.value!!.uid) ?: proc.value!!.uid.toString()
         }
-
+        isApk.value = isAppInstalled(TaskManager.getContext(), proc.value!!.cmdLine)
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
@@ -139,12 +165,18 @@ fun ProcessInfo(
                                 interactionSource = interactionSource,
                                 onClick = {
                                     if ((kill_result.value != true) && !killing.value){
-                                        val pid = proc.value!!.pid
-                                        val signal = 9
                                         GlobalScope.launch(Dispatchers.IO) {
                                             killing.value = true
+
                                             runCatching {
-                                                val cmd: Array<String> = arrayOf("kill", "-$signal", pid.toString())
+                                                val cmd = if (isApk.value == true && ShizukuUtil.isShell()){
+                                                    arrayOf("am", "force-stop", proc.value!!.cmdLine)
+                                                }else{
+                                                    val pid = proc.value!!.pid
+                                                    val signal = 9
+                                                    arrayOf("kill", "-$signal", pid.toString())
+                                                }
+
                                                 val result = SP.newProcess(cmd,emptyArray<String>(),"/")
                                                 kill_result.value = result == 0
                                                 if (kill_result.value == true){
@@ -153,6 +185,7 @@ fun ProcessInfo(
                                             }.onFailure {
                                                 it.printStackTrace()
                                             }
+
                                             killing.value = false
                                         }
                                     }
@@ -165,18 +198,18 @@ fun ProcessInfo(
                             title = {
                                 Text(
                                     fontWeight = FontWeight.Bold,
-                                    text = if (killing.value){"Killing..."}else{
+                                    text = if (killing.value){if (isApk.value == true){"Stopping..."}else{"Killing..."}}else{
                                         kill_result.value?.let {
                                             if (it) {
-                                                "Killed"
+                                                if (isApk.value == true){"Killed"}else{"Stopped"}
                                             } else {
-                                                if (ShizukuUtil.isShell()){
+                                                if (ShizukuUtil.isShell() && isApk.value != true){
                                                     "Kill failed (Permission denied)"
                                                 }else{
                                                     "Kill failed (try again?)"
                                                 }
                                             }
-                                        } ?: "Kill"
+                                        } ?: if (isApk.value == true){"Force Stop"}else{"Kill"}
                                     },
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -264,10 +297,17 @@ fun ProcessInfo(
 
 
                     PreferenceGroup {
-                        TextCard(text = "Name", description = proc.value!!.name.trimEnd())
+                        var name by remember { mutableStateOf("Loading") }
+                        var cmdLabel by remember { mutableStateOf("Command") }
+
+                        LaunchedEffect(Unit) {
+                            name = getApkNameFromPackage(TaskManager.getContext(), proc.value!!.cmdLine).also { cmdLabel = "PackageName" } ?: proc.value!!.name
+                        }
+
+                        TextCard(text = "Name", description = name)
                         TextCard(text = "PID", description = proc.value!!.pid.toString())
                         TextCard(
-                            text = "Command",
+                            text = cmdLabel,
                             description = if (proc.value!!.cmdLine.isEmpty()) {
                                 "No Command"
                             } else {
@@ -281,7 +321,7 @@ fun ProcessInfo(
                                 description = proc.value!!.parentPid.toString()
                             )
                         }
-                        TextCard(text = "CPU Usage", description = proc.value!!.cpuUsage.toString())
+                        TextCard(text = "CPU Usage", description = proc.value!!.cpuUsage.roundToInt().toString() + "%")
                         TextCard(
                             text = "Foreground",
                             description = proc.value!!.isForeground.toString()
@@ -291,7 +331,7 @@ fun ProcessInfo(
                             description = "${proc.value!!.memoryUsageKb}KB"
                         )
                         TextCard(
-                            text = "Nice",
+                            text = "Niceness",
                             description = "${proc.value!!.nice}"
                         )
 

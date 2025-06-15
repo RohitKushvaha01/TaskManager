@@ -47,7 +47,10 @@ class ProcessViewModel : ViewModel() {
                     return@withService
                 }
 
-                val newProcesses = service!!.listPs()
+                val newProcesses = service!!.listPs().sortedWith(
+                    compareByDescending<Proc> { it.cpuUsage }.thenByDescending { it.memoryUsageKb }
+                )
+
                 Log.d("ViewModel","Got process list...")
 
                 // Update the list only if processes changed

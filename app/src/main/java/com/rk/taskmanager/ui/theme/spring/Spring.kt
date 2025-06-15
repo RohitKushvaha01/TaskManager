@@ -1,9 +1,11 @@
 package com.rk.taskmanager.ui.theme.spring
 
+import androidx.annotation.Keep
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import com.rk.taskmanager.ui.theme.Theme
 
+@Keep
 object Spring : Theme() {
 
     override val lightScheme = lightColorScheme(

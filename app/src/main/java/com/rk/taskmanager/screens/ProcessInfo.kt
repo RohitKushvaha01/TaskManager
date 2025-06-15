@@ -298,16 +298,16 @@ fun ProcessInfo(
 
                     PreferenceGroup {
                         var name by remember { mutableStateOf("Loading") }
-                        var cmdLabel by remember { mutableStateOf("Command") }
+
 
                         LaunchedEffect(Unit) {
-                            name = getApkNameFromPackage(TaskManager.getContext(), proc.value!!.cmdLine).also { cmdLabel = "PackageName" } ?: proc.value!!.name
+                            name = getApkNameFromPackage(TaskManager.getContext(), proc.value!!.cmdLine) ?: proc.value!!.name
                         }
 
-                        TextCard(text = "Name", description = name)
+                        TextCard(text = "Name", description = name.trim())
                         TextCard(text = "PID", description = proc.value!!.pid.toString())
                         TextCard(
-                            text = cmdLabel,
+                            text = if(isApk.value == true){"Package"}else{"Command"},
                             description = if (proc.value!!.cmdLine.isEmpty()) {
                                 "No Command"
                             } else {
@@ -321,7 +321,7 @@ fun ProcessInfo(
                                 description = proc.value!!.parentPid.toString()
                             )
                         }
-                        TextCard(text = "CPU Usage", description = proc.value!!.cpuUsage.roundToInt().toString() + "%")
+                        TextCard(text = "CPU Usage", description = proc.value!!.cpuUsage.roundToInt().toString() + "% (estimated)")
                         TextCard(
                             text = "Foreground",
                             description = proc.value!!.isForeground.toString()

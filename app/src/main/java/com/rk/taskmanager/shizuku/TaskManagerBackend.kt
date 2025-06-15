@@ -3,6 +3,7 @@ package com.rk.taskmanager.shizuku
 import android.os.Binder
 import android.os.Parcel
 import android.system.Os
+import android.system.OsConstants
 import androidx.annotation.Keep
 import java.io.File
 
@@ -130,9 +131,11 @@ import java.io.File
                     // Calculate CPU usage percentage
                     val totalTime = utime + stime
                     val seconds = uptimeSeconds - (startTime / 100f)
-                    val cpuUsage = if (seconds > 0) ((totalTime.toFloat() / 100f) / seconds) * 100 else 0f
+                    val numCores = Runtime.getRuntime().availableProcessors()
+                    val cpuUsageRaw = if (seconds > 0) ((totalTime.toFloat() / 100f) / seconds) * 100 else 0f
+                    val cpuUsage = (cpuUsageRaw / numCores).coerceIn(0f, 100f)
 
-                    val clockTicksPerSecond = 100  // Usually 100 on Linux
+                    val clockTicksPerSecond = Os.sysconf(OsConstants._SC_CLK_TCK)
                     val elapsedTime = uptimeSeconds - (startTime / clockTicksPerSecond)
 
                     @Keep fun getPageSizeKb(): Int {

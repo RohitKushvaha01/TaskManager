@@ -20,6 +20,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
+import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager

@@ -99,8 +99,9 @@ object ShizukuUtil {
 
                     runCatching {
                         Shizuku.bindUserService(
-                            UserServiceArgs(ComponentName(TaskManager.Companion.getContext().packageName, TaskManagerServiceImpl::class.java.name))
-                                .daemon(false)
+                            UserServiceArgs(ComponentName(TaskManager.Companion.getContext().packageName,
+                                TaskManagerBackend::class.java.name))
+                                .daemon(true)
                                 .debuggable(true)
                                 .processNameSuffix("task_manager")
                                 .version(2),

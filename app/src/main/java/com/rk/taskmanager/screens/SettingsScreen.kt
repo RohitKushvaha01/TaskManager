@@ -58,6 +58,10 @@ fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
                 })
             }
         }
+
+
+
+
     }
 }
 

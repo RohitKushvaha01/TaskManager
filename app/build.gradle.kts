@@ -130,5 +130,6 @@ dependencies {
     implementation(libs.vico.compose.m3)
 
     implementation(project(":components"))
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.36.0")
 
 }

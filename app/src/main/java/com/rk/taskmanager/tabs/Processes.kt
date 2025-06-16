@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -18,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
+import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceTemplate
@@ -30,6 +33,7 @@ import com.rk.taskmanager.shizuku.Proc
 import com.rk.taskmanager.shizuku.ShizukuUtil
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Processes(
     modifier: Modifier = Modifier,
@@ -37,9 +41,6 @@ fun Processes(
     navController: NavController
 ) {
     val state by viewModel.state.collectAsState()
-    val processes = viewModel.processes
-    val isLoading = viewModel.isLoading.value
-    val listState = rememberLazyListState()
 
 
     LaunchedEffect(Unit) {
@@ -52,22 +53,26 @@ fun Processes(
     ) {
         when (state) {
             ShizukuUtil.Error.NO_ERROR -> {
-                if (isLoading) {
+                if (viewModel.isLoading.value && viewModel.processes.isEmpty()) {
                     CircularProgressIndicator()
                 } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        state = listState
-                    ) {
-                        items(processes.size, key = { processes[it].pid }) { index ->
-                            ProcessItem(processes[index],navController = navController)
-                        }
+                    val listState = rememberLazyListState()
+                    PullToRefreshBox(isRefreshing = viewModel.isLoading.value, onRefresh = {
+                        viewModel.refreshProcesses()
+                    }) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            state = listState
+                        ) {
+                            items(viewModel.processes.size, key = { viewModel.processes[it].pid }) { index ->
+                                ProcessItem(viewModel.processes[index],navController = navController)
+                            }
 
-                        item(key = null) {
-                            Spacer(modifier = Modifier.padding(bottom = 32.dp))
+                            item(key = null) {
+                                Spacer(modifier = Modifier.padding(bottom = 32.dp))
+                            }
                         }
                     }
-
                 }
             }
 

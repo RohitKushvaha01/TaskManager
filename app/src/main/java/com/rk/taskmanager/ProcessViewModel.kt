@@ -24,7 +24,6 @@ class ProcessViewModel : ViewModel() {
         private set
 
     var isLoading = mutableStateOf(true)
-        private set
 
 
     private var loadingMutex = Mutex()

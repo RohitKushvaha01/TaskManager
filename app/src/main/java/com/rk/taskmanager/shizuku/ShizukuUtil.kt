@@ -18,7 +18,7 @@ import java.lang.ref.WeakReference
 
 @Keep
 object ShizukuUtil {
-    var serviceBinder = WeakReference<TaskManagerService?>(null)
+    var serviceBinder: TaskManagerService? = null
 
 
     const val SHIZUKU_PERMISSION_REQUEST_CODE = 872837
@@ -79,13 +79,13 @@ object ShizukuUtil {
         val context = this
         if (isShizukuRunning()){
             runCatching {
-                while (isWaiting && serviceBinder.get() == null){
+                while (isWaiting && serviceBinder == null){
                     delay(300)
-                    println("waitling...")
+                    println("waiting...")
                 }
 
-                if (serviceBinder.get() != null){
-                    ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
+                if (serviceBinder != null){
+                    ServiceCallback.invoke(Error.NO_ERROR,serviceBinder!!)
                     return@withContext
                 }
 
@@ -107,10 +107,10 @@ object ShizukuUtil {
                                 .version(2),
                             object : ServiceConnection {
                                 override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                                    serviceBinder = WeakReference(TaskManagerService.CREATOR.asInterface(service!!))
+                                    serviceBinder = TaskManagerService.CREATOR.asInterface(service!!)
                                     isWaiting = false
                                     context.launch{
-                                        ServiceCallback.invoke(Error.NO_ERROR,serviceBinder.get()!!)
+                                        ServiceCallback.invoke(Error.NO_ERROR,serviceBinder!!)
                                     }
                                 }
 

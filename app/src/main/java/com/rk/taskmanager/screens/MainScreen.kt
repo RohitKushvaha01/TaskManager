@@ -50,7 +50,6 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
         })
     },bottomBar = {
         NavigationBar {
-
             NavigationBarItem(selected = selectedscreen.intValue == 0, onClick = {
                 selectedscreen.intValue = 0
             }, icon = {

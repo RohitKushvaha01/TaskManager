@@ -326,10 +326,29 @@ fun ProcessInfo(
                             text = "Foreground",
                             description = proc.value!!.isForeground.toString()
                         )
+
+                        fun formatSize(kb: Long): String {
+                            return if (kb >= 1000) {
+                                val mb = kb / 1024f
+                                String.format(java.util.Locale.US,"%.2f MB", mb)
+                            } else {
+                                "$kb KB"
+                            }
+                        }
+
                         TextCard(
                             text = "RAM Usage",
-                            description = "${proc.value!!.memoryUsageKb}KB"
+                            description = formatSize(proc.value!!.memoryUsageKb)
                         )
+
+                        if (proc.value!!.residentSetSizeKb != proc.value!!.memoryUsageKb) {
+                            TextCard(
+                                text = "Actual Ram Usage (RSS)",
+                                description = formatSize(proc.value!!.residentSetSizeKb)
+                            )
+                        }
+
+
                         TextCard(
                             text = "Niceness",
                             description = "${proc.value!!.nice}"
@@ -358,10 +377,8 @@ fun ProcessInfo(
                             text = "Elapsed Time",
                             description = proc.value!!.elapsedTime.toString()
                         )
-                        TextCard(
-                            text = "Actual Ram Usage (RSS)",
-                            description = "${proc.value!!.residentSetSizeKb}KB"
-                        )
+
+
                         TextCard(
                             text = "Virtual Memory",
                             description = "${proc.value!!.virtualMemoryKb}KB"

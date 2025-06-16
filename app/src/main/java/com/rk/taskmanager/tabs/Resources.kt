@@ -5,6 +5,8 @@ import android.app.ActivityManager.MemoryInfo
 import android.content.Context.ACTIVITY_SERVICE
 import android.graphics.PointF
 import android.graphics.Typeface
+import android.net.LocalSocket
+import android.net.LocalSocketAddress
 import android.os.Debug
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -46,6 +48,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.text.DecimalFormat
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -103,14 +108,22 @@ fun Resources(modifier: Modifier = Modifier) {
 
                 val cpuUsage = it!!.getCpuUsage()
                 val smoothingFactor = 0.1f
-                val smoothedCpuUsage = (cpuUsage * smoothingFactor) + (lastCpuUsage * (1 - smoothingFactor))
-                lastCpuUsage = smoothedCpuUsage
+
+                val valueToAdd = if (cpuYValues.any { it.toFloat() != 0f } && cpuYValues.size >= MAX_POINTS) {
+                    val smoothed = (cpuUsage * smoothingFactor) + (lastCpuUsage * (1 - smoothingFactor))
+                    lastCpuUsage = smoothed
+                    smoothed
+                } else {
+                    lastCpuUsage = cpuUsage.toFloat()
+                    cpuUsage.toFloat()
+                }
+
 
                 scope.launch(Dispatchers.Main) {
                     if (cpuYValues.size >= MAX_POINTS) {
-                        cpuYValues.removeAt(0) // Always remove exactly one element
+                        cpuYValues.removeAt(0)
                     }
-                    cpuYValues.add(smoothedCpuUsage)
+                    cpuYValues.add(valueToAdd)
                     modelProducer.runTransaction {
                         lineSeries { series(xValues, cpuYValues) }
                     }
@@ -123,7 +136,7 @@ fun Resources(modifier: Modifier = Modifier) {
 
         scope.launch{
             while (isActive){
-                delay(150)
+                delay(500)
                 val mi = MemoryInfo()
                 val activityManger = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
                 activityManger.getMemoryInfo(mi)
@@ -152,11 +165,14 @@ fun Resources(modifier: Modifier = Modifier) {
 
         while (isActive) {
             if (updating.get().not()){
+                delay(500)
                 update()
             }else{
-                delay(10)
+                delay(20)
             }
         }
+
+
 
 
     }
@@ -165,45 +181,55 @@ fun Resources(modifier: Modifier = Modifier) {
         PreferenceGroup(heading = "CPU - ${if (CpuUsage <= 0){"No Data"}else{"$CpuUsage%"}}") {
             when (state.value) {
                 ShizukuUtil.Error.NO_ERROR -> {
-                    CartesianChartHost(
-                        rememberCartesianChart(
-                            rememberLineCartesianLayer(
-                                lineProvider = LineCartesianLayer.LineProvider.series(
-                                    LineCartesianLayer.rememberLine(
-                                        fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                                        areaFill = LineCartesianLayer.AreaFill.single(
-                                            fill(
-                                                ShaderProvider.verticalGradient(
-                                                    intArrayOf(
-                                                        lineColor.copy(alpha = 0.4f).toArgb(),
-                                                        Color.Transparent.toArgb()
+                    if (CpuUsage <= 0 && cpuYValues.isEmpty()){
+                        SettingsToggle(
+                            label = "No Data",
+                            description = "Waiting for response...",
+                            showSwitch = false,
+                            default = false
+                        )
+                    }else{
+                        CartesianChartHost(
+                            rememberCartesianChart(
+                                rememberLineCartesianLayer(
+                                    lineProvider = LineCartesianLayer.LineProvider.series(
+                                        LineCartesianLayer.rememberLine(
+                                            fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                                            areaFill = LineCartesianLayer.AreaFill.single(
+                                                fill(
+                                                    ShaderProvider.verticalGradient(
+                                                        intArrayOf(
+                                                            lineColor.copy(alpha = 0.4f).toArgb(),
+                                                            Color.Transparent.toArgb()
+                                                        )
                                                     )
                                                 )
                                             )
                                         )
-                                    )
+                                    ),
+                                    rangeProvider = RangeProvider,
                                 ),
-                                rangeProvider = RangeProvider,
-                            ),
-                            startAxis = VerticalAxis.rememberStart(
-                                valueFormatter = StartAxisValueFormatter,
-                                label = TextComponent(
-                                    color = MaterialTheme.colorScheme.onSurface.toArgb(),
-                                    textSizeSp = 10f,
-                                    lineCount = 1,
-                                    typeface = Typeface.DEFAULT
+                                startAxis = VerticalAxis.rememberStart(
+                                    valueFormatter = StartAxisValueFormatter,
+                                    label = TextComponent(
+                                        color = MaterialTheme.colorScheme.onSurface.toArgb(),
+                                        textSizeSp = 10f,
+                                        lineCount = 1,
+                                        typeface = Typeface.DEFAULT
+                                    ),
+                                    guideline = rememberAxisGuidelineComponent(),
                                 ),
-                                guideline = rememberAxisGuidelineComponent(),
+                                bottomAxis = null,
+                                marker = rememberMarker(MarkerValueFormatter),
                             ),
-                            bottomAxis = null,
-                            marker = rememberMarker(MarkerValueFormatter),
-                        ),
-                        modelProducer,
-                        modifier.padding(8.dp),
-                        rememberVicoScrollState(scrollEnabled = false),
-                        animateIn = false,
-                        animationSpec = null,
-                    )
+                            modelProducer,
+                            modifier.padding(8.dp),
+                            rememberVicoScrollState(scrollEnabled = false),
+                            animateIn = false,
+                            animationSpec = null,
+                        )
+                    }
+
                 }
                 ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> {
                     SettingsToggle(

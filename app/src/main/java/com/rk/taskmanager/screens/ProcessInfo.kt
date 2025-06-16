@@ -179,9 +179,7 @@ fun ProcessInfo(
 
                                                 val result = SP.newProcess(cmd,emptyArray<String>(),"/")
                                                 kill_result.value = result == 0
-                                                if (kill_result.value == true){
-                                                    viewModel.processes.remove(proc.value)
-                                                }
+                                                viewModel.refreshProcesses()
                                             }.onFailure {
                                                 it.printStackTrace()
                                             }

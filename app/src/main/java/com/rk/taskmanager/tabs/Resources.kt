@@ -59,26 +59,27 @@ private val StartAxisValueFormatter =
 private val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default(YDecimalFormat)
 
 
+val modelProducer = CartesianChartModelProducer()
+val RamModelProducer = CartesianChartModelProducer()
+val updating = AtomicBoolean(false)
+
+// Keep X values static (0 to MAX_POINTS-1)
+val xValues = List(MAX_POINTS) { it.toDouble() }
+// Separate yValues lists
+val cpuYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
+val ramYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
+
+var lastCpuUsage by  mutableFloatStateOf(0f)
+var CpuUsage by mutableIntStateOf(0)
+var RamUsage by mutableIntStateOf(0)
+var Ram by mutableStateOf("0mb of 0mb")
+var state = mutableStateOf(ShizukuUtil.Error.NO_ERROR)
+
 @Composable
 fun Resources(modifier: Modifier = Modifier) {
     val lineColor = MaterialTheme.colorScheme.primary
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val modelProducer = remember { CartesianChartModelProducer() }
-    val RamModelProducer = remember { CartesianChartModelProducer() }
-    val updating = remember { AtomicBoolean(false) }
-
-    // Keep X values static (0 to MAX_POINTS-1)
-    val xValues = remember { List(MAX_POINTS) { it.toDouble() } }
-    // Separate yValues lists
-    val cpuYValues = remember { mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } } }
-    val ramYValues = remember { mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } } }
-
-    var lastCpuUsage by remember { mutableFloatStateOf(0f) }
-    var CpuUsage by remember { mutableIntStateOf(0) }
-    var RamUsage by remember { mutableIntStateOf(0) }
-    var Ram by remember { mutableStateOf("0mb of 0mb") }
-    var state = remember { mutableStateOf(ShizukuUtil.Error.NO_ERROR) }
 
 
     LaunchedEffect(Unit) {
@@ -122,7 +123,7 @@ fun Resources(modifier: Modifier = Modifier) {
 
         scope.launch{
             while (isActive){
-                delay(100)
+                delay(150)
                 val mi = MemoryInfo()
                 val activityManger = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
                 activityManger.getMemoryInfo(mi)

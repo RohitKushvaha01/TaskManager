@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
-
 android {
     namespace = "com.rk.taskmanager"
     compileSdk = 35
@@ -49,9 +48,9 @@ android {
 
     buildTypes {
         release{
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             isCrunchPngs = false
-            isShrinkResources = true
+            isShrinkResources = false
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
@@ -98,6 +97,13 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
+    }
+}
+
+tasks.whenTaskAdded {
+    if (name.contains("ArtProfile")) {
+        println("Disabled Task $name")
+        enabled = false
     }
 }
 

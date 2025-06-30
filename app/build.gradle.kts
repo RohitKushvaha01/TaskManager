@@ -133,8 +133,8 @@ dependencies {
     implementation(libs.androidx.foundation.v178)
     implementation(libs.provider)
     implementation(libs.androidx.material.icons.extended)
-    //implementation(libs.vico.compose)
-    //implementation(libs.vico.compose.m3)
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
 
     implementation(project(":components"))
     implementation("com.google.accompanist:accompanist-swiperefresh:0.36.0")

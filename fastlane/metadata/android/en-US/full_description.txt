@@ -1,1 +1,10 @@
-<p>Task Manager for android (needs shizuku)</p>
+<b>TaskManager</b> is a tool for Android inspired by the Gnome system monitor. It requires <a href='https://shizuku.rikka.app/'>Shizuku</a> to work.
+
+<b>Features:</b>
+
+* Monitor cpu usage
+* Monitor Ram usage
+* Monitor running linux processes
+* List process info (eg. ram usage,priority etc.)
+* Kill running process (Needs shizuku to be started by root)
+* Change Process priority (Needs shizuku to be started by root)

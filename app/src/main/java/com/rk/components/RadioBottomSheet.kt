@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.rk.components.BottomSheetContent
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 
 data class RadioOption<T>(
@@ -38,14 +39,19 @@ fun <T> RadioBottomSheet(
             BottomSheetContent(
                 title = { Text(text = title) },
                 buttons = {}
-            ){
+            ) {
                 LazyColumn {
                     items(options) { item ->
                         PreferenceTemplate(
                             title = { Text(text = item.label) },
-                            description = {Text(text = item.label)},
-                            modifier = Modifier.clickable { onOptionSelected(item)},
-                            startWidget = { RadioButton(selected = item == selectedOption, onClick = null) }
+                            description = { Text(text = item.label) },
+                            modifier = Modifier.clickable { onOptionSelected(item) },
+                            startWidget = {
+                                RadioButton(
+                                    selected = item == selectedOption,
+                                    onClick = null
+                                )
+                            }
                         )
 
                     }

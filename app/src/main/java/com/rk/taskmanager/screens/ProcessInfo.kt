@@ -25,8 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -51,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,6 +61,7 @@ import com.rk.components.TextCard
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.ProcessViewModel
+import com.rk.taskmanager.R
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.shizuku.Proc
 import com.rk.taskmanager.shizuku.SP
@@ -237,7 +237,7 @@ fun ProcessInfo(
                                                 modifier = Modifier
                                                     .padding(start = 16.dp)
                                                     .alpha(if (enabled) 1f else 0.3f),
-                                                imageVector = Icons.Rounded.ErrorOutline,
+                                                imageVector = Icons.Rounded.Close,
                                                 contentDescription = null
                                             )
                                         }
@@ -286,7 +286,7 @@ fun ProcessInfo(
                                 Icon(
                                     modifier = Modifier
                                         .padding(start = 16.dp),
-                                    imageVector = Icons.Rounded.Speed,
+                                    painter = painterResource(id = R.drawable.speed_24px),
                                     contentDescription = null
                                 )
                             }

@@ -69,8 +69,8 @@ android {
         targetSdk = 35
 
         //versioning
-        versionCode = 7
-        versionName = "1.0.6"
+        versionCode = 8
+        versionName = "1.0.7"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -91,12 +91,7 @@ android {
         jvmTarget = "17"
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.15"
-    }
-    packaging {
-        jniLibs {
-            useLegacyPackaging = true
-        }
+        kotlinCompilerExtensionVersion = "2.1.10"
     }
 }
 
@@ -108,16 +103,6 @@ tasks.whenTaskAdded {
 }
 
 dependencies {
-    implementation(libs.appcompat)
-    implementation(libs.material)
-    //implementation(libs.constraintlayout)
-    //implementation(libs.navigation.fragment)
-    implementation(libs.navigation.ui)
-    //implementation(libs.asynclayoutinflater)
-    //implementation(libs.navigation.fragment.ktx)
-    implementation(libs.navigation.ui.ktx)
-    implementation(libs.activity)
-    implementation(libs.lifecycle.livedata.ktx)
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.activity.compose)
@@ -126,17 +111,9 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.material3)
     implementation(libs.navigation.compose)
-    //implementation(libs.terminal.view)
-    //implementation(libs.terminal.emulator)
-    implementation(libs.utilcode)
-    implementation(libs.api)
-    implementation(libs.androidx.foundation.v178)
-    implementation(libs.provider)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.vico.compose)
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
     implementation(libs.vico.compose.m3)
-
     implementation(project(":components"))
-    implementation("com.google.accompanist:accompanist-swiperefresh:0.36.0")
-
+    implementation(libs.accompanist.swiperefresh)
 }

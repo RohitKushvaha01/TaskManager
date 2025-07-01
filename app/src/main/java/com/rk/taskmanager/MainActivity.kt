@@ -15,7 +15,7 @@ import com.rk.taskmanager.animations.NavigationAnimationTransitions
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SettingsScreen
-import com.rk.taskmanager.shizuku.ShizukuUtil
+
 
 
 class MainActivity : ComponentActivity() {

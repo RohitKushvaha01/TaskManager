@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,12 +21,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.tabs.Processes
 import com.rk.taskmanager.tabs.Resources
+import com.rk.taskmanager.R
 
 private var selectedscreen = mutableIntStateOf(0)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,7 +55,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                 selectedscreen.intValue = 0
             }, icon = {
                 Icon(
-                    imageVector = Icons.Filled.Speed,
+                    painter = painterResource(id = R.drawable.speed_24px),
                     contentDescription = "Resources"
                 )
             }, label = {Text("Resources")})

@@ -62,12 +62,11 @@ vico = "2.0.3"
 
 [libraries]
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
-androidx-foundation-v178 = { module = "androidx.compose.foundation:foundation", version.ref = "foundationVersion" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 anrwatchdog = { module = "com.github.anrwatchdog:anrwatchdog", version.ref = "anrwatchdog" }
-api = { module = "dev.rikka.shizuku:api", version.ref = "api" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "api" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 browser = { module = "androidx.browser:browser", version.ref = "browser" }
 bsh = { module = "org.beanshell:bsh", version.ref = "bsh" }
@@ -100,7 +99,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 org-eclipse-jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "orgEclipseJgit" }
 org-jetbrains-kotlin-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 photoview = { module = "com.github.chrisbanes:PhotoView", version.ref = "photoview" }
-provider = { module = "dev.rikka.shizuku:provider", version.ref = "api" }
+shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "api" }
 quickjs-android = { module = "app.cash.quickjs:quickjs-android", version.ref = "quickjsAndroid" }
 sshj = { module = "com.hierynomus:sshj", version.ref = "sshj" }
 swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }

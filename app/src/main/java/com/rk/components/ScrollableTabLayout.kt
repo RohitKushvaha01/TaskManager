@@ -1,4 +1,4 @@
-package com.rk.terminal.ui.components
+package com.rk.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

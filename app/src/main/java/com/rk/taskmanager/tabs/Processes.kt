@@ -128,7 +128,7 @@ fun ProcessItem(modifier: Modifier,proc: Proc,navController: NavController) {
                 if (proc.cmdLine.startsWith("/vendor") || proc.cmdLine.isEmpty()){
                     id.value = com.rk.taskmanager.R.drawable.cpu_24px
                 }else if (proc.cmdLine.startsWith("/data/local/tmp") || proc.uid == 2000){
-                    id.value = com.rk.taskmanager.R.drawable.cpu_24px
+                    id.value = com.rk.taskmanager.R.drawable.usb_24px
                 }
             }
 

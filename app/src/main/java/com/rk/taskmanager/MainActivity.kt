@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,16 +16,24 @@ import com.rk.taskmanager.animations.NavigationAnimationTransitions
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SettingsScreen
-
+import kotlinx.coroutines.CoroutineScope
 
 
 class MainActivity : ComponentActivity() {
 
     val viewModel: ProcessViewModel by viewModels()
+
+    companion object{
+        var scope:CoroutineScope? = null
+            private set
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        scope = this.lifecycleScope
 
         setContent {
             TaskManagerTheme {

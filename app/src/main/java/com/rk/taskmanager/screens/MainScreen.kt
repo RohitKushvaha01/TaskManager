@@ -76,7 +76,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
             }
             when(selectedscreen.intValue){
                 0 -> {
-                    Resources()
+                    Resources(modifier = Modifier.padding(horizontal = 4.dp))
                 }
                 1 -> {
                     Processes(viewModel = viewModel, navController = navController)

@@ -2,6 +2,10 @@ package com.rk.taskmanager.screens
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -99,6 +103,37 @@ fun getApkNameFromPackage(context: Context, packageName: String): String? {
         null
     }
 }
+
+fun getAppIcon(context: Context, packageName: String): Drawable? {
+    return try {
+        val pm = context.packageManager
+        val appInfo = pm.getApplicationInfo(packageName, 0)
+        pm.getApplicationIcon(appInfo)
+    } catch (e: PackageManager.NameNotFoundException) {
+        null // App not found
+    }
+}
+
+fun drawableTobitMap(drawable: Drawable?): Bitmap?{
+    return drawable?.let {
+        if (it is BitmapDrawable) {
+            it.bitmap
+        } else {
+            val bitmap = Bitmap.createBitmap(it.intrinsicWidth, it.intrinsicHeight, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            it.setBounds(0, 0, canvas.width, canvas.height)
+            it.draw(canvas)
+            bitmap
+        }
+    }
+}
+
+fun getAppIconBitmap(context: Context, packageName: String): Bitmap? {
+    val drawable = getAppIcon(context, packageName)
+    return drawableTobitMap(drawable)
+}
+
+
 
 
 @OptIn(

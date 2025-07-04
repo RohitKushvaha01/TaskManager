@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat.getSystemService
@@ -43,6 +45,7 @@ import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.rememberMarker
 import com.rk.taskmanager.shizuku.ShizukuUtil
 import com.rk.components.SettingsToggle
+import com.rk.taskmanager.MainActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -84,8 +87,7 @@ var state = mutableStateOf(ShizukuUtil.Error.NO_ERROR)
 fun Resources(modifier: Modifier = Modifier) {
     val lineColor = MaterialTheme.colorScheme.primary
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
+    val scope = MainActivity.scope!!
 
     LaunchedEffect(Unit) {
         suspend fun update() {
@@ -178,7 +180,7 @@ fun Resources(modifier: Modifier = Modifier) {
     }
 
     Column(modifier.verticalScroll(rememberScrollState())) {
-        PreferenceGroup(heading = "CPU - ${if (CpuUsage <= 0){"No Data"}else{"$CpuUsage%"}}") {
+        Column() {
             when (state.value) {
                 ShizukuUtil.Error.NO_ERROR -> {
                     if (CpuUsage <= 0 && cpuYValues.isEmpty()){
@@ -223,7 +225,7 @@ fun Resources(modifier: Modifier = Modifier) {
                                 marker = rememberMarker(MarkerValueFormatter),
                             ),
                             modelProducer,
-                            modifier.padding(8.dp),
+                            modifier,
                             rememberVicoScrollState(scrollEnabled = false),
                             animateIn = false,
                             animationSpec = null,
@@ -258,9 +260,12 @@ fun Resources(modifier: Modifier = Modifier) {
             }
 
         }
+        SettingsToggle(label = "CPU - ${if (CpuUsage <= 0){"No Data"}else{"$CpuUsage%"}}",
+            showSwitch = false,
+            default = false)
+        
 
-
-        PreferenceGroup(heading = "RAM - ${if (RamUsage <= 0){"No Data"}else{"$RamUsage%"}}") {
+        Column() {
             CartesianChartHost(
                 rememberCartesianChart(
                     rememberLineCartesianLayer(
@@ -295,18 +300,16 @@ fun Resources(modifier: Modifier = Modifier) {
                     marker = rememberMarker(MarkerValueFormatter),
                 ),
                 RamModelProducer,
-                modifier.padding(8.dp),
+                modifier,
                 rememberVicoScrollState(scrollEnabled = false),
                 animateIn = false,
                 animationSpec = null
             )
         }
 
-        PreferenceGroup {
-            SettingsToggle(label = "RAM : $Ram",
-                showSwitch = false,
-                default = false)
-        }
+        SettingsToggle(label = "RAM : $Ram ($RamUsage%)",
+            showSwitch = false,
+            default = false)
 
         Spacer(modifier = Modifier.padding(vertical = 16.dp))
     }

@@ -1,6 +1,8 @@
 # TaskManager
 **Task Manager** is tool for android inpired from gnome system moniter
 
+[<img src="https://shields.rbtlog.dev/simple/com.rk.taskmanager" alt="RB shield">](https://shields.rbtlog.dev/com.rk.taskmanager)
+
 > [!IMPORTANT]
 Task Manager requires shizuku to work
 
@@ -18,10 +20,6 @@ Task Manager requires shizuku to work
   <img src="https://github.com/user-attachments/assets/efb62f80-8af8-47ab-82aa-7e39c2a10599" width="32%" />
     <img src="https://github.com/user-attachments/assets/63b0eba9-bd35-4515-919b-94bf0c08bfb2" width="32%" />
 </div>
-
-
-# Download
-[<img src="https://shields.rbtlog.dev/simple/com.rk.taskmanager" alt="RB shield">](https://shields.rbtlog.dev/com.rk.taskmanager)
 
 ## Find this app useful? :heart:
 Support it by giving a star :star: <br>

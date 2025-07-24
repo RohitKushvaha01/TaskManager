@@ -20,6 +20,9 @@ Task Manager requires shizuku to work
 </div>
 
 
+# Download
+[<img src="https://shields.rbtlog.dev/simple/com.rk.taskmanager" alt="RB shield">](https://shields.rbtlog.dev/com.rk.taskmanager)
+
 ## Find this app useful? :heart:
 Support it by giving a star :star: <br>
 Also, **__[follow](https://github.com/Rohitkushvaha01)__** me for my next creations!

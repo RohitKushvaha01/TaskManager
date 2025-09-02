@@ -69,6 +69,7 @@ import com.rk.taskmanager.screens.showLinuxProcess
 import com.rk.taskmanager.screens.showSystemApps
 import com.rk.taskmanager.shizuku.Proc
 import com.rk.taskmanager.shizuku.ShizukuUtil
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,16 +80,22 @@ fun Processes(
     navController: NavController
 ) {
     val state by viewModel.state.collectAsState()
+    val scope = rememberCoroutineScope()
 
     if (showFilter.value){
         XedDialog(onDismissRequest = {showFilter.value = false}) {
             DividerColumn {
                 SettingsToggle(label = "Show System Apps", description = null, showSwitch = true, default = showSystemApps.value, sideEffect = {
-                    showSystemApps.value = it
+                    scope.launch{
+                        showSystemApps.value = it
+                    }
+
                 })
 
                 SettingsToggle(label = "Show Linux Processes", description = null, showSwitch = true, default = showLinuxProcess.value, sideEffect = {
-                    showLinuxProcess.value = it
+                    scope.launch{
+                        showLinuxProcess.value = it
+                    }
                 })
             }
         }

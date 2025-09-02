@@ -16,9 +16,9 @@ Task Manager requires shizuku to work
 
 # Screenshots
 <div>
-<img src="https://github.com/user-attachments/assets/079b9c68-4445-45e5-90bd-27ffcdc70e34" width="32%" />
-  <img src="https://github.com/user-attachments/assets/efb62f80-8af8-47ab-82aa-7e39c2a10599" width="32%" />
-    <img src="https://github.com/user-attachments/assets/63b0eba9-bd35-4515-919b-94bf0c08bfb2" width="32%" />
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.jpg" width="32%" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/02.jpg" width="32%" />
+    <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/03.jpg" width="32%" />
 </div>
 
 ## Find this app useful? :heart:

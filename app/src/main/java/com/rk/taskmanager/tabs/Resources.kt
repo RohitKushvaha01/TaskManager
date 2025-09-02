@@ -2,6 +2,7 @@ package com.rk.taskmanager.tabs
 
 import android.app.ActivityManager
 import android.app.ActivityManager.MemoryInfo
+import android.content.Context
 import android.content.Context.ACTIVITY_SERVICE
 import android.graphics.PointF
 import android.graphics.Typeface
@@ -47,6 +48,7 @@ import com.rk.taskmanager.shizuku.ShizukuUtil
 import com.rk.components.SettingsToggle
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.screens.delayMs
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -84,101 +86,97 @@ var RamUsage by mutableIntStateOf(0)
 var Ram by mutableStateOf("0mb of 0mb")
 var state = mutableStateOf(ShizukuUtil.Error.NO_ERROR)
 
+
+suspend fun CoroutineScope.update() {
+    if (!updating.compareAndSet(false, true)) return
+    ShizukuUtil.withService {
+        state.value = this
+        if (this != ShizukuUtil.Error.NO_ERROR) {
+            launch(Dispatchers.Main) {
+                if (cpuYValues.size >= MAX_POINTS) {
+                    cpuYValues.removeAt(0)
+                }
+                cpuYValues.add(0) // Set CPU usage to 0% if service fails
+                modelProducer.runTransaction {
+                    lineSeries { series(xValues,cpuYValues) }
+                }
+            }
+            updating.set(false)
+            return@withService
+        }
+
+        val cpuUsage = it!!.getCpuUsage()
+        val smoothingFactor = 0.1f
+
+        val valueToAdd = if (cpuYValues.any { it.toFloat() != 0f } && cpuYValues.size >= MAX_POINTS) {
+            val smoothed = (cpuUsage * smoothingFactor) + (lastCpuUsage * (1 - smoothingFactor))
+            lastCpuUsage = smoothed
+            smoothed
+        } else {
+            lastCpuUsage = cpuUsage.toFloat()
+            cpuUsage.toFloat()
+        }
+
+
+        launch(Dispatchers.Main) {
+            if (cpuYValues.size >= MAX_POINTS) {
+                cpuYValues.removeAt(0)
+            }
+            cpuYValues.add(valueToAdd)
+            modelProducer.runTransaction {
+                lineSeries { series(xValues, cpuYValues) }
+            }
+            CpuUsage = cpuUsage.toInt()
+        }
+        updating.set(false)
+    }
+
+}
+
+
+suspend fun CoroutineScope.ramUpdater(context: Context){
+    while (isActive){
+        delay(delayMs.toLong())
+        val mi = MemoryInfo()
+        val activityManger = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        activityManger.getMemoryInfo(mi)
+
+        val percentAvail = mi.availMem.toDouble() / mi.totalMem.toDouble() * 100.0
+
+        val percentUsed = 100.0 - percentAvail
+
+        withContext(Dispatchers.Main) {
+            Ram = "${(mi.totalMem - mi.availMem) / (1024 * 1024)}MB of ${mi.totalMem / (1024 * 1024)}MB"
+
+            RamUsage = percentUsed.toInt()
+
+            RamModelProducer.runTransaction {
+                lineSeries {
+                    series(xValues, ramYValues.apply {
+                        if (size >= MAX_POINTS) removeAt(0)
+                        add(RamUsage)
+                    })
+                }
+            }
+        }
+
+    }
+}
+
+suspend fun CoroutineScope.cpuUpdater(){
+    while (isActive) {
+        if (updating.get().not()){
+            delay(delayMs.toLong())
+            update()
+        }else{
+            delay(20)
+        }
+    }
+}
+
 @Composable
 fun Resources(modifier: Modifier = Modifier) {
     val lineColor = MaterialTheme.colorScheme.primary
-    val context = LocalContext.current
-    val scope = MainActivity.scope!!
-
-    LaunchedEffect(Unit) {
-        suspend fun update() {
-            if (!updating.compareAndSet(false, true)) return
-            ShizukuUtil.withService {
-                state.value = this
-                if (this != ShizukuUtil.Error.NO_ERROR) {
-                    scope.launch(Dispatchers.Main) {
-                        if (cpuYValues.size >= MAX_POINTS) {
-                            cpuYValues.removeAt(0)
-                        }
-                        cpuYValues.add(0) // Set CPU usage to 0% if service fails
-                        modelProducer.runTransaction {
-                            lineSeries { series(xValues,cpuYValues) }
-                        }
-                    }
-                    updating.set(false)
-                    return@withService
-                }
-
-                val cpuUsage = it!!.getCpuUsage()
-                val smoothingFactor = 0.1f
-
-                val valueToAdd = if (cpuYValues.any { it.toFloat() != 0f } && cpuYValues.size >= MAX_POINTS) {
-                    val smoothed = (cpuUsage * smoothingFactor) + (lastCpuUsage * (1 - smoothingFactor))
-                    lastCpuUsage = smoothed
-                    smoothed
-                } else {
-                    lastCpuUsage = cpuUsage.toFloat()
-                    cpuUsage.toFloat()
-                }
-
-
-                scope.launch(Dispatchers.Main) {
-                    if (cpuYValues.size >= MAX_POINTS) {
-                        cpuYValues.removeAt(0)
-                    }
-                    cpuYValues.add(valueToAdd)
-                    modelProducer.runTransaction {
-                        lineSeries { series(xValues, cpuYValues) }
-                    }
-                    CpuUsage = cpuUsage.toInt()
-                }
-                updating.set(false)
-            }
-
-        }
-
-        scope.launch{
-            while (isActive){
-                delay(delayMs.toLong())
-                val mi = MemoryInfo()
-                val activityManger = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
-                activityManger.getMemoryInfo(mi)
-
-                val percentAvail = mi.availMem.toDouble() / mi.totalMem.toDouble() * 100.0
-
-                val percentUsed = 100.0 - percentAvail
-
-                withContext(Dispatchers.Main) {
-                    Ram = "${(mi.totalMem - mi.availMem) / (1024 * 1024)}MB of ${mi.totalMem / (1024 * 1024)}MB"
-
-                    RamUsage = percentUsed.toInt()
-
-                    RamModelProducer.runTransaction {
-                        lineSeries {
-                            series(xValues, ramYValues.apply {
-                                if (size >= MAX_POINTS) removeAt(0)
-                                add(RamUsage)
-                            })
-                        }
-                    }
-                }
-
-            }
-        }
-
-        while (isActive) {
-            if (updating.get().not()){
-                delay(delayMs.toLong())
-                update()
-            }else{
-                delay(20)
-            }
-        }
-
-
-
-
-    }
 
     Column(modifier.verticalScroll(rememberScrollState())) {
         Column() {

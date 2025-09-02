@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,13 +32,15 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 
+var delayMs by mutableFloatStateOf(Settings.updateDelay.toFloat())
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
     DelicateCoroutinesApi::class
 )
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
     PreferenceLayout(label = "Settings") {
-        PreferenceGroup(heading = "Customization") {
+        PreferenceGroup {
 
             SelectableCard(selected = dynamicTheme.value, label = "Dynamic Theme", description = null, isEnaled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S, onClick = {
                 GlobalScope.launch{
@@ -60,6 +64,9 @@ fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
         }
 
 
+        ValueSlider(label = { Text("Graph Update Rate") }, min = 20, max = 500, position = delayMs, positionLabel = if (delayMs == 20f){"Fastest"}else{"${delayMs.toInt()}ms"}){
+            delayMs = it
+        }
 
 
     }
@@ -89,4 +96,23 @@ fun SelectableCard(modifier: Modifier = Modifier, selected: Boolean, label: Stri
             RadioButton(selected = selected, onClick = onClick,modifier = Modifier.padding(start = 8.dp))
         }
     )
+}
+
+@Composable
+fun ValueSlider(modifier: Modifier = Modifier, position: Float, label:@Composable ()-> Unit,positionLabel: String, min: Int, max: Int, onValueChanged:(Float)-> Unit) {
+    PreferenceGroup {
+        PreferenceTemplate(title = label){
+            Text(positionLabel)
+        }
+        PreferenceTemplate(title = {}){
+            Slider(
+                value = position,
+                onValueChange = {
+                    onValueChanged.invoke(it)
+                },
+                steps = (max - min).toInt() - 1,
+                valueRange = min.toFloat()..max.toFloat(),
+            )
+        }
+    }
 }

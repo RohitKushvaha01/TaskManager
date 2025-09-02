@@ -46,6 +46,7 @@ import com.rk.components.rememberMarker
 import com.rk.taskmanager.shizuku.ShizukuUtil
 import com.rk.components.SettingsToggle
 import com.rk.taskmanager.MainActivity
+import com.rk.taskmanager.screens.delayMs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -138,7 +139,7 @@ fun Resources(modifier: Modifier = Modifier) {
 
         scope.launch{
             while (isActive){
-                delay(500)
+                delay(delayMs.toLong())
                 val mi = MemoryInfo()
                 val activityManger = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
                 activityManger.getMemoryInfo(mi)
@@ -167,7 +168,7 @@ fun Resources(modifier: Modifier = Modifier) {
 
         while (isActive) {
             if (updating.get().not()){
-                delay(500)
+                delay(delayMs.toLong())
                 update()
             }else{
                 delay(20)

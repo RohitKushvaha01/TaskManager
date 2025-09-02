@@ -1,6 +1,7 @@
 package com.rk.taskmanager.screens
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -103,6 +104,18 @@ fun getApkNameFromPackage(context: Context, packageName: String): String? {
         null
     }
 }
+
+fun isSystemApp(context: Context, packageName: String): Boolean {
+    return try {
+        val packageManager = context.packageManager
+        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+        (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+    } catch (e: PackageManager.NameNotFoundException) {
+        // Package not found
+        false
+    }
+}
+
 
 fun getAppIcon(context: Context, packageName: String): Drawable? {
     return try {

@@ -248,6 +248,25 @@ fun Resources(modifier: Modifier = Modifier) {
                         default = false
                     )
                 }
+
+                ShizukuUtil.Error.SHIZUKU_TIMEOUT -> {
+                    SettingsToggle(
+                        label = "No Data",
+                        description = "Shizuku not running (connection timeout)",
+                        showSwitch = false,
+                        default = false
+                    )
+                }
+
+                ShizukuUtil.Error.NOT_INSTALLED -> {
+                    SettingsToggle(
+                        label = "No Data",
+                        description = "Shizuku not installed",
+                        showSwitch = false,
+                        default = false
+                    )
+                }
+
                 else -> {
                     SettingsToggle(
                         label = "No Data",

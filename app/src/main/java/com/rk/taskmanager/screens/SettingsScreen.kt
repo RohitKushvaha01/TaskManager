@@ -99,18 +99,26 @@ fun SelectableCard(modifier: Modifier = Modifier, selected: Boolean, label: Stri
 }
 
 @Composable
-fun ValueSlider(modifier: Modifier = Modifier, position: Float, label:@Composable ()-> Unit,positionLabel: String, min: Int, max: Int, onValueChanged:(Float)-> Unit) {
+fun ValueSlider(
+    modifier: Modifier = Modifier,
+    position: Float,
+    label: @Composable () -> Unit,
+    positionLabel: String,
+    min: Int,
+    max: Int,
+    onValueChanged: (Float) -> Unit
+) {
     PreferenceGroup {
-        PreferenceTemplate(title = label){
+        PreferenceTemplate(title = label) {
             Text(positionLabel)
         }
-        PreferenceTemplate(title = {}){
+        PreferenceTemplate(title = {}) {
             Slider(
                 value = position,
                 onValueChange = {
                     onValueChanged.invoke(it)
                 },
-                steps = (max - min).toInt() - 1,
+                // Removed the steps parameter to make the slider continuous
                 valueRange = min.toFloat()..max.toFloat(),
             )
         }

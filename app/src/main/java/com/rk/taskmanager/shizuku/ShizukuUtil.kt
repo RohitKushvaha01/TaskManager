@@ -1,6 +1,7 @@
 package com.rk.taskmanager.shizuku
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
@@ -23,6 +24,7 @@ object ShizukuUtil {
 
     const val SHIZUKU_PERMISSION_REQUEST_CODE = 872837
     var callback:((Boolean)-> Unit)? = null
+    val isShizukuInstalled = isShizukuInstalled(TaskManager.getContext())
 
 
     init {
@@ -66,22 +68,46 @@ object ShizukuUtil {
     fun isShell(): Boolean{
         return Shizuku.getUid() == 2000
     }
+
+    fun isShizukuInstalled(context: Context): Boolean {
+        return try {
+            context.packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
     
     enum class Error{
         PERMISSION_DENIED,
+        NOT_INSTALLED,
         SHIZUKU_NOT_RUNNNING,
         UNKNOWN_ERROR,
         NO_ERROR,
+        SHIZUKU_TIMEOUT
     }
 
     private var isWaiting = false
+
     suspend fun withService(ServiceCallback: suspend Error.(TaskManagerService?)-> Unit) = withContext(Dispatchers.IO){
+        if (!isShizukuInstalled){
+            ServiceCallback.invoke(Error.NOT_INSTALLED,null)
+            return@withContext
+        }
+
         val context = this
         if (isShizukuRunning()){
             runCatching {
+                var timeMs = 0L
                 while (isWaiting && serviceBinder == null){
                     delay(300)
+                    timeMs += 300
                     println("waiting...")
+                    if (timeMs > 5000){
+                        timeMs = 0
+                        ServiceCallback.invoke(Error.SHIZUKU_TIMEOUT,null)
+                        return@withContext
+                    }
                 }
 
                 if (serviceBinder != null){
@@ -98,11 +124,11 @@ object ShizukuUtil {
                     }
 
                     runCatching {
+                        isWaiting = true
                         Shizuku.bindUserService(
                             UserServiceArgs(ComponentName(TaskManager.Companion.getContext().packageName,
                                 TaskManagerBackend::class.java.name))
                                 .daemon(true)
-                                .debuggable(true)
                                 .processNameSuffix("task_manager")
                                 .version(2),
                             object : ServiceConnection {
@@ -119,7 +145,6 @@ object ShizukuUtil {
                                 }
                             }
                         )
-                        isWaiting = true
                     }.onFailure {
                         context.launch{
                             ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)

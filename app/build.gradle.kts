@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.rk.taskmanager"
-    compileSdk = 35
+    compileSdk = 36
 
     dependenciesInfo {
         includeInApk = false
@@ -65,12 +65,12 @@ android {
 
     defaultConfig {
         applicationId = "com.rk.taskmanager"
-        minSdk = 29
-        targetSdk = 35
+        minSdk = 26
+        targetSdk = 36
 
         //versioning
-        versionCode = 10
-        versionName = "1.0.9"
+        versionCode = 11
+        versionName = "1.1.0"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -97,7 +97,7 @@ android {
 
 tasks.whenTaskAdded {
     if (name.contains("ArtProfile")) {
-        println("Disabled Task $name")
+        println("Skipped Task $name")
         enabled = false
     }
 }

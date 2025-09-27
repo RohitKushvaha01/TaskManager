@@ -142,6 +142,9 @@ object ShizukuUtil {
 
                                 override fun onServiceDisconnected(name: ComponentName?) {
                                     Log.d("ShizukuService", "Service disconnected")
+                                    context.launch {
+                                        ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)
+                                    }
                                 }
                             }
                         )

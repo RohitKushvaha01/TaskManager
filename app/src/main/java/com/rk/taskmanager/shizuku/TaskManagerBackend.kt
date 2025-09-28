@@ -34,7 +34,7 @@ import java.io.OutputStreamWriter
                 }
 
                 reply?.writeNoException()
-                reply?.writeBoolean(result)
+                reply?.writeInt(if (result) 1 else 0)
                 return true
             }
 

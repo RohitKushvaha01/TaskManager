@@ -105,17 +105,18 @@ suspend fun CoroutineScope.update() {
             return@withService
         }
 
-        val cpuUsage = it!!.getCpuUsage()
+        val cpuUsage = it?.getCpuUsage()?.toFloat() ?: 0f
         val smoothingFactor = 0.1f
 
-        val valueToAdd = if (cpuYValues.any { it.toFloat() != 0f } && cpuYValues.size >= MAX_POINTS) {
-            val smoothed = (cpuUsage * smoothingFactor) + (lastCpuUsage * (1 - smoothingFactor))
+        val valueToAdd = if (cpuYValues.isNotEmpty() && cpuYValues.size >= MAX_POINTS) {
+            val smoothed = (cpuUsage * smoothingFactor) + (lastCpuUsage * (1f - smoothingFactor))
             lastCpuUsage = smoothed
             smoothed
         } else {
-            lastCpuUsage = cpuUsage.toFloat()
-            cpuUsage.toFloat()
+            lastCpuUsage = cpuUsage
+            cpuUsage
         }
+
 
 
         launch(Dispatchers.Main) {

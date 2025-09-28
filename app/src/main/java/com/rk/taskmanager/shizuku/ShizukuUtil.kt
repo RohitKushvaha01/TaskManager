@@ -90,11 +90,6 @@ object ShizukuUtil {
     private var isWaiting = false
 
     suspend fun withService(ServiceCallback: suspend Error.(TaskManagerService?)-> Unit) = withContext(Dispatchers.IO){
-        if (!isShizukuInstalled){
-            ServiceCallback.invoke(Error.NOT_INSTALLED,null)
-            return@withContext
-        }
-
         val context = this
         if (isShizukuRunning()){
             runCatching {
@@ -104,7 +99,6 @@ object ShizukuUtil {
                     timeMs += 300
                     println("waiting...")
                     if (timeMs > 5000){
-                        timeMs = 0
                         ServiceCallback.invoke(Error.SHIZUKU_TIMEOUT,null)
                         return@withContext
                     }
@@ -162,6 +156,10 @@ object ShizukuUtil {
                 ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)
             }
         }else{
+            if (!isShizukuInstalled){
+                ServiceCallback.invoke(Error.NOT_INSTALLED,null)
+                return@withContext
+            }
             ServiceCallback.invoke(Error.SHIZUKU_NOT_RUNNNING,null)
         }
     }

@@ -37,11 +37,12 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import com.rk.taskmanager.settings.Settings
 
 private var selectedscreen = mutableIntStateOf(0)
 var showFilter = mutableStateOf(false)
-var showSystemApps = mutableStateOf(true)
-var showLinuxProcess = mutableStateOf(true)
+var showSystemApps = mutableStateOf(Settings.showSystemApps)
+var showLinuxProcess = mutableStateOf(Settings.showLinuxProcess)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

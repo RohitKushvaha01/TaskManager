@@ -75,6 +75,7 @@ import com.rk.taskmanager.screens.isSystemApp
 import com.rk.taskmanager.screens.showFilter
 import com.rk.taskmanager.screens.showLinuxProcess
 import com.rk.taskmanager.screens.showSystemApps
+import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.shizuku.Proc
 import com.rk.taskmanager.shizuku.ShizukuUtil
 import kotlinx.coroutines.launch
@@ -95,6 +96,7 @@ fun Processes(
             DividerColumn {
                 SettingsToggle(label = "Show System Apps", description = null, showSwitch = true, default = showSystemApps.value, sideEffect = {
                     scope.launch{
+                        Settings.showSystemApps = it
                         showSystemApps.value = it
                     }
 
@@ -102,6 +104,7 @@ fun Processes(
 
                 SettingsToggle(label = "Show Linux Processes", description = null, showSwitch = true, default = showLinuxProcess.value, sideEffect = {
                     scope.launch{
+                        Settings.showLinuxProcess = it
                         showLinuxProcess.value = it
                     }
                 })
@@ -196,7 +199,15 @@ fun Processes(
                 }
 
                 ShizukuUtil.Error.SHIZUKU_TIMEOUT -> {
-                    Text("Shizuku not running (connection timeout)")
+                    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                        val context = LocalContext.current
+                        Text("Shizuku not running (connection timeout)")
+                        Button(onClick = {
+                            launchShizuku(context = context)
+                        }) {
+                            Text("Open Shizuku")
+                        }
+                    }
                 }
 
                 else -> {

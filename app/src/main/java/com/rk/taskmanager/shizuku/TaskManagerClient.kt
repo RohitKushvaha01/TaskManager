@@ -5,7 +5,8 @@ import android.os.Parcel
 import androidx.annotation.Keep
 
 @Keep class TaskManagerClient(private val binder: IBinder) : TaskManagerService {
-    override @Keep fun listPs(): List<Proc> {
+    @Keep
+    override fun listPs(): List<Proc> {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
 
@@ -23,7 +24,8 @@ import androidx.annotation.Keep
     }
 
 
-    override @Keep fun getCpuUsage(): Byte {
+    @Keep
+    override fun getCpuUsage(): Byte {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
         return try {
@@ -46,11 +48,16 @@ import androidx.annotation.Keep
             data.writeInterfaceToken(TaskManagerService.DESCRIPTOR)
             data.writeInt(pid)
             data.writeInt(signal)
-            println("dndndkd")
-            binder.transact(TaskManagerService.TRANSACTION_killPid, data, reply, IBinder.FLAG_ONEWAY)
-            println("transation done")
+
+            binder.transact(
+                TaskManagerService.TRANSACTION_killPid,
+                data,
+                reply,
+                IBinder.FLAG_ONEWAY
+            )
+
             reply.readException()
-            reply.readBoolean()
+            reply.readInt() != 0
         } finally {
             data.recycle()
             reply.recycle()
@@ -58,7 +65,9 @@ import androidx.annotation.Keep
     }
 
 
-    override @Keep fun asBinder(): IBinder {
+
+    @Keep
+    override fun asBinder(): IBinder {
         return binder
     }
 }

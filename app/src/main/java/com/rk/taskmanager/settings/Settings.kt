@@ -23,6 +23,20 @@ object Settings {
             default = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         )
         set(value) = Preference.setBoolean(key = "monet",value)
+
+    var showSystemApps
+        get() = Preference.getBoolean(
+            key = "showSystemApps",
+            default = true
+        )
+        set(value) = Preference.setBoolean(key = "showSystemApps",value)
+
+    var showLinuxProcess
+        get() = Preference.getBoolean(
+            key = "showLinuxProcess",
+            default = true
+        )
+        set(value) = Preference.setBoolean(key = "showLinuxProcess",value)
 }
 
 object Preference {

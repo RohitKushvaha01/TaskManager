@@ -66,6 +66,7 @@ fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
 
         ValueSlider(label = { Text("Graph Update Rate") }, min = 20, max = 500, position = delayMs, positionLabel = if (delayMs == 20f){"Fastest"}else{"${delayMs.toInt()}ms"}){
             delayMs = it
+            Settings.updateDelay = it.toInt()
         }
 
 

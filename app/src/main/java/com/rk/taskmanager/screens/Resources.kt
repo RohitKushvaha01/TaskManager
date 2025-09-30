@@ -137,6 +137,7 @@ suspend fun CoroutineScope.visualUpdater() {
             }
 
             CpuUsage = currentCpuUsage.toInt()
+            RamUsage = currentRamUsage.toInt()
         }
 
         frameCount++

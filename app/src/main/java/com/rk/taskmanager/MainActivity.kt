@@ -37,11 +37,7 @@ class MainActivity : ComponentActivity() {
 
         scope = this.lifecycleScope
 
-        Thread{
-            runBlocking {
-                metricsUpdater(this@MainActivity)
-            }
-        }.start()
+
 
         setContent {
             TaskManagerTheme {

@@ -147,35 +147,58 @@ suspend fun CoroutineScope.visualUpdater() {
     }
 }
 
-// Data fetcher with optimized timing
 suspend fun CoroutineScope.dataFetcher(context: Context) {
-    // Initialize timestamp
-    lastCpuUpdateTime = System.currentTimeMillis()
-    lastRamUpdateTime = System.currentTimeMillis()
+    var lastCpuFetchTime = 0L
+    var lastRamFetchTime = 0L
+    val cpuFetchInterval = 500L // Fetch CPU every 500ms
+    val ramFetchInterval = 1000L // Fetch RAM every second
 
     while (isActive) {
-        val start = System.currentTimeMillis()
+        val currentTime = System.currentTimeMillis()
 
-        // Fetch CPU data with Shizuku
-        ShizukuUtil.withService {
-            state.value = this
-            if (this != ShizukuUtil.Error.NO_ERROR) {
-                withContext(Dispatchers.Main) {
-                    previousCpuUsage = targetCpuUsage
-                    targetCpuUsage = 0f
-                    lastCpuUpdateTime = System.currentTimeMillis()
-                }
-            } else {
-                val cpuUsage = it?.getCpuUsage()?.toFloat() ?: 0f
-                withContext(Dispatchers.Main) {
-                    previousCpuUsage = targetCpuUsage
-                    targetCpuUsage = cpuUsage
-                    lastCpuUpdateTime = System.currentTimeMillis()
-                }
-            }
+        // Fetch CPU data if enough time has passed
+        if (currentTime - lastCpuFetchTime >= cpuFetchInterval) {
+            fetchCpuData()
+            lastCpuFetchTime = currentTime
         }
 
-        // Fetch RAM data
+        // Fetch RAM data if enough time has passed
+        if (currentTime - lastRamFetchTime >= ramFetchInterval) {
+            fetchRamData(context)
+            lastRamFetchTime = currentTime
+        }
+
+        // Calculate remaining time until next fetch
+        val nextCpuFetch = lastCpuFetchTime + cpuFetchInterval - currentTime
+        val nextRamFetch = lastRamFetchTime + ramFetchInterval - currentTime
+        val minDelay = minOf(nextCpuFetch, nextRamFetch).coerceAtLeast(50L)
+
+        delay(minDelay)
+    }
+}
+
+private suspend fun fetchCpuData() {
+    ShizukuUtil.withService {
+        state.value = this
+        if (this != ShizukuUtil.Error.NO_ERROR) {
+            withContext(Dispatchers.Main) {
+                previousCpuUsage = targetCpuUsage
+                targetCpuUsage = 0f
+                lastCpuUpdateTime = System.currentTimeMillis()
+            }
+        } else {
+            val cpuUsage = it?.getCpuUsage()?.toFloat() ?: 0f
+            withContext(Dispatchers.Main) {
+                previousCpuUsage = targetCpuUsage
+                targetCpuUsage = cpuUsage
+                lastCpuUpdateTime = System.currentTimeMillis()
+            }
+        }
+    }
+}
+
+private suspend fun fetchRamData(context: Context) {
+    withContext(Dispatchers.IO) {
         val mi = MemoryInfo()
         val activityManager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
         activityManager.getMemoryInfo(mi)
@@ -184,15 +207,10 @@ suspend fun CoroutineScope.dataFetcher(context: Context) {
 
         withContext(Dispatchers.Main) {
             Ram = "${(mi.totalMem - mi.availMem) / (1024 * 1024)}MB of ${mi.totalMem / (1024 * 1024)}MB"
-            RamUsage = percentUsed.toInt()
             previousRamUsage = targetRamUsage
             targetRamUsage = percentUsed.toFloat()
             lastRamUpdateTime = System.currentTimeMillis()
         }
-
-        val elapsed = System.currentTimeMillis() - start
-        val remaining = delayMs.toLong() - elapsed
-        if (remaining > 0) delay(remaining) else delay(100)
     }
 }
 

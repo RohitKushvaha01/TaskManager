@@ -22,5 +22,11 @@ class TaskManager : Application() {
     override fun onCreate() {
         application = this
         super.onCreate()
+
+        Thread{
+            runBlocking {
+                metricsUpdater(this@TaskManager)
+            }
+        }.start()
     }
 }

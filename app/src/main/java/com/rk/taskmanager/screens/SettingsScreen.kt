@@ -32,8 +32,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 
-var delayMs by mutableFloatStateOf(Settings.updateDelay.toFloat())
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
     DelicateCoroutinesApi::class
 )
@@ -64,12 +62,6 @@ fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
         }
 
 
-        ValueSlider(label = { Text("Graph accuracy") }, min = 20, max = 500, position = delayMs){
-            delayMs = it
-            Settings.updateDelay = it.toInt()
-        }
-
-
     }
 }
 
@@ -97,32 +89,4 @@ fun SelectableCard(modifier: Modifier = Modifier, selected: Boolean, label: Stri
             RadioButton(selected = selected, onClick = onClick,modifier = Modifier.padding(start = 8.dp))
         }
     )
-}
-
-@Composable
-fun ValueSlider(
-    modifier: Modifier = Modifier,
-    position: Float,
-    label: @Composable () -> Unit,
-    positionLabel: String? = null,
-    min: Int,
-    max: Int,
-    onValueChanged: (Float) -> Unit
-) {
-    PreferenceGroup {
-        PreferenceTemplate(title = label) {
-            if (positionLabel != null) {
-                Text(positionLabel)
-            }
-        }
-        PreferenceTemplate(title = {}) {
-            Slider(
-                value = position,
-                onValueChange = {
-                    onValueChanged.invoke(it)
-                },
-                valueRange = min.toFloat()..max.toFloat(),
-            )
-        }
-    }
 }

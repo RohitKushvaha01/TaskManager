@@ -12,11 +12,6 @@ object Settings {
         get() = Preference.getInt(key = "theme",0)
         set(value) = Preference.setInt(key = "theme",value)
 
-    var updateDelay
-        //0 is the id of the theme in the themes hashmap
-        get() = Preference.getInt(key = "updateDelay",500)
-        set(value) = Preference.setInt(key = "updateDelay",value)
-
     var monet
         get() = Preference.getBoolean(
             key = "monet",

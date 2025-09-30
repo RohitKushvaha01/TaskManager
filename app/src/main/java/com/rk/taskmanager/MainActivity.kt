@@ -16,7 +16,9 @@ import com.rk.taskmanager.animations.NavigationAnimationTransitions
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SettingsScreen
+import com.rk.taskmanager.screens.metricsUpdater
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.runBlocking
 
 
 class MainActivity : ComponentActivity() {
@@ -34,6 +36,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         scope = this.lifecycleScope
+
+        Thread{
+            runBlocking {
+                metricsUpdater(this@MainActivity)
+            }
+        }.start()
 
         setContent {
             TaskManagerTheme {

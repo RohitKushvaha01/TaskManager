@@ -57,7 +57,7 @@ import java.io.OutputStreamWriter
                     }
 
                     val prev = readCpuStat() ?: return 0
-                    Thread.sleep(100)
+                    Thread.sleep(20)
                     val curr = readCpuStat() ?: return 0
 
                     val totalDiff = (curr.total() - prev.total()).toDouble()

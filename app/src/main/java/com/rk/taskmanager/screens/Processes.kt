@@ -1,4 +1,4 @@
-package com.rk.taskmanager.tabs
+package com.rk.taskmanager.screens
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -9,16 +9,12 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,14 +22,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
@@ -42,41 +33,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import androidx.navigation.NavOptions
-import androidx.navigation.Navigator
-import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.rk.components.SettingsToggle
 import com.rk.components.XedDialog
 import com.rk.components.compose.preferences.base.DividerColumn
-import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
+import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
-import com.rk.taskmanager.TaskManager
-import com.rk.taskmanager.screens.drawableTobitMap
-import com.rk.taskmanager.screens.getApkNameFromPackage
-import com.rk.taskmanager.screens.getAppIcon
-import com.rk.taskmanager.screens.getAppIconBitmap
-import com.rk.taskmanager.screens.isAppInstalled
-import com.rk.taskmanager.screens.isSystemApp
-import com.rk.taskmanager.screens.showFilter
-import com.rk.taskmanager.screens.showLinuxProcess
-import com.rk.taskmanager.screens.showSystemApps
 import com.rk.taskmanager.settings.Settings
-import com.rk.taskmanager.shizuku.Proc
 import com.rk.taskmanager.shizuku.ShizukuUtil
 import kotlinx.coroutines.launch
 
@@ -266,13 +237,13 @@ fun ProcessItem(
             } else {
                 val fallbackId = when {
                     uiProc.proc.cmdLine.startsWith("/vendor") || uiProc.proc.cmdLine.isEmpty() ->
-                        com.rk.taskmanager.R.drawable.cpu_24px
+                        R.drawable.cpu_24px
 
                     uiProc.proc.cmdLine.startsWith("/data/local/tmp") || uiProc.proc.uid == 2000 ->
-                        com.rk.taskmanager.R.drawable.usb_24px
+                        R.drawable.usb_24px
 
                     else ->
-                        com.rk.taskmanager.R.drawable.ic_android_black_24dp
+                        R.drawable.ic_android_black_24dp
                 }
 
                 Image(

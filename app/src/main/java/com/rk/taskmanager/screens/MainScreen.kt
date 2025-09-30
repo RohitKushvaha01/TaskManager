@@ -16,27 +16,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
-import com.rk.taskmanager.tabs.Processes
-import com.rk.taskmanager.tabs.Resources
 import com.rk.taskmanager.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.unit.dp
 import com.rk.taskmanager.settings.Settings
 
 private var selectedscreen = mutableIntStateOf(0)

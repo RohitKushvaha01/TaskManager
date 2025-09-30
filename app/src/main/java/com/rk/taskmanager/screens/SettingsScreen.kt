@@ -64,7 +64,7 @@ fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
         }
 
 
-        ValueSlider(label = { Text("Graph Update Rate") }, min = 20, max = 500, position = delayMs, positionLabel = if (delayMs == 20f){"Fastest"}else{"${delayMs.toInt()}ms"}){
+        ValueSlider(label = { Text("Graph accuracy") }, min = 20, max = 500, position = delayMs){
             delayMs = it
             Settings.updateDelay = it.toInt()
         }
@@ -104,14 +104,16 @@ fun ValueSlider(
     modifier: Modifier = Modifier,
     position: Float,
     label: @Composable () -> Unit,
-    positionLabel: String,
+    positionLabel: String? = null,
     min: Int,
     max: Int,
     onValueChanged: (Float) -> Unit
 ) {
     PreferenceGroup {
         PreferenceTemplate(title = label) {
-            Text(positionLabel)
+            if (positionLabel != null) {
+                Text(positionLabel)
+            }
         }
         PreferenceTemplate(title = {}) {
             Slider(
@@ -119,7 +121,6 @@ fun ValueSlider(
                 onValueChange = {
                     onValueChanged.invoke(it)
                 },
-                // Removed the steps parameter to make the slider continuous
                 valueRange = min.toFloat()..max.toFloat(),
             )
         }

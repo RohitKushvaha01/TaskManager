@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import com.rk.taskmanager.TaskManager
+import com.rk.taskmanager.screens.WorkingMode
 
 object Settings {
     var theme
@@ -12,6 +13,9 @@ object Settings {
         get() = Preference.getInt(key = "theme",0)
         set(value) = Preference.setInt(key = "theme",value)
 
+    var workingMode
+        get() = Preference.getInt(key = "workingMode", -1)
+        set(value) = Preference.setInt(key = "workingMode",value)
     var monet
         get() = Preference.getBoolean(
             key = "monet",

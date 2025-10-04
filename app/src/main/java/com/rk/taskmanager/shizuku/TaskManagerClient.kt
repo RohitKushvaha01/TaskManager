@@ -5,65 +5,35 @@ import android.os.Parcel
 import androidx.annotation.Keep
 
 @Keep class TaskManagerClient(private val binder: IBinder) : TaskManagerService {
+
     @Keep
-    override fun listPs(): List<Proc> {
+    override fun newProcess(
+        cmd: Array<String>,
+        env: Array<String>,
+        workingDir: String
+    ): Int {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
 
         try {
             data.writeInterfaceToken(TaskManagerService.DESCRIPTOR)
-            binder.transact(TaskManagerService.TRANSACTION_listPs, data, reply, 0)
+
+            // Write parameters to parcel
+            data.writeStringArray(cmd)
+            data.writeStringArray(env)
+            data.writeString(workingDir)
+
+            // Make the remote call
+            binder.transact(TaskManagerService.TRANSACTION_newProcess, data, reply, 0)
+
+            // Read response
             reply.readException()
-            return mutableListOf<Proc>().apply {
-                reply.readTypedList(this, Proc.CREATOR)
-            }
+            return reply.readInt()
         } finally {
             data.recycle()
             reply.recycle()
         }
     }
-
-
-    @Keep
-    override fun getCpuUsage(): Byte {
-        val data = Parcel.obtain()
-        val reply = Parcel.obtain()
-        return try {
-            data.writeInterfaceToken(TaskManagerService.DESCRIPTOR)
-            binder.transact(TaskManagerService.TRANSACTION_getCpuUsage, data, reply, 0)
-            reply.readException()
-            reply.readByte()
-        } finally {
-            data.recycle()
-            reply.recycle()
-        }
-    }
-
-
-    @Keep
-    override fun killPid(pid: Int, signal: Int): Boolean {
-        val data = Parcel.obtain()
-        val reply = Parcel.obtain()
-        return try {
-            data.writeInterfaceToken(TaskManagerService.DESCRIPTOR)
-            data.writeInt(pid)
-            data.writeInt(signal)
-
-            binder.transact(
-                TaskManagerService.TRANSACTION_killPid,
-                data,
-                reply,
-                IBinder.FLAG_ONEWAY
-            )
-
-            reply.readException()
-            reply.readInt() != 0
-        } finally {
-            data.recycle()
-            reply.recycle()
-        }
-    }
-
 
 
     @Keep

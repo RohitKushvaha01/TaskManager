@@ -1,9 +1,7 @@
 package com.rk.taskmanager.screens
 
 import android.app.ActivityManager
-import android.app.ActivityManager.MemoryInfo
 import android.content.Context
-import android.content.Context.ACTIVITY_SERVICE
 import android.graphics.Typeface
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.*
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
@@ -31,294 +28,147 @@ import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
-import com.rk.components.rememberMarker
-import com.rk.taskmanager.shizuku.ShizukuUtil
 import com.rk.components.SettingsToggle
-import com.rk.taskmanager.settings.Settings
-import kotlinx.coroutines.CoroutineScope
+import com.rk.components.rememberMarker
+import com.rk.daemon_messages
+import com.rk.send_daemon_messages
+import com.rk.taskmanager.TaskManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.Locale
 
 private const val MAX_POINTS = 120
-private const val VISUAL_UPDATE_MS = 20L
 
 private val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = 100.0)
 private val YDecimalFormat = DecimalFormat("#.##'%'")
 private val StartAxisValueFormatter = CartesianValueFormatter.decimal(YDecimalFormat)
 private val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default(YDecimalFormat)
 
-val modelProducer = CartesianChartModelProducer()
+val CpuModelProducer = CartesianChartModelProducer()
 val RamModelProducer = CartesianChartModelProducer()
-val updating = AtomicBoolean(false)
 
 val xValues = List(MAX_POINTS) { it.toDouble() }
 val cpuYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
 val ramYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
 
-var lastCpuUsage by mutableFloatStateOf(0f)
-var targetCpuUsage by mutableFloatStateOf(0f)
-var currentCpuUsage by mutableFloatStateOf(0f)
-var previousCpuUsage by mutableFloatStateOf(0f)
-
-var lastRamUsage by mutableFloatStateOf(0f)
-var targetRamUsage by mutableFloatStateOf(0f)
-var currentRamUsage by mutableFloatStateOf(0f)
-var previousRamUsage by mutableFloatStateOf(0f)
-
 var CpuUsage by mutableIntStateOf(0)
 var RamUsage by mutableIntStateOf(0)
-var Ram by mutableStateOf("0mb of 0mb")
-var state = mutableStateOf(ShizukuUtil.Error.NO_ERROR)
 
-var lastCpuUpdateTime = 0L
-var lastRamUpdateTime = 0L
 
-fun smoothInterpolate(
-    current: Float,
-    target: Float,
-    previous: Float,
-    timeSinceUpdate: Long
-): Float {
-    // Low-pass filter approach - very smooth but responsive
-    val alpha = when {
-        timeSinceUpdate > 800 -> 0.4f   // Data getting stale
-        timeSinceUpdate > 400 -> 0.2f   // Moderately stale
-        else -> 0.1f                    // Fresh data, maximum smoothing
-    }
+var usedRam by mutableLongStateOf(0L)
+var totalRam by mutableLongStateOf(0L)
 
-    // Simple low-pass filter: output = alpha * input + (1-alpha) * previous_output
-    return current * (1f - alpha) + target * alpha
+suspend fun getSystemRamUsage(context: Context): Int = withContext(Dispatchers.IO) {
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    val memoryInfo = ActivityManager.MemoryInfo()
+    activityManager.getMemoryInfo(memoryInfo)
+
+    totalRam = memoryInfo.totalMem  // Keep as Long
+    val availableRam = memoryInfo.availMem
+    usedRam = totalRam - availableRam  // Keep as Long
+    val usagePercentage = ((usedRam.toDouble() / totalRam.toDouble()) * 100).toInt()
+
+    return@withContext usagePercentage
 }
 
-suspend fun CoroutineScope.visualUpdater() {
-    var frameCount = 0L
+// Helper to format for display
+fun formatRamMB(bytes: Long): String = "${bytes / (1024 * 1024)} MB"
+fun formatRamGB(bytes: Long): String = String.format(Locale.ENGLISH,"%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
 
-    while (isActive) {
-        val start = System.currentTimeMillis()
-        val timeSinceCpuUpdate = start - lastCpuUpdateTime
-        val timeSinceRamUpdate = start - lastRamUpdateTime
 
-        // Interpolate values
-        currentCpuUsage = smoothInterpolate(
-            currentCpuUsage,
-            targetCpuUsage,
-            previousCpuUsage,
-            timeSinceCpuUpdate
-        )
 
-        currentRamUsage = smoothInterpolate(
-            currentRamUsage,
-            targetRamUsage,
-            previousRamUsage,
-            timeSinceRamUpdate
-        )
-
-        withContext(Dispatchers.Main) {
-            // Update CPU graph with high resolution
-            if (cpuYValues.size >= MAX_POINTS) cpuYValues.removeAt(0)
-            cpuYValues.add(currentCpuUsage)
-
-            // Batch updates every few frames for performance
-            modelProducer.runTransaction {
-                lineSeries { series(xValues, cpuYValues) }
-            }
-
-            // Update RAM graph with high resolution
-            if (ramYValues.size >= MAX_POINTS) ramYValues.removeAt(0)
-            ramYValues.add(currentRamUsage)
-
-            RamModelProducer.runTransaction {
-                lineSeries { series(xValues, ramYValues) }
-            }
-
-            CpuUsage = currentCpuUsage.toInt()
-            RamUsage = currentRamUsage.toInt()
-        }
-
-        frameCount++
-
-        val elapsed = System.currentTimeMillis() - start
-        val remaining = VISUAL_UPDATE_MS - elapsed
-        if (remaining > 0) delay(remaining) else delay(8) // Minimum 8ms for stability
-    }
-}
-
-suspend fun CoroutineScope.dataFetcher(context: Context) {
-    var lastCpuFetchTime = 0L
-    var lastRamFetchTime = 0L
-    val cpuFetchInterval = 500L // Fetch CPU every 500ms
-    val ramFetchInterval = 1000L // Fetch RAM every second
-
-    while (isActive) {
-        val currentTime = System.currentTimeMillis()
-
-        // Fetch CPU data if enough time has passed
-        if (currentTime - lastCpuFetchTime >= cpuFetchInterval) {
-            fetchCpuData()
-            lastCpuFetchTime = currentTime
-        }
-
-        // Fetch RAM data if enough time has passed
-        if (currentTime - lastRamFetchTime >= ramFetchInterval) {
-            fetchRamData(context)
-            lastRamFetchTime = currentTime
-        }
-
-        // Calculate remaining time until next fetch
-        val nextCpuFetch = lastCpuFetchTime + cpuFetchInterval - currentTime
-        val nextRamFetch = lastRamFetchTime + ramFetchInterval - currentTime
-        val minDelay = minOf(nextCpuFetch, nextRamFetch).coerceAtLeast(50L)
-
-        delay(minDelay)
-    }
-}
-
-private suspend fun fetchCpuData() {
-    ShizukuUtil.withService {
-        state.value = this
-        if (this != ShizukuUtil.Error.NO_ERROR) {
-            withContext(Dispatchers.Main) {
-                previousCpuUsage = targetCpuUsage
-                targetCpuUsage = 0f
-                lastCpuUpdateTime = System.currentTimeMillis()
-            }
-        } else {
-            val cpuUsage = it?.getCpuUsage()?.toFloat() ?: 0f
-            withContext(Dispatchers.Main) {
-                previousCpuUsage = targetCpuUsage
-                targetCpuUsage = cpuUsage
-                lastCpuUpdateTime = System.currentTimeMillis()
-            }
+private suspend fun updateRamGraph(){
+    RamUsage = getSystemRamUsage(TaskManager.getContext())
+    ramYValues.removeAt(0)
+    ramYValues.add(RamUsage)
+    RamModelProducer.runTransaction {
+        lineSeries {
+            series(x = xValues, y = ramYValues)
         }
     }
 }
 
-private suspend fun fetchRamData(context: Context) {
-    withContext(Dispatchers.IO) {
-        val mi = MemoryInfo()
-        val activityManager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        activityManager.getMemoryInfo(mi)
-
-        val percentUsed = 100.0 - (mi.availMem.toDouble() / mi.totalMem.toDouble() * 100.0)
-
-        withContext(Dispatchers.Main) {
-            Ram = "${(mi.totalMem - mi.availMem) / (1024 * 1024)}MB of ${mi.totalMem / (1024 * 1024)}MB"
-            previousRamUsage = targetRamUsage
-            targetRamUsage = percentUsed.toFloat()
-            lastRamUpdateTime = System.currentTimeMillis()
+private suspend fun updateCpuGraph(){
+    cpuYValues.removeAt(0)
+    cpuYValues.add(CpuUsage)
+    CpuModelProducer.runTransaction {
+        lineSeries {
+            series(x = xValues, y = cpuYValues)
         }
     }
-}
-
-// Combined metrics updater
-suspend fun CoroutineScope.metricsUpdater(context: Context) {
-    launch { visualUpdater() }
-    launch { dataFetcher(context) }
 }
 
 @Composable
 fun Resources(modifier: Modifier = Modifier) {
     val lineColor = MaterialTheme.colorScheme.primary
 
+    LaunchedEffect(Unit) {
+        daemon_messages.collect { message ->
+            if (message.startsWith("CPU:")){
+                launch {
+                    CpuUsage = message.removePrefix("CPU:").toInt()
+                    updateCpuGraph()
+                }
+
+                launch { updateRamGraph() }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (isActive){
+            send_daemon_messages.emit("CPU_PING")
+            delay(1000)
+        }
+    }
+
+
+
     Column(modifier.verticalScroll(rememberScrollState())) {
         Column() {
-            when (state.value) {
-                ShizukuUtil.Error.NO_ERROR -> {
-                    if (CpuUsage <= 0 && cpuYValues.isEmpty()){
-                        SettingsToggle(
-                            label = "No Data",
-                            description = "Waiting for response...",
-                            showSwitch = false,
-                            default = false
-                        )
-                    }else{
-                        CartesianChartHost(
-                            rememberCartesianChart(
-                                rememberLineCartesianLayer(
-                                    lineProvider = LineCartesianLayer.LineProvider.series(
-                                        LineCartesianLayer.rememberLine(
-                                            fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                                            areaFill = LineCartesianLayer.AreaFill.single(
-                                                fill(
-                                                    ShaderProvider.verticalGradient(
-                                                        intArrayOf(
-                                                            lineColor.copy(alpha = 0.4f).toArgb(),
-                                                            Color.Transparent.toArgb()
-                                                        )
-                                                    )
-                                                )
+            CartesianChartHost(
+                rememberCartesianChart(
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.rememberLine(
+                                fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                                areaFill = LineCartesianLayer.AreaFill.single(
+                                    fill(
+                                        ShaderProvider.verticalGradient(
+                                            intArrayOf(
+                                                lineColor.copy(alpha = 0.4f).toArgb(),
+                                                Color.Transparent.toArgb()
                                             )
                                         )
-                                    ),
-                                    rangeProvider = RangeProvider,
-                                ),
-                                startAxis = VerticalAxis.rememberStart(
-                                    valueFormatter = StartAxisValueFormatter,
-                                    label = TextComponent(
-                                        color = MaterialTheme.colorScheme.onSurface.toArgb(),
-                                        textSizeSp = 10f,
-                                        lineCount = 1,
-                                        typeface = Typeface.DEFAULT
-                                    ),
-                                    guideline = rememberAxisGuidelineComponent(),
-                                ),
-                                bottomAxis = null,
-                                marker = rememberMarker(MarkerValueFormatter),
-                            ),
-                            modelProducer,
-                            modifier,
-                            rememberVicoScrollState(scrollEnabled = false),
-                            animateIn = false,
-                            animationSpec = null,
-                        )
-                    }
-                }
-                ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> {
-                    SettingsToggle(
-                        label = "No Data",
-                        description = "Shizuku not running",
-                        showSwitch = false,
-                        default = false
-                    )
-                }
-                ShizukuUtil.Error.PERMISSION_DENIED -> {
-                    SettingsToggle(
-                        label = "No Data",
-                        description = "Shizuku permission not granted",
-                        showSwitch = false,
-                        default = false
-                    )
-                }
-                ShizukuUtil.Error.SHIZUKU_TIMEOUT -> {
-                    SettingsToggle(
-                        label = "No Data",
-                        description = "Shizuku not running (connection timeout)",
-                        showSwitch = false,
-                        default = false
-                    )
-                }
-                ShizukuUtil.Error.NOT_INSTALLED -> {
-                    SettingsToggle(
-                        label = "No Data",
-                        description = "Shizuku not installed",
-                        showSwitch = false,
-                        default = false
-                    )
-                }
-                else -> {
-                    SettingsToggle(
-                        label = "No Data",
-                        description = "Unknown Error please logcat for more info",
-                        showSwitch = false,
-                        default = false
-                    )
-                }
-            }
+                                    )
+                                )
+                            )
+                        ),
+                        rangeProvider = RangeProvider,
+                    ),
+                    startAxis = VerticalAxis.rememberStart(
+                        valueFormatter = StartAxisValueFormatter,
+                        label = TextComponent(
+                            color = MaterialTheme.colorScheme.onSurface.toArgb(),
+                            textSizeSp = 10f,
+                            lineCount = 1,
+                            typeface = Typeface.DEFAULT
+                        ),
+                        guideline = rememberAxisGuidelineComponent(),
+                    ),
+                    bottomAxis = null,
+                    marker = rememberMarker(MarkerValueFormatter),
+                ),
+                CpuModelProducer,
+                modifier,
+                rememberVicoScrollState(scrollEnabled = false),
+                animateIn = false,
+                animationSpec = null,
+            )
         }
 
         SettingsToggle(
@@ -370,7 +220,7 @@ fun Resources(modifier: Modifier = Modifier) {
         }
 
         SettingsToggle(
-            label = "RAM : $Ram ($RamUsage%)",
+            label = "RAM : ${formatRamMB(usedRam)}/${formatRamGB(totalRam)} ($RamUsage%)",
             showSwitch = false,
             default = false
         )

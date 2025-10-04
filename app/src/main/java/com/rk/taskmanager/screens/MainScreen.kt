@@ -1,14 +1,17 @@
 package com.rk.taskmanager.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -18,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -29,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import com.rk.isConnected
 import com.rk.taskmanager.settings.Settings
 
 private var selectedscreen = mutableIntStateOf(0)
@@ -36,74 +41,86 @@ var showFilter = mutableStateOf(false)
 var showSystemApps = mutableStateOf(Settings.showSystemApps)
 var showLinuxProcess = mutableStateOf(Settings.showLinuxProcess)
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewModel: ProcessViewModel) {
-    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
-        TopAppBar(title = {
-            Text("Task Manager")
-        }, actions = {
+    if (isConnected){
+        Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
+            TopAppBar(title = {
+                Text("Task Manager")
+            }, actions = {
 
-            if (selectedscreen.intValue == 1){
+                if (selectedscreen.intValue == 1){
+                    IconButton(
+                        modifier = Modifier.padding(8.dp),
+                        onClick = {
+                            showFilter.value = !showFilter.value
+                        }) {
+                        Icon(
+                            imageVector = Filter_list,
+                            contentDescription = "Filter"
+                        )
+                    }
+                }
+
+
                 IconButton(
                     modifier = Modifier.padding(8.dp),
                     onClick = {
-                        showFilter.value = !showFilter.value
+                        navController.navigate(SettingsRoutes.Settings.route)
                     }) {
                     Icon(
-                        imageVector = Filter_list,
-                        contentDescription = "Filter"
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = "Settings"
                     )
                 }
+            })
+        },bottomBar = {
+            NavigationBar {
+                NavigationBarItem(selected = selectedscreen.intValue == 0, onClick = {
+                    selectedscreen.intValue = 0
+                }, icon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.speed_24px),
+                        contentDescription = "Resources"
+                    )
+                }, label = {Text("Resources")})
+
+                NavigationBarItem(selected = selectedscreen.intValue == 1, onClick = {
+                    selectedscreen.intValue = 1
+                }, icon = {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = "Processes"
+                    )
+                }, label = {Text("Processes")})
             }
-
-
-            IconButton(
-                modifier = Modifier.padding(8.dp),
-                onClick = {
-                    navController.navigate(SettingsRoutes.Settings.route)
-                }) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings"
-                )
+        }) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)){
+                LaunchedEffect(Unit) {
+                    viewModel.refreshAuto()
+                }
+                when(selectedscreen.intValue){
+                    0 -> {
+                        Resources(modifier = Modifier.padding(horizontal = 4.dp))
+                    }
+                    1 -> {
+                        Processes(viewModel = viewModel, navController = navController)
+                    }
+                }
             }
-        })
-    },bottomBar = {
-        NavigationBar {
-            NavigationBarItem(selected = selectedscreen.intValue == 0, onClick = {
-                selectedscreen.intValue = 0
-            }, icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.speed_24px),
-                    contentDescription = "Resources"
-                )
-            }, label = {Text("Resources")})
-
-            NavigationBarItem(selected = selectedscreen.intValue == 1, onClick = {
-                selectedscreen.intValue = 1
-            }, icon = {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = "Processes"
-                )
-            }, label = {Text("Processes")})
         }
-    }) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)){
-            LaunchedEffect(Unit) {
-                viewModel.refreshAuto()
-            }
-            when(selectedscreen.intValue){
-                0 -> {
-                    Resources(modifier = Modifier.padding(horizontal = 4.dp))
-                }
-                1 -> {
-                    Processes(viewModel = viewModel, navController = navController)
-                }
+    }else{
+        Box(modifier = Modifier.fillMaxSize()){
+            Column(modifier = Modifier.align(Alignment.Center)) {
+                LinearProgressIndicator()
+                Text("Waiting for daemon connection...")
             }
         }
     }
+
+
 }
 
 

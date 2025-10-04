@@ -81,6 +81,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
         // isCoreLibraryDesugaringEnabled = true
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 
     buildFeatures {
         viewBinding = true
@@ -116,4 +121,6 @@ dependencies {
     implementation(libs.vico.compose.m3)
     implementation(project(":components"))
     implementation(libs.accompanist.swiperefresh)
+    implementation(libs.google.material)
+    implementation(project(":taskmanagerd"))
 }

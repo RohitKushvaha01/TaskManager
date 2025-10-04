@@ -6,8 +6,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rk.taskmanager.shizuku.Proc
-import com.rk.taskmanager.shizuku.ShizukuUtil
 import com.rk.taskmanager.screens.getApkNameFromPackage
 import com.rk.taskmanager.screens.getAppIconBitmap
 import com.rk.taskmanager.screens.isAppInstalled
@@ -21,11 +19,14 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import com.rk.daemon_messages
+import com.rk.send_daemon_messages
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import org.json.JSONArray
 
 data class ProcessUiModel(
-    val proc: Proc,
+    val proc: ProcessViewModel.Process,
     val name: String,
     val icon: ImageBitmap?,
     val isSystemApp: Boolean,
@@ -34,10 +35,7 @@ data class ProcessUiModel(
 
 class ProcessViewModel : ViewModel() {
 
-    private val _state = MutableStateFlow(ShizukuUtil.Error.NO_ERROR)
-    val state: StateFlow<ShizukuUtil.Error> = _state
-
-    var processes = mutableStateListOf<Proc>()
+    var processes = mutableStateListOf<Process>()
         private set
 
     private val _uiProcesses = MutableStateFlow<List<ProcessUiModel>>(emptyList())
@@ -45,72 +43,102 @@ class ProcessViewModel : ViewModel() {
 
     var isLoading = mutableStateOf(true)
 
-    private var loadingMutex = Mutex()
+    data class Process(
+        val name: String,
+        var nice: Int,
+        val pid: Int,
+        val uid: Int,
+        val cpuUsage: Float,
+        val parentPid: Int,
+        val isForeground: Boolean,
+        val memoryUsageKb: Long,
+        val cmdLine: String,
+        val state: String,
+        val threads: Int,
+        val startTime: Long,
+        val elapsedTime: Float,
+        val residentSetSizeKb: Long,
+        val virtualMemoryKb: Long,
+        val cgroup: String,
+        val executablePath: String
+    )
 
     init {
         viewModelScope.launch {
-            fetchProcesses()
-        }
-    }
+            daemon_messages.collect { message ->
+                if (message.startsWith("[") && message.endsWith("]")) {
+                    try {
+                        val jsonArray = JSONArray(message)
+                        val newProcesses = mutableListOf<Process>()
 
-    private suspend fun fetchProcesses() = withContext(Dispatchers.IO) {
-        loadingMutex.withLock {
-            Log.i("ViewModel", "Launching service...")
-            ShizukuUtil.withService { service ->
-
-                Log.i("ViewModel", "Service Launched")
-                _state.value = this
-
-                if (this != ShizukuUtil.Error.NO_ERROR) {
-                    isLoading.value = false
-                    return@withService
-                }
-
-                val newProcesses = service!!.listPs().sortedWith(
-                    compareByDescending<Proc> { it.cpuUsage }
-                        .thenByDescending { it.memoryUsageKb }
-                )
-
-                Log.d("ViewModel", "Got process list...")
-
-                if (processes.size != newProcesses.size ||
-                    processes.zip(newProcesses).any { it.first.pid != it.second.pid }) {
-
-                    Log.d("ViewModel", "Updating process list...")
-
-                    // Precompute UI models
-                    val uiList = newProcesses.map { proc ->
-                        async {
-                            val context = TaskManager.getContext()
-                            val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
-                            val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
-                            val system = isSystemApp(context, proc.cmdLine)
-                            val installed = isAppInstalled(context, proc.cmdLine)
-                            ProcessUiModel(proc, name, icon, system, installed)
+                        for (i in 0 until jsonArray.length()) {
+                            val obj = jsonArray.getJSONObject(i)
+                            newProcesses.add(
+                                Process(
+                                    name = obj.optString("name", ""),
+                                    nice = obj.optInt("nice", 0),
+                                    pid = obj.optInt("pid", 0),
+                                    uid = obj.optInt("uid", 0),
+                                    cpuUsage = obj.optDouble("cpuUsage", 0.0).toFloat(),
+                                    parentPid = obj.optInt("parentPid", 0),
+                                    isForeground = obj.optBoolean("isForeground", false),
+                                    memoryUsageKb = obj.optLong("memoryUsageKb", 0L),
+                                    cmdLine = obj.optString("cmdLine", ""),
+                                    state = obj.optString("state", ""),
+                                    threads = obj.optInt("threads", 0),
+                                    startTime = obj.optLong("startTime", 0L),
+                                    elapsedTime = obj.optDouble("elapsedTime", 0.0).toFloat(),
+                                    residentSetSizeKb = obj.optLong("residentSetSizeKb", 0L),
+                                    virtualMemoryKb = obj.optLong("virtualMemoryKb", 0L),
+                                    cgroup = obj.optString("cgroup", ""),
+                                    executablePath = obj.optString("executablePath", "")
+                                )
+                            )
                         }
-                    }.awaitAll()
+
+                        Log.d("ProcessList", "Received ${processes.size} processes")
+                        val uiList = newProcesses.map { proc ->
+                            async {
+                                val context = TaskManager.getContext()
+                                val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
+                                val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
+                                val system = isSystemApp(context, proc.cmdLine)
+                                val installed = isAppInstalled(context, proc.cmdLine)
+                                ProcessUiModel(proc, name, icon, system, installed)
+                            }
+                        }.awaitAll()
 
 
-                    withContext(Dispatchers.Main) {
-                        processes.clear()
-                        processes.addAll(newProcesses)
-                        _uiProcesses.value = uiList
-                        isLoading.value = false
+                        withContext(Dispatchers.Main) {
+                            processes.clear()
+                            processes.addAll(newProcesses)
+                            _uiProcesses.value = uiList
+                            isLoading.value = false
+                        }
+
+                    } catch (e: Exception) {
+                        Log.e("ProcessList", "Failed to parse process list: ${e.message}")
                     }
                 }
             }
         }
+
+        viewModelScope.launch {
+            refreshProcesses()
+        }
+
     }
+
 
     fun refreshProcesses() {
         isLoading.value = true
         viewModelScope.launch {
-            fetchProcesses()
+            send_daemon_messages.emit("LIST_PROCESS")
         }
     }
 
     fun refreshAuto() {
-        if (processes.isEmpty() || state.value != ShizukuUtil.Error.NO_ERROR) {
+        if (processes.isEmpty()) {
             refreshProcesses()
         }
     }

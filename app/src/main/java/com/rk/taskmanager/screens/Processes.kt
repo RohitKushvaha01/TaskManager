@@ -59,7 +59,6 @@ fun Processes(
     viewModel: ProcessViewModel,
     navController: NavController
 ) {
-    val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
 
     if (showFilter.value){
@@ -92,99 +91,37 @@ fun Processes(
         contentAlignment = Alignment.Center
     ) {
 
-            when (state) {
-                ShizukuUtil.Error.NOT_INSTALLED -> {
-                    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                        val context = LocalContext.current
-                        Text("Shizuku not installed")
-                        Button(onClick = {
-                            openPlayStore(context,"moe.shizuku.privileged.api")
-                        }) {
-                            Text("Install")
-                        }
+        PullToRefreshBox(isRefreshing = viewModel.isLoading.value, onRefresh = {
+            viewModel.refreshProcesses()
+        }) {
+            val listState = rememberLazyListState()
+
+            val uiProcesses by viewModel.uiProcesses.collectAsState()
+
+            val filteredProcesses = remember(uiProcesses, showSystemApps.value, showLinuxProcess.value) {
+                uiProcesses.filter { process ->
+                    when {
+                        process.isSystemApp && !showSystemApps.value -> false
+                        !process.isInstalledApp && !showLinuxProcess.value -> false
+                        else -> true
                     }
-                }
-
-                ShizukuUtil.Error.NO_ERROR -> {
-                    if (viewModel.isLoading.value) {
-                        CircularProgressIndicator()
-                    } else if (viewModel.processes.isEmpty()){
-                        Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Unable to read process list from /proc")
-                            Button(onClick = {
-                                viewModel.refreshProcesses()
-                            }) {
-                                Text("Refresh")
-                            }
-                        }
-
-                    } else {
-                        PullToRefreshBox(isRefreshing = viewModel.isLoading.value, onRefresh = {
-                            viewModel.refreshProcesses()
-                        }) {
-                            val listState = rememberLazyListState()
-
-                            val uiProcesses by viewModel.uiProcesses.collectAsState()
-
-                            val filteredProcesses = remember(uiProcesses, showSystemApps.value, showLinuxProcess.value) {
-                                uiProcesses.filter { process ->
-                                    when {
-                                        process.isSystemApp && !showSystemApps.value -> false
-                                        !process.isInstalledApp && !showLinuxProcess.value -> false
-                                        else -> true
-                                    }
-                                }
-                            }
-
-
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                state = listState
-                            ) {
-                                items(filteredProcesses, key = { it.proc.pid }) { uiProc ->
-                                    ProcessItem(modifier, uiProc, navController = navController)
-                                }
-
-                                item {
-                                    Spacer(modifier = Modifier.padding(bottom = 32.dp))
-                                }
-                            }
-                        }
-                    }
-                }
-
-                ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> {
-                    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                        val context = LocalContext.current
-                        Text("Shizuku not started")
-                        Button(onClick = {
-                            launchShizuku(context = context)
-                        }) {
-                            Text("Open Shizuku")
-                        }
-                    }
-                }
-
-                ShizukuUtil.Error.PERMISSION_DENIED -> {
-                    Text("Shizuku permission denied")
-                }
-
-                ShizukuUtil.Error.SHIZUKU_TIMEOUT -> {
-                    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                        val context = LocalContext.current
-                        Text("Shizuku not running (connection timeout)")
-                        Button(onClick = {
-                            launchShizuku(context = context)
-                        }) {
-                            Text("Open Shizuku")
-                        }
-                    }
-                }
-
-                else -> {
-                    Text("Unknown error, check logcat")
                 }
             }
+
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState
+            ) {
+                items(filteredProcesses, key = { it.proc.pid }) { uiProc ->
+                    ProcessItem(modifier, uiProc, navController = navController)
+                }
+
+                item {
+                    Spacer(modifier = Modifier.padding(bottom = 32.dp))
+                }
+            }
+        }
 
 
     }

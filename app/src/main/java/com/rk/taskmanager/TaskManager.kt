@@ -1,12 +1,8 @@
 package com.rk.taskmanager
 
 import android.app.Application
-import com.rk.taskmanager.screens.metricsUpdater
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+
 
 class TaskManager : Application() {
     companion object{
@@ -22,11 +18,5 @@ class TaskManager : Application() {
     override fun onCreate() {
         application = this
         super.onCreate()
-
-        Thread{
-            runBlocking {
-                metricsUpdater(this@TaskManager)
-            }
-        }.start()
     }
 }

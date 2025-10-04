@@ -45,3 +45,4 @@ dependencyResolutionManagement {
 rootProject.name = "TaskManager"
 include(":app")
 include(":components")
+include(":taskmanagerd")

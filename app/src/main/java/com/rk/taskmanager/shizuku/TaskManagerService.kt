@@ -15,15 +15,11 @@ interface IInterfaceCreator<T : IInterface> {
 
 @Keep
 interface TaskManagerService : IInterface {
-    @Keep fun listPs(): List<Proc>
-    @Keep fun getCpuUsage(): Byte
-    @Keep fun killPid(pid: Int, signal: Int): Boolean
+    @Keep fun newProcess(cmd: Array<String>, env: Array<String>, workingDir: String): Int
 
     companion object {
         const val DESCRIPTOR = "com.rk.taskmanager.TaskManagerService"
-        const val TRANSACTION_listPs = IBinder.FIRST_CALL_TRANSACTION
-        const val TRANSACTION_getCpuUsage = IBinder.FIRST_CALL_TRANSACTION + 1
-        const val TRANSACTION_killPid = IBinder.FIRST_CALL_TRANSACTION + 2
+        const val TRANSACTION_newProcess = IBinder.FIRST_CALL_TRANSACTION
 
         val CREATOR = object : IInterfaceCreator<TaskManagerService> {
             override @Keep fun asInterface(binder: IBinder): TaskManagerService {

@@ -143,6 +143,7 @@ object ShizukuUtil {
                             }
                         )
                     }.onFailure {
+                        it.printStackTrace()
                         context.launch{
                             ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)
                         }

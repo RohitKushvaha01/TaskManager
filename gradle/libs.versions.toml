@@ -59,6 +59,7 @@ wordWrap = "0.1.13"
 coreAnimation = "1.0.0"
 runtimeAndroid = "1.8.3"
 vico = "2.0.3"
+materialVersion = "1.13.0"
 
 [libraries]
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
@@ -137,6 +138,7 @@ core-animation = { group = "androidx.core", name = "core-animation", version.ref
 runtime-android = { group = "androidx.compose.runtime", name = "runtime-android", version.ref = "runtimeAndroid" }
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
+google-material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
 
 [plugins]
 

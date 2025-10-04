@@ -128,26 +128,20 @@ CpuStat readCpuStat() {
 // Optimized: Reduced sleep time for faster response
 int calculateCpuUsage() {
     CpuStat prev = readCpuStat();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     CpuStat curr = readCpuStat();
 
-    long totalDiff = curr.total() - prev.total();
-    long activeDiff = curr.active() - prev.active();
+    uint64_t totalDiff = curr.total() - prev.total();
+    uint64_t activeDiff = curr.active() - prev.active();
 
-    if (totalDiff > 0) {
-        return static_cast<int>((static_cast<double>(activeDiff) / totalDiff) * 100);
-    }
-    return 0;
+    if (totalDiff == 0) return 0;
+
+    double usage = (double)activeDiff / (double)totalDiff * 100.0;
+    if (usage < 0) usage = 0;
+    if (usage > 100) usage = 100;
+    return (int)usage;
 }
 
-bool killProcess(int pid) {
-    if (kill(pid, SIGKILL) == 0) {
-        return true;
-    }
-    std::cerr << "Failed to kill process " << pid
-              << ": " << strerror(errno) << std::endl;
-    return false;
-}
 
 bool killProcessGroup(pid_t pgid, int signal = SIGKILL) {
     return kill(-pgid, signal) == 0;

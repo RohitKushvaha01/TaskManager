@@ -25,6 +25,7 @@
 #include <iostream>
 #include <regex>
 #include <sys/epoll.h>
+#include <limits.h>
 
 namespace fs = std::filesystem;
 
@@ -140,6 +141,15 @@ int calculateCpuUsage() {
     if (usage < 0) usage = 0;
     if (usage > 100) usage = 100;
     return (int)usage;
+}
+
+bool killProcess(int pid) {
+    if (kill(pid, SIGKILL) == 0) {
+        return true;
+    }
+    std::cerr << "Failed to kill process " << pid
+              << ": " << strerror(errno) << std::endl;
+    return false;
 }
 
 

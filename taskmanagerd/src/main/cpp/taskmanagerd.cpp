@@ -580,9 +580,12 @@ void daemonize()
 }
 
 int main() {
+    std::thread compileThread([]() {
+        system("pm compile -m speed com.rk.taskmanager");
+        system("pm compile -r bg-dexopt com.rk.taskmanager");
+    });
 
-    system("pm compile -m everything com.rk.taskmanager");
-    system("pm compile -r bg-dexopt com.rk.taskmanager");
+    compileThread.detach();
 
     daemonize();
 

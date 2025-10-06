@@ -1,18 +1,23 @@
 package com.rk.taskmanager.screens
 
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -23,13 +28,17 @@ import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
+import com.rk.startDaemon
+import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.ui.theme.currentTheme
 import com.rk.taskmanager.ui.theme.dynamicTheme
 import com.rk.taskmanager.ui.theme.themes
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
@@ -38,7 +47,35 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
     PreferenceLayout(label = "Settings") {
-        PreferenceGroup {
+        val context = LocalContext.current
+        val selectedMode = remember { mutableIntStateOf(Settings.workingMode) }
+
+        PreferenceGroup(heading = "Working Mode") {
+            WorkingMode.entries.forEach { mode ->
+                SettingsToggle(
+                    label = mode.name,
+                    description = null,
+                    default = selectedMode.intValue == mode.id,
+                    sideEffect = {
+                        Settings.workingMode = mode.id
+                        selectedMode.intValue = mode.id
+
+                        Toast.makeText(context, "Changes will take effect after next cold-start", Toast.LENGTH_SHORT).show()
+                    },
+                    showSwitch = false,
+                    startWidget = {
+                        RadioButton(selected = selectedMode.intValue == mode.id, onClick = {
+                            Settings.workingMode = mode.id
+                            selectedMode.intValue = mode.id
+                            Toast.makeText(context, "Changes will take effect after next cold-start", Toast.LENGTH_SHORT).show()
+
+                        })
+                    },
+                )
+            }
+        }
+
+        PreferenceGroup(heading = "Theme") {
 
             SelectableCard(selected = dynamicTheme.value, label = "Dynamic Theme", description = null, isEnaled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S, onClick = {
                 GlobalScope.launch{
@@ -62,8 +99,41 @@ fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
         }
 
 
+        val minFreq = 150 // 150ms at 0%
+        val maxFreq = 1000
+
+        var sliderPosition by rememberSaveable {
+            mutableFloatStateOf(
+                ((Settings.updateFrequency - minFreq).toFloat() / (maxFreq - minFreq))
+                    .coerceIn(0f, 1f)
+            )
+        }
+
+        PreferenceGroup {
+            PreferenceTemplate(title = {
+                Text("Graph update frequency")
+            }) {
+                val currentFreq = (minFreq + (sliderPosition * (maxFreq - minFreq))).toInt()
+                Text("${currentFreq}ms")
+            }
+            PreferenceTemplate(title = {}) {
+                Slider(
+                    value = sliderPosition,
+                    onValueChange = { sliderPosition = it },
+                    onValueChangeFinished = {
+                        Settings.updateFrequency = (minFreq + (sliderPosition * (maxFreq - minFreq))).toInt()
+                    }
+                )
+            }
+        }
+
+
+
+
     }
 }
+
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

@@ -12,16 +12,29 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.rk.daemon_messages
+import com.rk.isConnected
+import com.rk.send_daemon_messages
 import com.rk.startDaemon
 import com.rk.taskmanager.animations.NavigationAnimationTransitions
+import com.rk.taskmanager.screens.CpuUsage
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SelectedWorkingMode
 import com.rk.taskmanager.screens.SettingsScreen
+import com.rk.taskmanager.screens.updateCpuGraph
+import com.rk.taskmanager.screens.updateRamGraph
+import com.rk.taskmanager.screens.updateSwapGraph
 import com.rk.taskmanager.settings.Settings
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlin.math.max
 
 
 class MainActivity : ComponentActivity() {
@@ -31,6 +44,8 @@ class MainActivity : ComponentActivity() {
     companion object{
         var scope:CoroutineScope? = null
             private set
+        var instance: MainActivity? = null
+            private set
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -38,13 +53,56 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         scope = this.lifecycleScope
+        instance = this
 
-        if (Settings.workingMode != -1){
-            scope?.launch {
-                startDaemon(this@MainActivity, Settings.workingMode)
+        val graphMutex = Mutex()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            daemon_messages.collect { message ->
+                if (message.startsWith("CPU:")){
+                    graphMutex.withLock {
+                        updateCpuGraph(message.removePrefix("CPU:").toInt())
+                    }
+                }
+
+                //SWAP:USED:TOTAL
+                if (message.startsWith("SWAP:")){
+                    graphMutex.withLock {
+                        updateRamGraph()
+
+                        val parts = message.removePrefix("SWAP:").split(":")
+
+                        if (parts.size == 2) {
+                            val used = parts[0]
+                            val total = parts[1]
+
+                            val usedValue = used.toFloatOrNull() ?: 0f
+                            val totalValue = total.toFloatOrNull() ?: 1f
+
+                            val percentage = (usedValue / totalValue) * 100
+
+                            updateSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
+                        }
+
+                    }
+                }
+
+                delay(16)
             }
         }
 
+        lifecycleScope.launch(Dispatchers.IO) {
+            while (isActive){
+                graphMutex.withLock {
+                    if (isConnected){
+                        send_daemon_messages.emit("CPU_PING")
+                        delay(20)
+                        send_daemon_messages.emit("SWAP_PING")
+                    }
+                }
+                delay(Settings.updateFrequency.toLong())
+            }
+        }
 
         setContent {
             TaskManagerTheme {
@@ -85,6 +143,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (Settings.workingMode != -1){
+            lifecycleScope.launch {
+                startDaemon(this@MainActivity, Settings.workingMode)
+            }
+        }
         viewModel.refreshAuto()
     }
 }

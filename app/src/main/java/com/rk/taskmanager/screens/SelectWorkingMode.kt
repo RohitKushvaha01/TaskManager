@@ -66,6 +66,7 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
                         description = null,
                         default = selectedMode.intValue == mode.id,
                         sideEffect = {
+                            Settings.workingMode = mode.id
                             selectedMode.intValue = mode.id
                             message = ""
 

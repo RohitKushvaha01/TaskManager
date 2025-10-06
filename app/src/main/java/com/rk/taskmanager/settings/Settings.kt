@@ -13,6 +13,11 @@ object Settings {
         get() = Preference.getInt(key = "theme",0)
         set(value) = Preference.setInt(key = "theme",value)
 
+    var updateFrequency
+        //0 is the id of the theme in the themes hashmap
+        get() = Preference.getInt(key = "updateFrequency",1000)
+        set(value) = Preference.setInt(key = "updateFrequency",value)
+
     var workingMode
         get() = Preference.getInt(key = "workingMode", -1)
         set(value) = Preference.setInt(key = "workingMode",value)
@@ -29,6 +34,13 @@ object Settings {
             default = true
         )
         set(value) = Preference.setBoolean(key = "showSystemApps",value)
+
+    var showUserApps
+        get() = Preference.getBoolean(
+            key = "showUserApps",
+            default = true
+        )
+        set(value) = Preference.setBoolean(key = "showUserApps",value)
 
     var showLinuxProcess
         get() = Preference.getBoolean(

@@ -30,6 +30,7 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,6 +65,15 @@ fun Processes(
     if (showFilter.value){
         XedDialog(onDismissRequest = {showFilter.value = false}) {
             DividerColumn {
+
+                SettingsToggle(label = "Show User Apps", description = null, showSwitch = true, default = showUserApps.value, sideEffect = {
+                    scope.launch{
+                        Settings.showUserApps = it
+                        showUserApps.value = it
+                    }
+
+                })
+
                 SettingsToggle(label = "Show System Apps", description = null, showSwitch = true, default = showSystemApps.value, sideEffect = {
                     scope.launch{
                         Settings.showSystemApps = it
@@ -90,7 +100,6 @@ fun Processes(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-
         PullToRefreshBox(isRefreshing = viewModel.isLoading.value, onRefresh = {
             viewModel.refreshProcesses()
         }) {
@@ -98,29 +107,47 @@ fun Processes(
 
             val uiProcesses by viewModel.uiProcesses.collectAsState()
 
-            val filteredProcesses = remember(uiProcesses, showSystemApps.value, showLinuxProcess.value) {
+            val filteredProcesses = remember(uiProcesses, showSystemApps.value,showUserApps.value, showLinuxProcess.value) {
                 uiProcesses.filter { process ->
                     when {
-                        process.isSystemApp && !showSystemApps.value -> false
-                        !process.isInstalledApp && !showLinuxProcess.value -> false
-                        else -> true
+                        process.isApp && process.isUserApp && showUserApps.value -> true
+                        process.isApp && process.isSystemApp && showSystemApps.value -> true
+                        process.isApp.not() && showLinuxProcess.value -> true
+                        else -> false
                     }
                 }
             }
 
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState
-            ) {
-                items(filteredProcesses, key = { it.proc.pid }) { uiProc ->
-                    ProcessItem(modifier, uiProc, navController = navController)
-                }
+            if (filteredProcesses.isNotEmpty()){
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState
+                ) {
+                    items(filteredProcesses, key = { it.proc.pid }) { uiProc ->
+                        ProcessItem(modifier, uiProc, navController = navController)
+                    }
 
-                item {
-                    Spacer(modifier = Modifier.padding(bottom = 32.dp))
+                    item {
+                        Spacer(modifier = Modifier.padding(bottom = 32.dp))
+                    }
                 }
+            }else{
+                val messages = listOf(
+                    "¯\\_(ツ)_/¯",
+                    "(¬_¬ )",
+                    "(╯°□°）╯︵ ┻━┻",
+                    "(>_<)",
+                    "Bruh, check the filter",
+                    "(ಠ_ಠ)",
+                    "(•_•) <(no data)",
+                    "(o_O)"
+                )
+
+                val message = rememberSaveable { messages.random() }
+                Text(message)
             }
+
         }
 
 

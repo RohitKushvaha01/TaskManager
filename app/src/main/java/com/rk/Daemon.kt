@@ -21,7 +21,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 val daemon_messages = received_messages.asSharedFlow()
-val send_daemon_messages = MutableSharedFlow<String>(extraBufferCapacity = 20,onBufferOverflow = BufferOverflow.SUSPEND)
+val send_daemon_messages = MutableSharedFlow<String>(extraBufferCapacity = 10,onBufferOverflow = BufferOverflow.DROP_OLDEST)
 var isConnected by mutableStateOf(false)
     private set
 
@@ -32,7 +32,7 @@ private object DaemonServer {
 
     private val running = AtomicBoolean(false)
 
-    val received_messages = MutableSharedFlow<String>(extraBufferCapacity = 70,onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val received_messages = MutableSharedFlow<String>(extraBufferCapacity = 10,onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
 
     private var acceptJob: Job? = null

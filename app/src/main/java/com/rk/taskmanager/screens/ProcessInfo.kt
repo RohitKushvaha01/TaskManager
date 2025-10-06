@@ -1,5 +1,7 @@
 package com.rk.taskmanager.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -7,6 +9,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.os.SystemClock
+import android.system.Os
+import android.system.OsConstants
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -28,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.AlertDialog
@@ -83,9 +89,55 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import java.lang.reflect.Method
+import java.util.concurrent.TimeUnit
 import kotlin.math.round
 import kotlin.math.roundToInt
+import androidx.core.graphics.createBitmap
+import com.rk.components.SettingsToggle
+import com.rk.taskmanager.SettingsRoutes
+import java.text.DateFormat
+import java.util.Date
 
+
+// Get ticks per second (usually 100 on Linux)
+fun ticksPerSecond(): Long = Os.sysconf(OsConstants._SC_CLK_TCK)
+
+
+// Calculate elapsed time from startTime ticks
+fun elapsedFromStartTime(startTimeTicks: Long): String {
+    val processStartMillis = startTimeToMillis(startTimeTicks)
+    val now = System.currentTimeMillis()
+    val elapsedSeconds = (now - processStartMillis) / 1000
+
+    val h = TimeUnit.SECONDS.toHours(elapsedSeconds)
+    val m = TimeUnit.SECONDS.toMinutes(elapsedSeconds) % 60
+    val s = elapsedSeconds % 60
+
+    return String.format("%02d:%02d:%02d", h, m, s)
+}
+
+// Convert process start time (ticks since boot) → wall clock time (ms since epoch)
+fun startTimeToMillis(startTimeTicks: Long): Long {
+    val ticksPerSecond = sysconf() // custom helper below
+    val bootTimeMillis = System.currentTimeMillis() - SystemClock.elapsedRealtime()
+    val processStartMillis = bootTimeMillis + (startTimeTicks * 1000 / ticksPerSecond)
+    return processStartMillis
+}
+
+// Convert elapsed ticks → duration string
+fun elapsedTimeToString(elapsedTicks: Long): String {
+    val ticksPerSecond = sysconf()
+    val seconds = elapsedTicks / ticksPerSecond
+    val h = TimeUnit.SECONDS.toHours(seconds)
+    val m = TimeUnit.SECONDS.toMinutes(seconds) % 60
+    val s = seconds % 60
+    return String.format(java.util.Locale.ENGLISH,"%02d:%02d:%02d", h, m, s)
+}
+
+// This mimics sysconf(_SC_CLK_TCK) ≈ 100 on Linux
+fun sysconf(): Long {
+    return android.system.Os.sysconf(android.system.OsConstants._SC_CLK_TCK)
+}
 
 fun isAppInstalled(context: Context, packageName: String): Boolean {
     return try {
@@ -132,7 +184,7 @@ fun drawableTobitMap(drawable: Drawable?): Bitmap?{
         if (it is BitmapDrawable) {
             it.bitmap
         } else {
-            val bitmap = Bitmap.createBitmap(it.intrinsicWidth, it.intrinsicHeight, Bitmap.Config.ARGB_8888)
+            val bitmap = createBitmap(it.intrinsicWidth, it.intrinsicHeight)
             val canvas = Canvas(bitmap)
             it.setBounds(0, 0, canvas.width, canvas.height)
             it.draw(canvas)
@@ -160,13 +212,13 @@ fun ProcessInfo(
     viewModel: ProcessViewModel,
     pid: Int
 ) {
-    var proc = remember { mutableStateOf<ProcessViewModel.Process?>(null) }
-    var username = remember { mutableStateOf("Unknown") }
-    var kill_result = remember { mutableStateOf<Boolean?>(null) }
-    var killing = remember { mutableStateOf(false) }
+    val proc = remember { mutableStateOf<ProcessViewModel.Process?>(null) }
+    val username = remember { mutableStateOf("Unknown") }
+    val kill_result = remember { mutableStateOf<Boolean?>(null) }
+    val killing = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    var isApk = remember { mutableStateOf<Boolean>(false) }
-    var isApkForceStopped = remember { mutableStateOf<Boolean?>(false) }
+    val isApk = remember { mutableStateOf<Boolean>(false) }
+    //val isApkForceStopped = remember { mutableStateOf<Boolean?>(false) }
 
 
     LaunchedEffect(Unit) {
@@ -248,7 +300,7 @@ fun ProcessInfo(
                             title = {
                                 Text(
                                     fontWeight = FontWeight.Bold,
-                                    text = if (killing.value){if (isApk.value == true){"Stopping..."}else{"Killing..."}}else{
+                                    text = if (killing.value){if (isApk.value){"Stopping..."}else{"Killing..."}}else{
                                         kill_result.value?.let {
                                             if (it) {
                                                 if (isApk.value){"Killed"}else{"Stopped"}
@@ -271,9 +323,11 @@ fun ProcessInfo(
                             endWidget = null,
                             startWidget = {
                                 if (killing.value) {
-                                    CircularProgressIndicator(modifier = Modifier
-                                        .padding(start = 16.dp)
-                                        .alpha(if (enabled) 1f else 0.3f),)
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .padding(start = 16.dp)
+                                            .alpha(if (enabled) 1f else 0.3f),
+                                    )
                                 } else {
                                     kill_result.value?.let {
                                         if (it) {
@@ -323,10 +377,21 @@ fun ProcessInfo(
                         )
                         TextCard(text = "User", description = username.value)
                         if (proc.value!!.parentPid != 0) {
-                            TextCard(
-                                text = "Parent PID",
-                                description = proc.value!!.parentPid.toString()
-                            )
+
+                            val text = "Parent PID"
+                            val description = proc.value!!.parentPid.toString()
+                            SettingsToggle(label = text, description = description, default = false, showSwitch = false, onLongClick = {
+                                val clipboard = TaskManager.getContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText(text, description)
+                                clipboard.setPrimaryClip(clip)
+
+                                Toast.makeText(TaskManager.getContext(), "Copied", Toast.LENGTH_SHORT).show()
+                            }, endWidget = {
+                                Icon(modifier = Modifier.padding(end = 16.dp), imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,contentDescription = null)
+                            }, sideEffect = {
+                                navController.navigate(SettingsRoutes.ProcessInfo.createRoute(proc.value!!.parentPid))
+                            })
+
                         }
                         TextCard(text = "CPU Usage", description = proc.value!!.cpuUsage.roundToInt().toString() + "% (estimated)")
                         TextCard(
@@ -364,34 +429,50 @@ fun ProcessInfo(
                         TextCard(
                             text = "Status",
                             description = when (proc.value!!.state.toString()
-                                .toLowerCase(Locale.current)) {
+                                .lowercase()) {
                                 "r" -> "Running"
                                 "s" -> "Sleeping"
                                 "d" -> "Uninterruptible sleep"
                                 "z" -> "Sleeping"
                                 "t" -> "Stopped"
                                 "x" -> "Dead"
-                                else -> "Unknown"
+                                else -> proc.value!!.state.toString()
                             }
                         )
 
                         TextCard(text = "Threads", description = proc.value!!.threads.toString())
+
                         TextCard(
                             text = "Start Time",
-                            description = proc.value!!.startTime.toString()
+                            description = DateFormat.getDateTimeInstance().format(
+                                Date(startTimeToMillis(proc.value!!.startTime))
+                            )
                         )
+
+                        var elapsed by remember { mutableStateOf("") }
+
+                        val startTimeTicks = proc.value!!.startTime
+                        LaunchedEffect(startTimeTicks) {
+                            while (true) {
+                                elapsed = elapsedFromStartTime(startTimeTicks)
+                                kotlinx.coroutines.delay(1000)
+                            }
+                        }
+
                         TextCard(
                             text = "Elapsed Time",
-                            description = proc.value!!.elapsedTime.toString()
+                            description = elapsed
                         )
 
 
-                        TextCard(
-                            text = "Virtual Memory",
-                            description = "${proc.value!!.virtualMemoryKb}KB"
-                        )
 
-                        TextCard(text = "Cgroup", description = proc.value!!.cgroup)
+//                        TextCard(
+//                            text = "Virtual Memory",
+//                            description = "${proc.value!!.virtualMemoryKb}KB"
+//                        )
+
+                        //TextCard(text = "Cgroup", description = proc.value!!.cgroup)
+
                         if (proc.value!!.executablePath != "null") {
                             TextCard(text = "Executable", description = proc.value!!.executablePath)
                         }

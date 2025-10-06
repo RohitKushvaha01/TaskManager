@@ -30,7 +30,8 @@ data class ProcessUiModel(
     val name: String,
     val icon: ImageBitmap?,
     val isSystemApp: Boolean,
-    val isInstalledApp: Boolean
+    val isUserApp: Boolean,
+    val isApp: Boolean
 )
 
 class ProcessViewModel : ViewModel() {
@@ -103,8 +104,8 @@ class ProcessViewModel : ViewModel() {
                                 val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
                                 val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
                                 val system = isSystemApp(context, proc.cmdLine)
-                                val installed = isAppInstalled(context, proc.cmdLine)
-                                ProcessUiModel(proc, name, icon, system, installed)
+                                val isApp = isAppInstalled(context, proc.cmdLine)
+                                ProcessUiModel(proc, name, icon, system, isApp && !system, isApp = isApp)
                             }
                         }.awaitAll()
 

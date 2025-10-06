@@ -419,7 +419,40 @@ std::vector<Proc> collectProcs() {
     return procs;
 }
 
+std::string getSwapUsageBytes() {
+    std::ifstream meminfo("/proc/meminfo");
+    if (!meminfo.is_open()) {
+        return "SWAP:0:0";
+    }
 
+    long swapTotalKB = 0;
+    long swapFreeKB = 0;
+    std::string line;
+
+    while (std::getline(meminfo, line)) {
+        std::istringstream iss(line);
+        std::string key;
+        long value;
+        std::string unit;
+
+        iss >> key >> value >> unit;
+
+        if (key == "SwapTotal:") {
+            swapTotalKB = value;
+        } else if (key == "SwapFree:") {
+            swapFreeKB = value;
+        }
+
+        if (swapTotalKB != 0 && swapFreeKB != 0) {
+            break; // got both values
+        }
+    }
+
+    long swapUsedBytes = (swapTotalKB - swapFreeKB) * 1024;
+    long swapTotalBytes = swapTotalKB * 1024;
+
+    return "SWAP:" + std::to_string(swapUsedBytes) + ":" + std::to_string(swapTotalBytes);
+}
 
 void processCommand(int sock, const std::string &received) {
     size_t colonPos = received.find(':');
@@ -490,12 +523,65 @@ void processCommand(int sock, const std::string &received) {
         std::string cpuUsage = "CPU:" + std::to_string(usage);
         log_line(cpuUsage);
         send_msg(sock, cpuUsage);
+    } else if (cmd == "SWAP_PING") {
+        std::string cpuUsage = getSwapUsageBytes();
+        log_line(cpuUsage);
+        send_msg(sock, cpuUsage);
     } else {
         log_line("Unknown command: " + received);
     }
 }
 
+void daemonize()
+{
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        exit(EXIT_FAILURE); // Fork failed
+    }
+
+    if (pid > 0) {
+        exit(EXIT_SUCCESS); // Parent exits, child continues
+    }
+
+    // Child process becomes session leader
+    if (setsid() < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    // Catch signals (optional, to properly shut down)
+
+    // Fork again to ensure the daemon cannot acquire a terminal
+    pid = fork();
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    // Set file permissions mask
+    umask(0);
+
+    // Change working directory to root
+    if (chdir("/") < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    // Close standard file descriptors
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    // Optionally redirect fds to /dev/null
+    open("/dev/null", O_RDONLY); // stdin
+    open("/dev/null", O_RDWR);   // stdout
+    open("/dev/null", O_RDWR);   // stderr
+}
+
 int main() {
+    daemonize();
+
     log_line("=== Client starting ===");
 
     // Setup signal handler

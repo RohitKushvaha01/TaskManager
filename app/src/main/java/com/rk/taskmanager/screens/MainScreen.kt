@@ -33,12 +33,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.lifecycle.lifecycleScope
 import com.rk.isConnected
+import com.rk.startDaemon
+import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.settings.Settings
+import kotlinx.coroutines.launch
 
 private var selectedscreen = mutableIntStateOf(0)
 var showFilter = mutableStateOf(false)
 var showSystemApps = mutableStateOf(Settings.showSystemApps)
+var showUserApps = mutableStateOf(Settings.showUserApps)
 var showLinuxProcess = mutableStateOf(Settings.showLinuxProcess)
 
 
@@ -58,7 +63,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                             showFilter.value = !showFilter.value
                         }) {
                         Icon(
-                            imageVector = Filter_list,
+                            imageVector = Filter,
                             contentDescription = "Filter"
                         )
                     }
@@ -112,6 +117,13 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
             }
         }
     }else{
+        LaunchedEffect(Unit) {
+            if (Settings.workingMode != -1){
+                MainActivity.scope?.launch {
+                    startDaemon(context = MainActivity.instance!!, Settings.workingMode)
+                }
+            }
+        }
         Box(modifier = Modifier.fillMaxSize()){
             Column(modifier = Modifier.align(Alignment.Center)) {
                 LinearProgressIndicator()
@@ -124,12 +136,12 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
 }
 
 
-val Filter_list: ImageVector
+val Sort: ImageVector
     get() {
-        if (_Filter_list != null) return _Filter_list!!
+        if (_Sort != null) return _Sort!!
 
-        _Filter_list = ImageVector.Builder(
-            name = "Filter_list",
+        _Sort = ImageVector.Builder(
+            name = "Sort",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 960f,
@@ -156,8 +168,52 @@ val Filter_list: ImageVector
             }
         }.build()
 
-        return _Filter_list!!
+        return _Sort!!
     }
 
-private var _Filter_list: ImageVector? = null
+private var _Sort: ImageVector? = null
+
+
+val Filter: ImageVector
+    get() {
+        if (_Filter != null) return _Filter!!
+
+        _Filter = ImageVector.Builder(
+            name = "Filter_alt",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 960f,
+            viewportHeight = 960f
+        ).apply {
+            path(
+                fill = SolidColor(Color(0xFF000000))
+            ) {
+                moveTo(440f, 800f)
+                quadToRelative(-17f, 0f, -28.5f, -11.5f)
+                reflectiveQuadTo(400f, 760f)
+                verticalLineToRelative(-240f)
+                lineTo(168f, 224f)
+                quadToRelative(-15f, -20f, -4.5f, -42f)
+                reflectiveQuadToRelative(36.5f, -22f)
+                horizontalLineToRelative(560f)
+                quadToRelative(26f, 0f, 36.5f, 22f)
+                reflectiveQuadToRelative(-4.5f, 42f)
+                lineTo(560f, 520f)
+                verticalLineToRelative(240f)
+                quadToRelative(0f, 17f, -11.5f, 28.5f)
+                reflectiveQuadTo(520f, 800f)
+                close()
+                moveToRelative(40f, -308f)
+                lineToRelative(198f, -252f)
+                horizontalLineTo(282f)
+                close()
+                moveToRelative(0f, 0f)
+            }
+        }.build()
+
+        return _Filter!!
+    }
+
+private var _Filter: ImageVector? = null
+
 

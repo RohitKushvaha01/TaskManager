@@ -175,6 +175,7 @@ fun Resources(modifier: Modifier = Modifier) {
             default = false
         )
 
+        Spacer(modifier = Modifier.padding(vertical = 8.dp))
         Column() {
             CartesianChartHost(
                 rememberCartesianChart(
@@ -230,6 +231,7 @@ fun Resources(modifier: Modifier = Modifier) {
 
 
 
+        Spacer(modifier = Modifier.padding(vertical = 8.dp))
         Column() {
             CartesianChartHost(
                 rememberCartesianChart(

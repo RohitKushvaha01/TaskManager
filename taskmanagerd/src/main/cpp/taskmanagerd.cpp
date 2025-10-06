@@ -527,6 +527,19 @@ void processCommand(int sock, const std::string &received) {
         std::string cpuUsage = getSwapUsageBytes();
         log_line(cpuUsage);
         send_msg(sock, cpuUsage);
+    }  else if (cmd == "PING_PID_CPU") {
+        int arg;
+        if (colonPos != std::string::npos) {
+            try {
+                arg = std::stoi(received.substr(colonPos + 1));
+            } catch (...) {
+                log_line("Invalid number in command");
+            }
+        }
+
+        std::string cpuUsage = "CPU_PID:" + std::to_string(calculateProcessCpuUsage(arg));
+        log_line(cpuUsage);
+        send_msg(sock, cpuUsage);
     } else {
         log_line("Unknown command: " + received);
     }

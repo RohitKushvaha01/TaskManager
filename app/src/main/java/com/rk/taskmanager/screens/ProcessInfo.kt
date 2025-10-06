@@ -95,6 +95,7 @@ import kotlin.math.roundToInt
 import androidx.core.graphics.createBitmap
 import com.rk.components.SettingsToggle
 import com.rk.taskmanager.SettingsRoutes
+import kotlinx.coroutines.isActive
 import java.text.DateFormat
 import java.util.Date
 
@@ -218,6 +219,7 @@ fun ProcessInfo(
     val killing = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val isApk = remember { mutableStateOf<Boolean>(false) }
+    val cpuUsage = remember { mutableIntStateOf(-1) }
     //val isApkForceStopped = remember { mutableStateOf<Boolean?>(false) }
 
 
@@ -393,7 +395,29 @@ fun ProcessInfo(
                             })
 
                         }
-                        TextCard(text = "CPU Usage", description = proc.value!!.cpuUsage.roundToInt().toString() + "% (estimated)")
+
+                        LaunchedEffect(Unit) {
+                            daemon_messages.collect { message ->
+                                if (message.startsWith("CPU_PID:")){
+                                    cpuUsage.intValue = message.removePrefix("CPU_PID:").toFloat().toInt()
+                                }
+                            }
+                        }
+
+                        LaunchedEffect(Unit) {
+                            while (isActive){
+                                if (proc.value != null){
+                                    send_daemon_messages.emit("PING_PID_CPU:${proc.value!!.pid}")
+                                }
+                                delay(1000)
+                            }
+                        }
+
+                        TextCard(text = "CPU Usage", description = (if (cpuUsage.intValue == -1){
+                            proc.value!!.cpuUsage.roundToInt().toString()
+                        }else{
+                            cpuUsage.intValue
+                        }).toString() + "% (estimated)")
                         TextCard(
                             text = "Foreground",
                             description = proc.value!!.isForeground.toString()

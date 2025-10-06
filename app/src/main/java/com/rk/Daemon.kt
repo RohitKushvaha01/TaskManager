@@ -168,18 +168,27 @@ private object DaemonServer {
     }
 }
 
+enum class DaemonResult(var message: String?){
+    OK(null),
+    SHIZUKU_PERMISSION_DENIED("Shizuku permission denied, grant permission manually"),
+    SHIZUKU_NOT_RUNNING("Shizuku not running"),
+    SHIZUKU_NOT_INSTALLED("Shizuku not installed, install shizuku/sui first"),
+    SHIZUKU_TIMEOUT("Shizuku not responding"),
+    SU_NOT_IN_PATH("Su not available in path"),
+    UNKNOWN_ERROR(null),
+    DAEMON_REFUSED("Daemon failed to start"),
+}
 
 suspend fun startDaemon(
     context: Context,
     mode: Int
-): Boolean {
+): DaemonResult {
     val daemonFile = File(TaskManager.getContext().applicationInfo.nativeLibraryDir,"libtaskmanagerd.so")
     return withContext(Dispatchers.IO) {
 
         println(daemonFile.absolutePath)
 
         DaemonServer.start()
-
 
         try {
             when (mode) {
@@ -189,22 +198,35 @@ suspend fun startDaemon(
                     loading.show()
 
 
-                    var success = false
-                    ShizukuUtil.withService {
-                        if (this == ShizukuUtil.Error.NO_ERROR) {
-                            val result = it?.newProcess(
-                                cmd = arrayOf(daemonFile.absolutePath),
-                                env = arrayOf(),
-                                workingDir = "/"
-                            )
-                            success = result == 0
-                            loading.hide()
-                        }else{
-                            success = false
+                    var result: DaemonResult = DaemonResult.UNKNOWN_ERROR
+                    ShizukuUtil.withService { it ->
+                        result =  when(this){
+                            ShizukuUtil.Error.PERMISSION_DENIED -> DaemonResult.SHIZUKU_PERMISSION_DENIED
+                            ShizukuUtil.Error.NOT_INSTALLED -> DaemonResult.SHIZUKU_NOT_INSTALLED
+                            ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> DaemonResult.SHIZUKU_NOT_RUNNING
+                            ShizukuUtil.Error.UNKNOWN_ERROR -> DaemonResult.UNKNOWN_ERROR
+                            ShizukuUtil.Error.SHIZUKU_TIMEOUT -> DaemonResult.SHIZUKU_TIMEOUT
+                            ShizukuUtil.Error.NO_ERROR -> {
+                                val processResult = it?.newProcess(
+                                    cmd = arrayOf(daemonFile.absolutePath),
+                                    env = arrayOf(),
+                                    workingDir = "/"
+                                )
+
+                                if (processResult?.first == 0){
+                                    DaemonResult.OK
+                                }else{
+                                    DaemonResult.DAEMON_REFUSED.also { enum ->
+                                        enum.message = processResult?.second
+                                    }
+                                }
+                            }
                         }
+                        loading.hide()
                     }
+
                     loading.hide()
-                    success
+                    result
                 }
 
                 WorkingMode.ROOT.id -> {
@@ -214,25 +236,30 @@ suspend fun startDaemon(
 
                     if (!isSuInPath()){
                         loading.hide()
-                        return@withContext false
+                        return@withContext DaemonResult.SU_NOT_IN_PATH
                     }
                     val cmd = arrayOf("su", "-c", daemonFile.absolutePath)
-                    if (newProcess(cmd = cmd, env = arrayOf(), workingDir = "/") == 0){
+                    val result = newProcess(cmd = cmd, env = arrayOf(), workingDir = "/")
+                    if (result.first == 0){
                         loading.hide()
-                        true
+                        DaemonResult.OK
                     }else{
                         loading.hide()
-                        false
+                        DaemonResult.DAEMON_REFUSED.also {
+                            it.message = result.second
+                        }
                     }
                 }
 
                 else -> {
-                    false
+                    DaemonResult.UNKNOWN_ERROR
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            false
+            DaemonResult.UNKNOWN_ERROR.also {
+                it.message = e.message
+            }
         }
     }
 }
@@ -251,9 +278,10 @@ private suspend fun newProcess(
     cmd: Array<String>,
     env: Array<String>,
     workingDir: String
-): Int = withContext(Dispatchers.IO){
+): Pair<Int,String> = withContext(Dispatchers.IO){
     return@withContext try {
         val processBuilder = ProcessBuilder(*cmd)
+        processBuilder.redirectErrorStream(true)
         if (workingDir.isNotEmpty()) {
             val dir = File(workingDir)
             if (dir.exists() && dir.isDirectory) {
@@ -272,9 +300,10 @@ private suspend fun newProcess(
             }
         }
 
-        processBuilder.start().waitFor()
+        val process = processBuilder.start()
+        Pair(process.waitFor(),process.inputStream.bufferedReader().readLine())
     } catch (e: Exception) {
         e.printStackTrace()
-        1
+        Pair(-1,e.message.toString())
     }
 }

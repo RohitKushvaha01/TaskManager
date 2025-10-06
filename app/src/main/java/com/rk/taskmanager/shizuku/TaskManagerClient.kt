@@ -11,7 +11,7 @@ import androidx.annotation.Keep
         cmd: Array<String>,
         env: Array<String>,
         workingDir: String
-    ): Int {
+    ): Pair<Int, String> {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
 
@@ -28,7 +28,9 @@ import androidx.annotation.Keep
 
             // Read response
             reply.readException()
-            return reply.readInt()
+            val resultCode = reply.readInt()
+            val resultString = reply.readString() ?: ""
+            return Pair(resultCode, resultString)
         } finally {
             data.recycle()
             reply.recycle()

@@ -1,5 +1,6 @@
 package com.rk.taskmanager.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,10 +35,13 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.lifecycle.lifecycleScope
+import com.rk.DaemonResult
 import com.rk.isConnected
 import com.rk.startDaemon
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.settings.Settings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private var selectedscreen = mutableIntStateOf(0)
@@ -119,8 +123,17 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
     }else{
         LaunchedEffect(Unit) {
             if (Settings.workingMode != -1){
-                MainActivity.scope?.launch {
-                    startDaemon(context = MainActivity.instance!!, Settings.workingMode)
+                MainActivity.scope?.launch(Dispatchers.Main) {
+                    val daemonResult = startDaemon(context = MainActivity.instance!!, Settings.workingMode)
+                    if (daemonResult != DaemonResult.OK){
+                        delay(3000)
+                        if (isConnected.not()){
+                            Toast.makeText(MainActivity.instance!!, daemonResult.message ?: "Unable to start daemon!", Toast.LENGTH_SHORT).show()
+                            if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
+                                navController.navigate(SettingsRoutes.SelectWorkingMode.route)
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -15,7 +15,7 @@ interface IInterfaceCreator<T : IInterface> {
 
 @Keep
 interface TaskManagerService : IInterface {
-    @Keep fun newProcess(cmd: Array<String>, env: Array<String>, workingDir: String): Int
+    @Keep fun newProcess(cmd: Array<String>, env: Array<String>, workingDir: String): Pair<Int, String>
 
     companion object {
         const val DESCRIPTOR = "com.rk.taskmanager.TaskManagerService"

@@ -1,6 +1,7 @@
 package com.rk.taskmanager
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,9 +10,11 @@ import androidx.compose.material3.Surface
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.rk.DaemonResult
 import com.rk.daemon_messages
 import com.rk.isConnected
 import com.rk.send_daemon_messages
@@ -34,6 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.lang.ref.WeakReference
 import kotlin.math.max
 
 
@@ -48,6 +52,8 @@ class MainActivity : ComponentActivity() {
             private set
     }
 
+    private var navControllerRef: WeakReference<NavController?> = WeakReference(null)
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,32 +65,32 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             daemon_messages.collect { message ->
-                if (message.startsWith("CPU:")){
-                    graphMutex.withLock {
-                        updateCpuGraph(message.removePrefix("CPU:").toInt())
-                    }
+                if (message.startsWith("CPU:") && graphMutex.tryLock()){
+                    updateCpuGraph(message.removePrefix("CPU:").toInt())
+                    delay(32)
+                    graphMutex.unlock()
                 }
 
-                //SWAP:USED:TOTAL
-                if (message.startsWith("SWAP:")){
-                    graphMutex.withLock {
-                        updateRamGraph()
+                if (message.startsWith("SWAP:") && graphMutex.tryLock()){
+                    updateRamGraph()
 
-                        val parts = message.removePrefix("SWAP:").split(":")
+                    delay(32)
 
-                        if (parts.size == 2) {
-                            val used = parts[0]
-                            val total = parts[1]
+                    val parts = message.removePrefix("SWAP:").split(":")
 
-                            val usedValue = used.toFloatOrNull() ?: 0f
-                            val totalValue = total.toFloatOrNull() ?: 1f
+                    if (parts.size == 2) {
+                        val used = parts[0]
+                        val total = parts[1]
 
-                            val percentage = (usedValue / totalValue) * 100
+                        val usedValue = used.toFloatOrNull() ?: 0f
+                        val totalValue = total.toFloatOrNull() ?: 1f
 
-                            updateSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
-                        }
+                        val percentage = (usedValue / totalValue) * 100
 
+                        updateSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
                     }
+
+                    graphMutex.unlock()
                 }
 
                 delay(16)
@@ -96,7 +102,7 @@ class MainActivity : ComponentActivity() {
                 graphMutex.withLock {
                     if (isConnected){
                         send_daemon_messages.emit("CPU_PING")
-                        delay(20)
+                        delay(16)
                         send_daemon_messages.emit("SWAP_PING")
                     }
                 }
@@ -108,6 +114,7 @@ class MainActivity : ComponentActivity() {
             TaskManagerTheme {
                 Surface{
                     val navController = rememberNavController()
+                    navControllerRef = WeakReference(navController)
                     NavHost(
                         navController = navController,
                         startDestination = if (Settings.workingMode == -1){
@@ -144,8 +151,18 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (Settings.workingMode != -1){
-            lifecycleScope.launch {
-                startDaemon(this@MainActivity, Settings.workingMode)
+            lifecycleScope.launch(Dispatchers.Main) {
+                val daemonResult = startDaemon(context = this@MainActivity, Settings.workingMode)
+                if (daemonResult != DaemonResult.OK){
+                    delay(3000)
+                    if (isConnected.not()){
+                        Toast.makeText(this@MainActivity, daemonResult.message ?: "Unable to start daemon!", Toast.LENGTH_SHORT).show()
+                        if (navControllerRef.get()?.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
+                            navControllerRef.get()?.navigate(SettingsRoutes.SelectWorkingMode.route)
+                        }
+
+                    }
+                }
             }
         }
         viewModel.refreshAuto()

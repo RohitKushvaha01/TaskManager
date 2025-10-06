@@ -33,7 +33,8 @@ import java.io.OutputStreamWriter
 
                 // Write response
                 reply?.writeNoException()
-                reply?.writeInt(result)
+                reply?.writeInt(result.first)
+                reply?.writeString(result.second)
                 return true
             }
 
@@ -45,9 +46,10 @@ import java.io.OutputStreamWriter
         cmd: Array<String>,
         env: Array<String>,
         workingDir: String
-    ): Int {
+    ): Pair<Int, String> {
         return try {
             val processBuilder = ProcessBuilder(*cmd)
+            processBuilder.redirectErrorStream(true)
 
             // Set working directory if provided
             if (workingDir.isNotEmpty()) {
@@ -70,11 +72,13 @@ import java.io.OutputStreamWriter
             }
 
             // Start the process
-            processBuilder.start().waitFor()
+            val process = processBuilder.start()
+            val resultCode = process.waitFor()
+            val stdout = process.inputStream.bufferedReader().readLine()
+            Pair(resultCode,stdout)
         } catch (e: Exception) {
             e.printStackTrace()
-            // Return 1 for failure
-            1
+            Pair(-1,e.message.toString())
         }
     }
 }

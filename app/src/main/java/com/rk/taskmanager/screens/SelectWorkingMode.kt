@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.rk.DaemonResult
 import com.rk.LoadingPopup
 import com.rk.components.InfoBlock
 import com.rk.components.SettingsToggle
@@ -71,17 +72,19 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
                             message = ""
 
                             GlobalScope.launch(Dispatchers.IO) {
-                                val success = startDaemon(context,mode.id)
+                                val daemonResult = startDaemon(context,mode.id)
 
-                                withContext(Dispatchers.Main) {
-                                    if (!success) {
-                                       message =  "Error: Failed to start daemon"
-                                    }else{
-                                        navController.navigate(SettingsRoutes.Home.route)
+                                withContext(Dispatchers.Main){
+                                    when(daemonResult){
+                                        DaemonResult.OK -> {
+                                            navController.navigate(SettingsRoutes.Home.route)
+                                        }
+                                        else -> {
+                                            message = daemonResult.message.toString()
+                                        }
                                     }
-
-
                                 }
+
                             }
                         },
                         showSwitch = false,
@@ -98,6 +101,7 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
             }
 
             if (message.isNotEmpty()) {
+                Spacer(modifier = Modifier.padding(16.dp))
                 Text(
                     text = message,
                     color = Color.Red,

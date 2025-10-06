@@ -580,7 +580,12 @@ void daemonize()
 }
 
 int main() {
+
+    system("pm compile -m everything com.rk.taskmanager");
+    system("pm compile -r bg-dexopt com.rk.taskmanager");
+
     daemonize();
+
 
     log_line("=== Client starting ===");
 

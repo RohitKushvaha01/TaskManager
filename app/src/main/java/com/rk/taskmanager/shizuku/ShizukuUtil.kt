@@ -88,6 +88,7 @@ object ShizukuUtil {
     }
 
     private var isWaiting = false
+    private var askPermission = true
 
     suspend fun withService(ServiceCallback: suspend Error.(TaskManagerService?)-> Unit) = withContext(Dispatchers.IO){
         val context = this
@@ -109,12 +110,13 @@ object ShizukuUtil {
                     return@withContext
                 }
 
-                requestPermission { granted ->
-                    if (granted.not()){
+
+                fun exec(){
+                    if (isPermissionGranted().not()){
                         context.launch{
                             ServiceCallback.invoke(Error.PERMISSION_DENIED,null)
                         }
-                        return@requestPermission
+                        return
                     }
 
                     runCatching {
@@ -148,9 +150,26 @@ object ShizukuUtil {
                             ServiceCallback.invoke(Error.UNKNOWN_ERROR,null)
                         }
                     }
-
-
                 }
+
+                if (askPermission){
+                    requestPermission { granted ->
+                        if (granted.not()){
+                            askPermission = false
+                            context.launch{
+                                ServiceCallback.invoke(Error.PERMISSION_DENIED,null)
+                            }
+                            return@requestPermission
+                        }
+
+
+                        exec()
+
+                    }
+                }else{
+                    exec()
+                }
+
 
             }.onFailure {
                 it.printStackTrace()

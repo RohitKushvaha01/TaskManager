@@ -3,7 +3,6 @@ package com.rk
 import android.content.Context
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.screens.WorkingMode
-import com.rk.taskmanager.shizuku.ShizukuUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -11,10 +10,14 @@ import android.net.LocalServerSocket
 import android.net.LocalSocket
 import androidx.compose.runtime.*
 import com.rk.DaemonServer.received_messages
+import com.rk.taskmanager.shizuku.ShizukuShell
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.takeWhile
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -171,20 +174,25 @@ private object DaemonServer {
 enum class DaemonResult(var message: String?){
     OK(null),
     SHIZUKU_PERMISSION_DENIED("Shizuku permission denied, grant permission manually"),
-    SHIZUKU_NOT_RUNNING("Shizuku not running"),
-    SHIZUKU_NOT_INSTALLED("Shizuku not installed, install shizuku/sui first"),
-    SHIZUKU_TIMEOUT("Shizuku not responding"),
+    SHIZUKU_NOT_RUNNING("Shizuku not running or not installed."),
     SU_NOT_IN_PATH("Su not available in path"),
     UNKNOWN_ERROR(null),
     DAEMON_REFUSED("Daemon failed to start"),
+    DAEMON_ALREADY_BEING_STARTED(null)
 }
 
+
+private var daemonCalled = false
 suspend fun startDaemon(
     context: Context,
     mode: Int
 ): DaemonResult {
     val daemonFile = File(TaskManager.getContext().applicationInfo.nativeLibraryDir,"libtaskmanagerd.so")
-    return withContext(Dispatchers.IO) {
+    val result = withContext(Dispatchers.IO) {
+        if (daemonCalled){
+            return@withContext DaemonResult.DAEMON_ALREADY_BEING_STARTED
+        }
+        daemonCalled = true
 
         println(daemonFile.absolutePath)
 
@@ -197,36 +205,33 @@ suspend fun startDaemon(
                     loading.setMessage("Starting daemon...")
                     loading.show()
 
-
-                    var result: DaemonResult = DaemonResult.UNKNOWN_ERROR
-                    ShizukuUtil.withService { it ->
-                        result =  when(this){
-                            ShizukuUtil.Error.PERMISSION_DENIED -> DaemonResult.SHIZUKU_PERMISSION_DENIED
-                            ShizukuUtil.Error.NOT_INSTALLED -> DaemonResult.SHIZUKU_NOT_INSTALLED
-                            ShizukuUtil.Error.SHIZUKU_NOT_RUNNNING -> DaemonResult.SHIZUKU_NOT_RUNNING
-                            ShizukuUtil.Error.UNKNOWN_ERROR -> DaemonResult.UNKNOWN_ERROR
-                            ShizukuUtil.Error.SHIZUKU_TIMEOUT -> DaemonResult.SHIZUKU_TIMEOUT
-                            ShizukuUtil.Error.NO_ERROR -> {
-                                val processResult = it?.newProcess(
-                                    cmd = arrayOf(daemonFile.absolutePath),
-                                    env = arrayOf(),
-                                    workingDir = "/"
-                                )
-
-                                if (processResult?.first == 0){
-                                    DaemonResult.OK
-                                }else{
-                                    DaemonResult.DAEMON_REFUSED.also { enum ->
-                                        enum.message = processResult?.second
-                                    }
-                                }
-                            }
-                        }
+                    if (!ShizukuShell.isShizukuRunning()){
                         loading.hide()
+                        return@withContext DaemonResult.SHIZUKU_NOT_RUNNING
+                    }
+
+                    if (!ShizukuShell.isPermissionGranted()) {
+                        loading.hide()
+                        return@withContext DaemonResult.SHIZUKU_PERMISSION_DENIED
+                    }
+
+                    val processResult = ShizukuShell.newProcess(
+                        cmd = arrayOf(daemonFile.absolutePath),
+                        env = arrayOf(),
+                        dir = "/"
+                    )
+
+                    val result = if (processResult.first == 0) {
+                        DaemonResult.OK
+                    } else {
+                        DaemonResult.DAEMON_REFUSED.also {
+                            it.message = processResult.second
+                        }
                     }
 
                     loading.hide()
                     result
+
                 }
 
                 WorkingMode.ROOT.id -> {
@@ -252,7 +257,7 @@ suspend fun startDaemon(
                 }
 
                 else -> {
-                    DaemonResult.UNKNOWN_ERROR
+                    throw IllegalStateException("This should not happen")
                 }
             }
         } catch (e: Exception) {
@@ -262,6 +267,9 @@ suspend fun startDaemon(
             }
         }
     }
+
+    daemonCalled = false
+    return result
 }
 
 suspend fun isSuInPath(): Boolean = withContext(Dispatchers.IO) {

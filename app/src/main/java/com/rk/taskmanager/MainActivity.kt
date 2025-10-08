@@ -26,8 +26,8 @@ import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SelectedWorkingMode
 import com.rk.taskmanager.screens.SettingsScreen
 import com.rk.taskmanager.screens.updateCpuGraph
+import com.rk.taskmanager.screens.updateRamAndSwapGraph
 import com.rk.taskmanager.screens.updateRamGraph
-import com.rk.taskmanager.screens.updateSwapGraph
 import com.rk.taskmanager.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -72,10 +72,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (message.startsWith("SWAP:") && graphMutex.tryLock()){
-                    updateRamGraph()
-
-                    delay(32)
-
                     val parts = message.removePrefix("SWAP:").split(":")
 
                     if (parts.size == 2) {
@@ -87,7 +83,7 @@ class MainActivity : ComponentActivity() {
 
                         val percentage = (usedValue / totalValue) * 100
 
-                        updateSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
+                        updateRamAndSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
                     }
 
                     graphMutex.unlock()

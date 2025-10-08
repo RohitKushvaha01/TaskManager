@@ -8,16 +8,25 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
-import com.patrykandpatrick.vico.compose.cartesian.*
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.layer.*
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -82,11 +91,11 @@ suspend fun getSystemRamUsage(context: Context): Int = withContext(Dispatchers.I
 
 // Helper to format for display
 fun formatRamMB(bytes: Long): String = "${bytes / (1024 * 1024)} MB"
-fun formatRamGB(bytes: Long): String = String.format(Locale.ENGLISH,"%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+fun formatRamGB(bytes: Long): String =
+    String.format(Locale.ENGLISH, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
 
 
-
-suspend fun updateRamGraph(){
+suspend fun updateRamGraph() {
     RamUsage = getSystemRamUsage(TaskManager.getContext())
     ramYValues.removeAt(0)
     ramYValues.add(RamUsage)
@@ -98,20 +107,33 @@ suspend fun updateRamGraph(){
 }
 
 
-suspend fun updateSwapGraph(usagePercent: Int, usageBytes: Long, totalBytes: Long){
+suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalBytes: Long) {
+    val ramUsage = getSystemRamUsage(TaskManager.getContext())
+
+    // Update values
+    RamUsage = ramUsage
+    usedRam = totalRam - (totalRam * (100 - ramUsage) / 100)
     usedSwap = usageBytes
     totalSwap = totalBytes
     SwapUsage = usagePercent
+
+    // Push new values into history
+    ramYValues.removeAt(0)
+    ramYValues.add(ramUsage)
     swapYValues.removeAt(0)
-    swapYValues.add(RamUsage)
-    SwapModelProducer.runTransaction {
+    swapYValues.add(usagePercent)
+
+    // Update chart model with both lines
+    RamModelProducer.runTransaction {
         lineSeries {
-            series(x = xValues, y = swapYValues)
+            series(x = xValues, y = ramYValues) // RAM line
+            series(x = xValues, y = swapYValues) // SWAP line
         }
     }
 }
 
-suspend fun updateCpuGraph(usage: Int){
+
+suspend fun updateCpuGraph(usage: Int) {
     CpuUsage = usage
     cpuYValues.removeAt(0)
     cpuYValues.add(CpuUsage)
@@ -127,155 +149,125 @@ fun Resources(modifier: Modifier = Modifier) {
     val lineColor = MaterialTheme.colorScheme.primary
 
     Column(modifier.verticalScroll(rememberScrollState())) {
-        Column() {
-            CartesianChartHost(
-                rememberCartesianChart(
-                    rememberLineCartesianLayer(
-                        lineProvider = LineCartesianLayer.LineProvider.series(
-                            LineCartesianLayer.rememberLine(
-                                fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                                areaFill = LineCartesianLayer.AreaFill.single(
-                                    fill(
-                                        ShaderProvider.verticalGradient(
-                                            intArrayOf(
-                                                lineColor.copy(alpha = 0.4f).toArgb(),
-                                                Color.Transparent.toArgb()
-                                            )
+
+        CartesianChartHost(
+            rememberCartesianChart(
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(
+                        LineCartesianLayer.rememberLine(
+                            fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                            areaFill = LineCartesianLayer.AreaFill.single(
+                                fill(
+                                    ShaderProvider.verticalGradient(
+                                        intArrayOf(
+                                            lineColor.copy(alpha = 0.4f).toArgb(),
+                                            Color.Transparent.toArgb()
                                         )
                                     )
                                 )
                             )
-                        ),
-                        rangeProvider = RangeProvider,
+                        )
                     ),
-                    startAxis = VerticalAxis.rememberStart(
-                        valueFormatter = StartAxisValueFormatter,
-                        label = TextComponent(
-                            color = MaterialTheme.colorScheme.onSurface.toArgb(),
-                            textSizeSp = 10f,
-                            lineCount = 1,
-                            typeface = Typeface.DEFAULT
-                        ),
-                        guideline = rememberAxisGuidelineComponent(),
-                    ),
-                    bottomAxis = null,
-                    marker = rememberMarker(MarkerValueFormatter),
+                    rangeProvider = RangeProvider,
                 ),
-                CpuModelProducer,
-                modifier,
-                rememberVicoScrollState(scrollEnabled = false),
-                animateIn = false,
-                animationSpec = null,
-            )
-        }
+                startAxis = VerticalAxis.rememberStart(
+                    valueFormatter = StartAxisValueFormatter,
+                    label = TextComponent(
+                        color = MaterialTheme.colorScheme.onSurface.toArgb(),
+                        textSizeSp = 10f,
+                        lineCount = 1,
+                        typeface = Typeface.DEFAULT
+                    ),
+                    guideline = rememberAxisGuidelineComponent(),
+                ),
+                bottomAxis = null,
+                marker = rememberMarker(MarkerValueFormatter),
+            ),
+            CpuModelProducer,
+            modifier,
+            rememberVicoScrollState(scrollEnabled = false),
+            animateIn = false,
+            animationSpec = null,
+        )
+
 
         SettingsToggle(
-            label = "CPU - ${if (CpuUsage <= 0){"No Data"}else{"$CpuUsage%"}}",
+            description = "CPU - ${
+                if (CpuUsage <= 0) {
+                    "No Data"
+                } else {
+                    "$CpuUsage%"
+                }
+            }",
             showSwitch = false,
             default = false
         )
 
         Spacer(modifier = Modifier.padding(vertical = 8.dp))
-        Column() {
-            CartesianChartHost(
-                rememberCartesianChart(
-                    rememberLineCartesianLayer(
-                        lineProvider = LineCartesianLayer.LineProvider.series(
-                            LineCartesianLayer.rememberLine(
-                                fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                                areaFill = LineCartesianLayer.AreaFill.single(
-                                    fill(
-                                        ShaderProvider.verticalGradient(
-                                            intArrayOf(
-                                                lineColor.copy(alpha = 0.4f).toArgb(),
-                                                Color.Transparent.toArgb()
-                                            )
+        val ramColor = MaterialTheme.colorScheme.primary
+        val swapColor = MaterialTheme.colorScheme.tertiary
+
+
+        HorizontalDivider()
+        CartesianChartHost(
+            rememberCartesianChart(
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(
+                        LineCartesianLayer.rememberLine(
+                            fill = LineCartesianLayer.LineFill.single(fill(ramColor)),
+                            areaFill = LineCartesianLayer.AreaFill.single(
+                                fill(
+                                    ShaderProvider.verticalGradient(
+                                        intArrayOf(
+                                            ramColor.copy(alpha = 0.3f).toArgb(),
+                                            Color.Transparent.toArgb()
                                         )
                                     )
                                 )
                             )
                         ),
-                        rangeProvider = RangeProvider,
+                        LineCartesianLayer.rememberLine(
+                            fill = LineCartesianLayer.LineFill.single(fill(swapColor)),
+                            areaFill = LineCartesianLayer.AreaFill.single(
+                                fill(
+                                    ShaderProvider.verticalGradient(
+                                        intArrayOf(
+                                            swapColor.copy(alpha = 0.3f).toArgb(),
+                                            Color.Transparent.toArgb()
+                                        )
+                                    )
+                                )
+                            )
+                        )
                     ),
-                    startAxis = VerticalAxis.rememberStart(
-                        valueFormatter = StartAxisValueFormatter,
-                        label = TextComponent(
-                            color = MaterialTheme.colorScheme.onSurface.toArgb(),
-                            textSizeSp = 10f,
-                            lineCount = 1,
-                            typeface = Typeface.DEFAULT
-                        ),
-                        guideline = rememberAxisGuidelineComponent(),
-                    ),
-                    bottomAxis = null,
-                    marker = rememberMarker(MarkerValueFormatter),
+                    rangeProvider = RangeProvider,
                 ),
-                RamModelProducer,
-                modifier,
-                rememberVicoScrollState(scrollEnabled = false),
-                animateIn = false,
-                animationSpec = null
-            )
-        }
-
-        SettingsToggle(
-            label = "RAM : ${formatRamMB(usedRam)}/${formatRamGB(totalRam)} ($RamUsage%)",
-            showSwitch = false,
-            default = false
+                startAxis = VerticalAxis.rememberStart(
+                    valueFormatter = StartAxisValueFormatter,
+                    label = TextComponent(
+                        color = MaterialTheme.colorScheme.onSurface.toArgb(),
+                        textSizeSp = 10f,
+                        lineCount = 1,
+                        typeface = Typeface.DEFAULT
+                    ),
+                    guideline = rememberAxisGuidelineComponent(),
+                ),
+                bottomAxis = null,
+                marker = rememberMarker(MarkerValueFormatter),
+            ),
+            RamModelProducer,
+            modifier,
+            rememberVicoScrollState(scrollEnabled = false),
+            animateIn = false,
+            animationSpec = null
         )
 
-
-
-
-        //
-
-
-
-        Spacer(modifier = Modifier.padding(vertical = 8.dp))
-        Column() {
-            CartesianChartHost(
-                rememberCartesianChart(
-                    rememberLineCartesianLayer(
-                        lineProvider = LineCartesianLayer.LineProvider.series(
-                            LineCartesianLayer.rememberLine(
-                                fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                                areaFill = LineCartesianLayer.AreaFill.single(
-                                    fill(
-                                        ShaderProvider.verticalGradient(
-                                            intArrayOf(
-                                                lineColor.copy(alpha = 0.4f).toArgb(),
-                                                Color.Transparent.toArgb()
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        ),
-                        rangeProvider = RangeProvider,
-                    ),
-                    startAxis = VerticalAxis.rememberStart(
-                        valueFormatter = StartAxisValueFormatter,
-                        label = TextComponent(
-                            color = MaterialTheme.colorScheme.onSurface.toArgb(),
-                            textSizeSp = 10f,
-                            lineCount = 1,
-                            typeface = Typeface.DEFAULT
-                        ),
-                        guideline = rememberAxisGuidelineComponent(),
-                    ),
-                    bottomAxis = null,
-                    marker = rememberMarker(MarkerValueFormatter),
-                ),
-                SwapModelProducer,
-                modifier,
-                rememberVicoScrollState(scrollEnabled = false),
-                animateIn = false,
-                animationSpec = null
-            )
-        }
-
         SettingsToggle(
-            label = "SWAP : ${formatRamMB(usedSwap)}/${formatRamGB(totalSwap)} ($SwapUsage%)",
+            description = "RAM: ${formatRamMB(usedRam)}/${formatRamGB(totalRam)} ($RamUsage%)\nSWAP: ${
+                formatRamMB(
+                    usedSwap
+                )
+            }/${formatRamGB(totalSwap)} ($SwapUsage%)",
             showSwitch = false,
             default = false
         )

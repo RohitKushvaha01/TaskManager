@@ -49,7 +49,6 @@ import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.settings.Settings
-import com.rk.taskmanager.shizuku.ShizukuUtil
 import kotlinx.coroutines.launch
 
 

@@ -33,7 +33,7 @@ import com.rk.components.compose.preferences.base.PreferenceTemplate
 fun PreferenceSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    label: String,
+    label: String? = null,
     modifier: Modifier = Modifier,
     description: String? = null,
     onLongClick: (() -> Unit)? = null,
@@ -63,7 +63,11 @@ fun PreferenceSwitch(
                 }
             ),
         contentModifier = Modifier.fillMaxHeight().padding(vertical = 16.dp).padding(start = 16.dp),
-        title = { Text(fontWeight = FontWeight.Bold, text = label) },
+        title = {
+            if (label != null) {
+                Text(fontWeight = FontWeight.Bold, text = label)
+            }
+        },
         description = { description?.let { Text(text = it) } },
         endWidget = {
             if (onClick != null) {

@@ -30,7 +30,7 @@ import com.rk.startDaemon
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.settings.Settings
-import com.rk.taskmanager.shizuku.ShizukuUtil
+import com.rk.taskmanager.shizuku.ShizukuShell
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -53,12 +53,17 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
     PreferenceLayout(label = "WorkingMode") {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // Info block
             InfoBlock(icon = {
                 Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
             }, text = "TaskManager requires elevated permission to work, select the working mode you want to use.")
 
             Spacer(modifier = Modifier.padding(10.dp))
+
+            LaunchedEffect(Unit) {
+                if (!ShizukuShell.isPermissionGranted()) {
+                    ShizukuShell.requestPermission()
+                }
+            }
 
             PreferenceGroup {
                 WorkingMode.entries.forEach { mode ->

@@ -24,7 +24,7 @@ import com.rk.components.compose.preferences.switch.PreferenceSwitch
 @Composable
 fun SettingsToggle(
     modifier: Modifier = Modifier,
-    label: String,
+    label: String? = null,
     description: String? = null,
     @DrawableRes iconRes: Int? = null,
     default: Boolean,
@@ -37,15 +37,14 @@ fun SettingsToggle(
     startWidget: (@Composable () -> Unit)? = null,
     endWidget: (@Composable () -> Unit)? = null,
 ) {
-    var state by remember {
-        mutableStateOf(default)
-    }
-
     if (showSwitch && endWidget != null){
         throw IllegalStateException("endWidget with show switch")
     }
 
     if (showSwitch) {
+        var state by remember {
+            mutableStateOf(default)
+        }
         PreferenceSwitch(checked = state,
             onLongClick = onLongClick,
             onCheckedChange = {
@@ -87,7 +86,11 @@ fun SettingsToggle(
                 .fillMaxHeight()
                 .padding(vertical = 16.dp)
                 .padding(start = 16.dp),
-            title = { Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            title = {
+                if (label != null) {
+                    Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            },
             description = { description?.let { Text(text = it) } },
             enabled = true,
             applyPaddings = false,

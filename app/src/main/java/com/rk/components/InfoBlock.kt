@@ -3,6 +3,7 @@ package com.rk.components
 
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,8 @@ fun InfoBlock(
     text: String,
     icon: @Composable (() -> Unit)? = null,
     shape: Shape = RoundedCornerShape(12.dp),
+    padding: PaddingValues = PaddingValues(16.dp),
+    textPadding: PaddingValues = PaddingValues(start = 8.dp)
 ) {
     PreferenceGroup(modifier = modifier) {
         Card(
@@ -34,7 +37,7 @@ fun InfoBlock(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(padding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (icon != null) {
@@ -49,7 +52,7 @@ fun InfoBlock(
                 Text(
                     text = text,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(textPadding)
                 )
             }
         }

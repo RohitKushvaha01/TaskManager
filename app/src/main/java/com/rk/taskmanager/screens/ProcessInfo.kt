@@ -76,7 +76,6 @@ import com.rk.send_daemon_messages
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
 import com.rk.taskmanager.TaskManager
-import com.rk.taskmanager.shizuku.ShizukuUtil
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -95,6 +94,7 @@ import kotlin.math.roundToInt
 import androidx.core.graphics.createBitmap
 import com.rk.components.SettingsToggle
 import com.rk.taskmanager.SettingsRoutes
+import com.rk.taskmanager.shizuku.ShizukuShell
 import kotlinx.coroutines.isActive
 import java.text.DateFormat
 import java.util.Date
@@ -280,7 +280,7 @@ fun ProcessInfo(
                                                     }
                                                 }
 
-                                                if (isApk.value && ShizukuUtil.isShell()){
+                                                if (isApk.value && ShizukuShell.isShell()){
                                                     send_daemon_messages.emit("FORCE_STOP:${proc.value!!.cmdLine}")
                                                 }else{
                                                     send_daemon_messages.emit("KILL:${proc.value!!.pid}")
@@ -307,7 +307,7 @@ fun ProcessInfo(
                                             if (it) {
                                                 if (isApk.value){"Killed"}else{"Stopped"}
                                             } else {
-                                                if (ShizukuUtil.isShell() && !isApk.value){
+                                                if (ShizukuShell.isShell() && !isApk.value){
                                                     "Kill failed (Permission denied)"
                                                 }else{
                                                     "Kill failed (try again?)"

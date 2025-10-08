@@ -54,22 +54,29 @@ private val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default
 
 val xValues = List(MAX_POINTS) { it.toDouble() }
 
+
+val cpuYValues = ArrayDeque<Int>(MAX_POINTS).apply { repeat(MAX_POINTS) { add(0) } }
+val ramYValues = ArrayDeque<Int>(MAX_POINTS).apply { repeat(MAX_POINTS) { add(0) } }
+val swapYValues = ArrayDeque<Int>(MAX_POINTS).apply { repeat(MAX_POINTS) { add(0) } }
+
+
+
 //CPU
 val CpuModelProducer = CartesianChartModelProducer()
-val cpuYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
+//val cpuYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
 var CpuUsage by mutableIntStateOf(0)
 
 
 //RAM
 val RamModelProducer = CartesianChartModelProducer()
-val ramYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
+//val ramYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
 var RamUsage by mutableIntStateOf(0)
 var usedRam by mutableLongStateOf(0L)
 var totalRam by mutableLongStateOf(0L)
 
 //SWAP
 val SwapModelProducer = CartesianChartModelProducer()
-val swapYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
+//val swapYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
 var SwapUsage by mutableIntStateOf(0)
 
 var usedSwap by mutableLongStateOf(0L)
@@ -95,17 +102,6 @@ fun formatRamGB(bytes: Long): String =
     String.format(Locale.ENGLISH, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
 
 
-suspend fun updateRamGraph() {
-    RamUsage = getSystemRamUsage(TaskManager.getContext())
-    ramYValues.removeAt(0)
-    ramYValues.add(RamUsage)
-    RamModelProducer.runTransaction {
-        lineSeries {
-            series(x = xValues, y = ramYValues)
-        }
-    }
-}
-
 
 suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalBytes: Long) {
     val ramUsage = getSystemRamUsage(TaskManager.getContext())
@@ -118,30 +114,42 @@ suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalByte
     SwapUsage = usagePercent
 
     // Push new values into history
-    ramYValues.removeAt(0)
-    ramYValues.add(ramUsage)
-    swapYValues.removeAt(0)
-    swapYValues.add(usagePercent)
+
+    ramYValues.removeFirst()
+    ramYValues.addLast(ramUsage)
+
+    swapYValues.removeFirst()
+    swapYValues.addLast(usagePercent)
+
 
     // Update chart model with both lines
+    if (selectedscreen.intValue == 0) {
     RamModelProducer.runTransaction {
         lineSeries {
             series(x = xValues, y = ramYValues) // RAM line
             series(x = xValues, y = swapYValues) // SWAP line
         }
     }
+    }
 }
 
 
 suspend fun updateCpuGraph(usage: Int) {
     CpuUsage = usage
-    cpuYValues.removeAt(0)
-    cpuYValues.add(CpuUsage)
-    CpuModelProducer.runTransaction {
-        lineSeries {
-            series(x = xValues, y = cpuYValues)
+    //cpuYValues.removeAt(0)
+    //cpuYValues.add(CpuUsage)
+
+    cpuYValues.removeFirst()
+    cpuYValues.addLast(CpuUsage)
+
+    if (selectedscreen.intValue == 0) {
+        CpuModelProducer.runTransaction {
+            lineSeries {
+                series(x = xValues, y = cpuYValues)
+            }
         }
     }
+
 }
 
 @Composable

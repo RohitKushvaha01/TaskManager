@@ -44,7 +44,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private var selectedscreen = mutableIntStateOf(0)
+var selectedscreen = mutableIntStateOf(0)
 var showFilter = mutableStateOf(false)
 var showSystemApps = mutableStateOf(Settings.showSystemApps)
 var showUserApps = mutableStateOf(Settings.showUserApps)

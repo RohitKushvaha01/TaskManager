@@ -27,7 +27,6 @@ import com.rk.taskmanager.screens.SelectedWorkingMode
 import com.rk.taskmanager.screens.SettingsScreen
 import com.rk.taskmanager.screens.updateCpuGraph
 import com.rk.taskmanager.screens.updateRamAndSwapGraph
-import com.rk.taskmanager.screens.updateRamGraph
 import com.rk.taskmanager.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

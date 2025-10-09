@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rk.DaemonResult
@@ -55,7 +56,7 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
 
             InfoBlock(icon = {
                 Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
-            }, text = "TaskManager requires elevated permission to work, select the working mode you want to use.")
+            }, text = "TaskManager needs elevated permissions to function properly. Please select the working mode you’d like to use.")
 
             Spacer(modifier = Modifier.padding(10.dp))
 
@@ -65,7 +66,7 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
                 }
             }
 
-            PreferenceGroup {
+            PreferenceGroup(heading = "Working Mode") {
                 WorkingMode.entries.forEach { mode ->
                     SettingsToggle(
                         label = mode.name,
@@ -107,12 +108,10 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
 
             if (message.isNotEmpty()) {
                 Spacer(modifier = Modifier.padding(16.dp))
-                Text(
-                    text = message,
-                    color = Color.Red,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
+                PreferenceGroup(heading = "Logs") {
+                    SettingsToggle(description = message, default = false, showSwitch = false)
+                }
+
             }
         }
     }

@@ -52,7 +52,6 @@ std::vector<int> listPids() {
 }
 
 static volatile sig_atomic_t keep_running = 1;
-static const char *abstract_name = "\0TaskmanagerD";
 
 void handle_sigint(int) {
     keep_running = 0;
@@ -592,54 +591,99 @@ void daemonize()
     open("/dev/null", O_RDWR);   // stderr
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    bool dFlag = false;
+    int port = -1;
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        if (arg == "-D") {
+            dFlag = true;
+        }
+        else if (arg == "-p") {
+            if (i + 1 < argc) {
+                port = std::atoi(argv[i + 1]); // convert next arg to int
+                i++; // skip next argument, since it's the port number
+            } else {
+                std::cerr << "ERROR: -p requires a port number" << std::endl;
+                return 1;
+            }
+        }
+        else {
+            std::cerr << "Unknown argument: " << arg << std::endl;
+        }
+    }
+
+    std::cout << "dFlag: " << (dFlag ? "true" : "false") << "\n";
+    std::cout << "Port: " << port << "\n";
+
+
+    if (port == -1) {
+        std::cerr << "ERROR: Port number must be specified with -p" << std::endl;
+        return 1;
+    }
+
+    if (port <= 0){
+        std::cerr << "Invalid port received: " << port << std::endl;
+    }
+
     std::thread compileThread([]() {
-        system("pm compile -m speed com.rk.taskmanager");
-        system("pm compile -r bg-dexopt com.rk.taskmanager");
+        system("pm compile -m speed com.rk.taskmanager > /dev/null 2>&1");
+        system("pm compile -r bg-dexopt com.rk.taskmanager > /dev/null 2>&1");
     });
 
     compileThread.detach();
 
-    daemonize();
-
 
     log_line("=== Client starting ===");
 
-    // Setup signal handler
+    // Setup signal handlers
     signal(SIGINT, handle_sigint);
     signal(SIGTERM, handle_sigint);
 
-    // --- Connect to server ---
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    // --- Create socket ---
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         log_line(std::string("ERROR: failed to create socket: ") + strerror(errno));
         return 1;
     }
 
-    // Set socket to non-blocking for better responsiveness
+    // Optional: make non-blocking
     int flags = fcntl(sock, F_GETFL, 0);
     fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 
-    struct sockaddr_un addr{};
+    // --- Setup TCP socket address ---
+    struct sockaddr_in addr{};
     memset(&addr, 0, sizeof(addr));
-    addr.sun_family = AF_UNIX;
-    memcpy(addr.sun_path, abstract_name, 1 + strlen(abstract_name + 1));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port); // Use the port variable
 
-    socklen_t addrlen = offsetof(struct sockaddr_un, sun_path) + 1 + strlen(abstract_name + 1);
-
-    log_line("Connecting to server...");
-
-    // Retry connection with non-blocking socket
-    fcntl(sock, F_SETFL, flags); // Set back to blocking for connect
-    if (connect(sock, (struct sockaddr *)&addr, addrlen) < 0) {
-        log_line(std::string("ERROR: could not connect to daemon: ") + strerror(errno));
+    // Connect to localhost only (127.0.0.1)
+    if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) <= 0) {
+        log_line("ERROR: Invalid address");
         close(sock);
         return 1;
     }
 
-    // Set non-blocking after connection
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    log_line("Connecting to server on 127.0.0.1:" + std::to_string(port) + "...");
+
+    // --- Connect ---
+    if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        if (errno != EINPROGRESS) { // EINPROGRESS is okay for non-blocking
+            log_line(std::string("ERROR: could not connect to daemon: ") + strerror(errno));
+            close(sock);
+            return 1;
+        }
+    }
+
+    // Optional: set socket back to blocking after connection
+    fcntl(sock, F_SETFL, flags);
+
     log_line("Connected to server.");
+
+    // Set non-blocking again if needed
+    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 
     // Log process info
     pid_t pid = getpid();
@@ -649,6 +693,7 @@ int main() {
     log_line("PID: " + std::to_string(pid) +
              " UID: " + std::to_string(uid) +
              " USER: " + std::string(username));
+
 
     // --- Use epoll for efficient I/O ---
     int epoll_fd = epoll_create1(0);
@@ -675,59 +720,100 @@ int main() {
 
     struct epoll_event events[1];
 
+    if (dFlag) {
+        daemonize();
+    }
+
     while (keep_running) {
         // Wait for events with timeout (reduces CPU usage when idle)
         int n = epoll_wait(epoll_fd, events, 1, 1000); // 1 second timeout
 
         if (n < 0) {
             if (errno == EINTR) continue;
-            log_line("ERROR: epoll_wait failed");
+            log_line("ERROR: epoll_wait failed: " + std::string(strerror(errno)));
             break;
         }
 
         if (n == 0) continue; // Timeout, no data
 
-        // Data available
-        while (true) {
-            ssize_t r = recv(sock, buf.get(), BUF_SIZE - 1, 0);
+        // Log what events we got for debugging
+        uint32_t ev_flags = events[0].events;
+        log_line("Epoll event: EPOLLIN=" + std::to_string(!!(ev_flags & EPOLLIN)) +
+                 " EPOLLOUT=" + std::to_string(!!(ev_flags & EPOLLOUT)) +
+                 " EPOLLERR=" + std::to_string(!!(ev_flags & EPOLLERR)) +
+                 " EPOLLHUP=" + std::to_string(!!(ev_flags & EPOLLHUP)));
 
-            if (r > 0) {
-                buf[r] = '\0';
-                recv_buffer.append(buf.get(), r);
-
-                // Process complete messages (lines)
-                size_t pos;
-                while ((pos = recv_buffer.find('\n')) != std::string::npos) {
-                    std::string message = recv_buffer.substr(0, pos);
-                    recv_buffer.erase(0, pos + 1);
-
-                    // Trim whitespace
-                    message.erase(message.find_last_not_of(" \r\n\t") + 1);
-
-                    if (!message.empty()) {
-                        log_line("Received: " + message);
-                        processCommand(sock, message);
-                    }
+        // Check for errors first
+        if (ev_flags & (EPOLLERR | EPOLLHUP)) {
+            int socket_error = 0;
+            socklen_t len = sizeof(socket_error);
+            if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &socket_error, &len) == 0) {
+                if (socket_error != 0) {
+                    log_line("Socket error detected: " + std::string(strerror(socket_error)));
                 }
-            } else if (r == 0) {
-                log_line("Connection closed by server. Exiting.");
+            }
+
+            if (ev_flags & EPOLLHUP) {
+                log_line("Socket hangup detected");
+            }
+
+            // Only exit if it's an error, not just a hangup with data available
+            if ((ev_flags & EPOLLERR) || ((ev_flags & EPOLLHUP) && !(ev_flags & EPOLLIN))) {
                 keep_running = 0;
                 break;
-            } else {
-                if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                    // No more data available
-                    break;
-                } else if (errno != EINTR) {
-                    log_line("Connection error. Exiting.");
+            }
+        }
+
+        // Read available data
+        if (ev_flags & EPOLLIN) {
+            while (true) {
+                ssize_t r = recv(sock, buf.get(), BUF_SIZE - 1, 0);
+
+                if (r > 0) {
+                    buf[r] = '\0';
+                    recv_buffer.append(buf.get(), r);
+
+                    // Process complete messages (lines)
+                    size_t pos;
+                    while ((pos = recv_buffer.find('\n')) != std::string::npos) {
+                        std::string message = recv_buffer.substr(0, pos);
+                        recv_buffer.erase(0, pos + 1);
+
+                        // Trim whitespace
+                        message.erase(message.find_last_not_of(" \r\n\t") + 1);
+
+                        if (!message.empty()) {
+                            log_line("Received: " + message);
+                            processCommand(sock, message);
+                        }
+                    }
+                } else if (r == 0) {
+                    log_line("Connection closed by server. Exiting.");
                     keep_running = 0;
                     break;
+                } else {
+                    int err = errno;
+                    if (err == EAGAIN || err == EWOULDBLOCK) {
+                        // No more data available - this is normal for non-blocking
+                        break;
+                    } else if (err == EINTR) {
+                        // Interrupted, try again
+                        continue;
+                    } else {
+                        log_line("Connection error: " + std::string(strerror(err)) +
+                                 " (errno=" + std::to_string(err) + ")");
+                        keep_running = 0;
+                        break;
+                    }
                 }
             }
         }
     }
 
-    log_line("=== Client exiting ===");
+    // Cleanup
     close(epoll_fd);
     close(sock);
+    log_line("Client shutdown complete.");
+
     return 0;
 }

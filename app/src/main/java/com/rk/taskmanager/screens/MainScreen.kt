@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
 import com.rk.DaemonResult
 import com.rk.isConnected
@@ -126,8 +127,9 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                 MainActivity.scope?.launch(Dispatchers.Main) {
                     val daemonResult = startDaemon(context = MainActivity.instance!!, Settings.workingMode)
                     if (daemonResult != DaemonResult.OK){
-                        delay(3000)
+                        delay(2000)
                         if (isConnected.not()){
+                            println(daemonResult.name)
                             Toast.makeText(MainActivity.instance!!, daemonResult.message ?: "Unable to start daemon!", Toast.LENGTH_SHORT).show()
                             if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
                                 navController.navigate(SettingsRoutes.SelectWorkingMode.route)
@@ -141,6 +143,18 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
             Column(modifier = Modifier.align(Alignment.Center)) {
                 LinearProgressIndicator()
                 Text("Waiting for daemon connection...")
+                val context = LocalContext.current
+
+                LaunchedEffect(isConnected) {
+                    delay(5000)
+                    if (isConnected.not()){
+                        Toast.makeText(context, "TimeOut", Toast.LENGTH_SHORT).show()
+
+                        if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
+                            navController.navigate(SettingsRoutes.SelectWorkingMode.route)
+                        }
+                    }
+                }
             }
         }
     }

@@ -1,7 +1,9 @@
 package com.rk.taskmanager.shizuku
 
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.annotation.Keep
+import androidx.compose.ui.util.fastJoinToString
 import androidx.lifecycle.lifecycleScope
 import com.rk.startDaemon
 import com.rk.taskmanager.MainActivity
@@ -24,7 +26,6 @@ import java.lang.reflect.InvocationTargetException
 object ShizukuShell {
 
     private const val SHIZUKU_PERMISSION_REQUEST_CODE = 93848
-    val permissionFlow = MutableStateFlow(isPermissionGranted())
 
     init {
         Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
@@ -39,12 +40,17 @@ object ShizukuShell {
     }
 
     fun isShizukuRunning(): Boolean{
-        return Shizuku.pingBinder() && Shizuku.getBinder() != null
+        return Shizuku.getBinder() != null && Shizuku.pingBinder()
     }
 
 
     fun isPermissionGranted(): Boolean{
-        return Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        return try {
+            Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        }catch (e: Exception){
+            e.printStackTrace()
+            false
+        }
     }
 
     fun isRoot(): Boolean{
@@ -58,6 +64,9 @@ object ShizukuShell {
 
 
     fun requestPermission(){
+        if (isShizukuRunning().not()){
+            return
+        }
         if (isPermissionGranted()){
             return
         }
@@ -74,7 +83,9 @@ object ShizukuShell {
     )
     suspend fun newProcess(cmd: Array<String?>, env: Array<String?>?, dir: String?): Pair<Int,String> =
         withContext(Dispatchers.IO) {
+
             return@withContext try {
+
                 val method = Shizuku::class.java.getDeclaredMethod(
                     "newProcess",
                     Array<String>::class.java,  // Java String[]
@@ -87,12 +98,19 @@ object ShizukuShell {
 
 
                 // Call the method
+
+                println("exec begin")
                 val result: ShizukuRemoteProcess? =
                     checkNotNull(method.invoke(null, cmd, env, dir) as ShizukuRemoteProcess?)
 
+                println("waiting")
                 result!!.waitFor()
+                println("done")
+                println("exitCode ${result.exitValue()}")
 
-                Pair(result.exitValue(),result.inputStream.bufferedReader().readLine())
+                Log.e("Shizuku_newProcess",result.errorStream.bufferedReader().readLines().toString())
+
+                Pair(result.exitValue(),result.inputStream.bufferedReader().readLines().fastJoinToString("\n"))
             }catch (e: Exception){
                 e.printStackTrace()
                 Pair(-1,e.message.toString())

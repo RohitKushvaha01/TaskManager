@@ -9,6 +9,7 @@ import java.io.File
 import android.net.LocalServerSocket
 import android.net.LocalSocket
 import androidx.compose.runtime.*
+import androidx.compose.ui.util.fastJoinToString
 import com.rk.DaemonServer.received_messages
 import com.rk.taskmanager.shizuku.ShizukuShell
 import kotlinx.coroutines.*
@@ -19,6 +20,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.takeWhile
 import java.io.IOException
+import java.net.InetAddress
+import java.net.ServerSocket
+import java.net.Socket
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -30,17 +34,15 @@ var isConnected by mutableStateOf(false)
 
 private object DaemonServer {
 
-    private var server: LocalServerSocket? = null
+    private var server: ServerSocket? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    private val running = AtomicBoolean(false)
 
     val received_messages = MutableSharedFlow<String>(extraBufferCapacity = 10,onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
 
     private var acceptJob: Job? = null
     private var clientJob: Job? = null
-    private var currentClient: LocalSocket? = null
+    private var currentClient: Socket? = null
 
     // --- Logging helper ---
     private fun log(msg: String) {
@@ -48,23 +50,22 @@ private object DaemonServer {
         println("[$ts] [DaemonServer] $msg")
     }
 
-    suspend fun start(): Exception? {
-        if (running.get()) {
+    suspend fun start(): Pair<Int,Exception?> {
+        if (server != null && server!!.isBound) {
             log("Server already running, ignoring start request")
-            return null
+            return Pair(server!!.localPort,null)
         }
 
         return try {
-            server = LocalServerSocket("TaskmanagerD")
-            running.set(true)
-            log("Server started on socket: TaskmanagerD")
+            server = ServerSocket(0, 1, InetAddress.getByName("0.0.0.0"))
+            log("Server started on port: ${server!!.localPort}")
             startAccepting()
-            null
+            Pair(server!!.localPort, null)
         } catch (e: IOException) {
             log("ERROR: Failed to start server: ${e.message}")
             e.printStackTrace()
             server = null
-            e
+            Pair(-1,e)
         }
     }
 
@@ -72,7 +73,7 @@ private object DaemonServer {
         acceptJob = scope.launch {
             val srv = server ?: return@launch
             log("Accept loop started, waiting for client...")
-            while (isActive && running.get()) {
+            while (isActive && server != null && server!!.isBound) {
                 try {
                     val client = srv.accept()
                     log("Incoming client connection")
@@ -92,7 +93,7 @@ private object DaemonServer {
                     handleClient(client)
 
                 } catch (e: IOException) {
-                    if (running.get()) {
+                    if (server != null && server!!.isBound) {
                         log("ERROR in accept loop: ${e.message}")
                         e.printStackTrace()
                     }
@@ -103,15 +104,14 @@ private object DaemonServer {
         }
     }
 
-    private fun handleClient(client: LocalSocket) {
+    private fun handleClient(client: Socket) {
         clientJob = scope.launch {
             isConnected = true
             log("Client handler started")
             val input = client.inputStream
-            val buf = ByteArray(1024)
 
             try {
-                scope.launch(Dispatchers.IO) {
+                val readerJob = launch(Dispatchers.IO) {
                     runCatching {
                         val reader = input.bufferedReader()
                         while (isActive) {
@@ -125,18 +125,25 @@ private object DaemonServer {
                     }.onFailure { it.printStackTrace() }
                 }
 
-                send_daemon_messages.asSharedFlow().collect {
-                    client.outputStream.write("$it\n".toByteArray())
-                    client.outputStream.flush()
+                val writerJob = launch(Dispatchers.IO) {
+                    runCatching {
+                        send_daemon_messages.asSharedFlow().collect {
+                            client.outputStream.write("$it\n".toByteArray())
+                            client.outputStream.flush()
+                        }
+                    }.onFailure {
+                        log("Writer error: ${it.message}")
+                        it.printStackTrace()
+                    }
                 }
+
+                readerJob.join()
+                writerJob.cancelAndJoin()
+                cleanupClient()
 
             } catch (e: IOException) {
                 log("ERROR while handling client: ${e.message}")
                 e.printStackTrace()
-            } finally {
-                log("Client disconnected")
-                isConnected = false
-                cleanupClient()
             }
         }
     }
@@ -155,7 +162,6 @@ private object DaemonServer {
 
     suspend fun stop() {
         log("Stopping server...")
-        running.set(false)
         isConnected = false
         acceptJob?.cancelAndJoin()
         acceptJob = null
@@ -196,7 +202,15 @@ suspend fun startDaemon(
 
         println(daemonFile.absolutePath)
 
-        DaemonServer.start()
+        val daemonServer = DaemonServer.start()
+        if (daemonServer.second != null){
+            return@withContext DaemonResult.UNKNOWN_ERROR.also { it.message = daemonServer.second?.message.toString() }
+        }
+
+        val port = daemonServer.first
+        if (port <= 0){
+            return@withContext DaemonResult.UNKNOWN_ERROR.also { it.message = "Unable to get a open port : got ${port}" }
+        }
 
         try {
             when (mode) {
@@ -216,7 +230,7 @@ suspend fun startDaemon(
                     }
 
                     val processResult = ShizukuShell.newProcess(
-                        cmd = arrayOf(daemonFile.absolutePath),
+                        cmd = arrayOf(daemonFile.absolutePath,"-p",port.toString(),"-D"),
                         env = arrayOf(),
                         dir = "/"
                     )
@@ -243,7 +257,7 @@ suspend fun startDaemon(
                         loading.hide()
                         return@withContext DaemonResult.SU_NOT_IN_PATH
                     }
-                    val cmd = arrayOf("su", "-c", daemonFile.absolutePath)
+                    val cmd = arrayOf("su", "-c", daemonFile.absolutePath,"-p",port.toString(),"-D")
                     val result = newProcess(cmd = cmd, env = arrayOf(), workingDir = "/")
                     if (result.first == 0){
                         loading.hide()
@@ -309,7 +323,7 @@ private suspend fun newProcess(
         }
 
         val process = processBuilder.start()
-        Pair(process.waitFor(),process.inputStream.bufferedReader().readLine())
+        Pair(process.waitFor(),process.inputStream.bufferedReader().readLines().fastJoinToString("\n"))
     } catch (e: Exception) {
         e.printStackTrace()
         Pair(-1,e.message.toString())

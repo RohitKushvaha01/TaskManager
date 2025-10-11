@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.settings.Settings
+import com.rk.taskmanager.strings
 import kotlinx.coroutines.launch
 
 
@@ -65,7 +67,7 @@ fun Processes(
         XedDialog(onDismissRequest = {showFilter.value = false}) {
             DividerColumn {
 
-                SettingsToggle(label = "Show User Apps", description = null, showSwitch = true, default = showUserApps.value, sideEffect = {
+                SettingsToggle(label = stringResource(strings.show_user_app), description = null, showSwitch = true, default = showUserApps.value, sideEffect = {
                     scope.launch{
                         Settings.showUserApps = it
                         showUserApps.value = it
@@ -73,7 +75,7 @@ fun Processes(
 
                 })
 
-                SettingsToggle(label = "Show System Apps", description = null, showSwitch = true, default = showSystemApps.value, sideEffect = {
+                SettingsToggle(label = stringResource(strings.show_system_app), description = null, showSwitch = true, default = showSystemApps.value, sideEffect = {
                     scope.launch{
                         Settings.showSystemApps = it
                         showSystemApps.value = it
@@ -81,7 +83,7 @@ fun Processes(
 
                 })
 
-                SettingsToggle(label = "Show Linux Processes", description = null, showSwitch = true, default = showLinuxProcess.value, sideEffect = {
+                SettingsToggle(label = stringResource(strings.show_linux_process), description = null, showSwitch = true, default = showLinuxProcess.value, sideEffect = {
                     scope.launch{
                         Settings.showLinuxProcess = it
                         showLinuxProcess.value = it

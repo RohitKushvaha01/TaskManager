@@ -35,12 +35,14 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import com.rk.DaemonResult
 import com.rk.isConnected
 import com.rk.startDaemon
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.settings.Settings
+import com.rk.taskmanager.strings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -58,7 +60,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
     if (isConnected){
         Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
             TopAppBar(title = {
-                Text("Task Manager")
+                Text(stringResource(strings.app_name))
             }, actions = {
 
                 if (selectedscreen.intValue == 1){

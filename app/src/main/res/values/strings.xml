@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">TaskManager</string>
+    <string name="info">Info</string>
+    <string name="working_mode">Working Mode</string>
+    <string name="shizuku_permission_denied">Shizuku permission denied, grant permission manually</string>
+    <string name="shizuku_not_running">Shizuku not running</string>
+    <string name="shizuku_not_installed">Shizuku not installed</string>
+    <string name="su_not_in_path">su not available in \$PATH</string>
+    <string name="daemon_not_started">Daemon failed to start</string>
+    <string name="port_busy">"Unable to get a open port : got %port"</string>
+    <string name="starting_daemon">Starting daemon…</string>
+    <string name="apply">Apply</string>
+    <string name="cancel">Cancel</string>
+    <string name="show_user_app">Show user apps</string>
+    <string name="show_system_app">Show system apps</string>
+    <string name="show_linux_process">Show linux processes</string>
+
+    <string name="intro">TaskManager needs elevated permissions to function properly. Please select the working mode you’d like to use.</string>
+    <string name="noob"><![CDATA[
+This app needs special permission to manage system tasks. Your device doesn’t have this access right now.
+
+To continue, please:
+• Install the Shizuku app and start it, or
+• Use a rooted device.
+]]></string>
+
+
 </resources>

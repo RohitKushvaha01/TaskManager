@@ -61,6 +61,15 @@ object ShizukuShell {
         return Shizuku.getUid() == 2000
     }
 
+    fun isShizukuInstalled(): Boolean {
+        return try {
+            TaskManager.getContext().packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
 
 
     fun requestPermission(){

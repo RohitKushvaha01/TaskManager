@@ -3,41 +3,33 @@ package com.rk.taskmanager.screens
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rk.DaemonResult
-import com.rk.LoadingPopup
 import com.rk.components.InfoBlock
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
+import com.rk.isSuInPath
 import com.rk.startDaemon
 import com.rk.taskmanager.SettingsRoutes
-import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.shizuku.ShizukuShell
+import com.rk.taskmanager.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 enum class WorkingMode(val id:Int){
     ROOT(0),
@@ -50,13 +42,18 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
     val selectedMode = remember { mutableIntStateOf(Settings.workingMode) }
     var message by remember { mutableStateOf("") }
     val context = LocalContext.current
+    var isNoob by remember { mutableStateOf(false) }
 
-    PreferenceLayout(label = "WorkingMode") {
+    LaunchedEffect(Unit) {
+        isNoob = isSuInPath().not() && ShizukuShell.isShizukuInstalled().not()
+    }
+
+    PreferenceLayout(label = stringResource(strings.working_mode)) {
         Column(modifier = Modifier.fillMaxSize()) {
 
             InfoBlock(icon = {
                 Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
-            }, text = "TaskManager needs elevated permissions to function properly. Please select the working mode you’d like to use.")
+            }, text = stringResource(strings.intro))
 
             Spacer(modifier = Modifier.padding(10.dp))
 
@@ -66,7 +63,7 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
                 }
             }
 
-            PreferenceGroup(heading = "Working Mode") {
+            PreferenceGroup(heading = stringResource(strings.working_mode)) {
                 WorkingMode.entries.forEach { mode ->
                     SettingsToggle(
                         label = mode.name,
@@ -106,12 +103,15 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
                 }
             }
 
+            if (isNoob){
+                message = stringResource(strings.noob)
+            }
+
             if (message.isNotEmpty()) {
                 Spacer(modifier = Modifier.padding(16.dp))
-                PreferenceGroup(heading = "Logs") {
+                PreferenceGroup(heading = stringResource(strings.info)) {
                     SettingsToggle(description = message, default = false, showSwitch = false)
                 }
-
             }
         }
     }

@@ -11,7 +11,9 @@ import android.net.LocalSocket
 import androidx.compose.runtime.*
 import androidx.compose.ui.util.fastJoinToString
 import com.rk.DaemonServer.received_messages
+import com.rk.taskmanager.getString
 import com.rk.taskmanager.shizuku.ShizukuShell
+import com.rk.taskmanager.strings
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -179,11 +181,11 @@ private object DaemonServer {
 
 enum class DaemonResult(var message: String?){
     OK(null),
-    SHIZUKU_PERMISSION_DENIED("Shizuku permission denied, grant permission manually"),
-    SHIZUKU_NOT_RUNNING("Shizuku not running or not installed."),
-    SU_NOT_IN_PATH("Su not available in path"),
+    SHIZUKU_PERMISSION_DENIED(strings.shizuku_permission_denied.getString()),
+    SHIZUKU_NOT_RUNNING(if (ShizukuShell.isShizukuInstalled()) strings.shizuku_not_running.getString() else strings.shizuku_not_installed.getString()),
+    SU_NOT_IN_PATH(strings.su_not_in_path.getString()),
     UNKNOWN_ERROR(null),
-    DAEMON_REFUSED("Daemon failed to start"),
+    DAEMON_REFUSED(strings.daemon_not_started.getString()),
     DAEMON_ALREADY_BEING_STARTED(null)
 }
 
@@ -209,14 +211,14 @@ suspend fun startDaemon(
 
         val port = daemonServer.first
         if (port <= 0){
-            return@withContext DaemonResult.UNKNOWN_ERROR.also { it.message = "Unable to get a open port : got ${port}" }
+            return@withContext DaemonResult.UNKNOWN_ERROR.also { it.message = strings.port_busy.getString(mapOf("%port" to port.toString())) }
         }
 
         try {
             when (mode) {
                 WorkingMode.SHIZUKU.id -> {
                     val loading = LoadingPopup(ctx = context)
-                    loading.setMessage("Starting daemon...")
+                    loading.setMessage(strings.starting_daemon.getString())
                     loading.show()
 
                     if (!ShizukuShell.isShizukuRunning()){
@@ -250,7 +252,7 @@ suspend fun startDaemon(
 
                 WorkingMode.ROOT.id -> {
                     val loading = LoadingPopup(ctx = context)
-                    loading.setMessage("Starting daemon...")
+                    loading.setMessage(strings.starting_daemon.getString())
                     loading.show()
 
                     if (!isSuInPath()){

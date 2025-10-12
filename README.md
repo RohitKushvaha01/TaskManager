@@ -12,7 +12,6 @@ Task Manager requires shizuku/root to work
 - [x] Moniter running linux processes
 - [x] List process info (eg. ram usage,priority etc.)
 - [x] Kill running process (Needs shizuku to be started by root)
-- [x] Change Process priority (Needs shizuku to be started by root)
 
 # Screenshots
 <div>

@@ -41,6 +41,7 @@ import com.rk.DaemonResult
 import com.rk.isConnected
 import com.rk.startDaemon
 import com.rk.taskmanager.MainActivity
+import com.rk.taskmanager.getString
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.Dispatchers
@@ -49,9 +50,6 @@ import kotlinx.coroutines.launch
 
 var selectedscreen = mutableIntStateOf(0)
 var showFilter = mutableStateOf(false)
-var showSystemApps = mutableStateOf(Settings.showSystemApps)
-var showUserApps = mutableStateOf(Settings.showUserApps)
-var showLinuxProcess = mutableStateOf(Settings.showLinuxProcess)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +69,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                         }) {
                         Icon(
                             imageVector = Filter,
-                            contentDescription = "Filter"
+                            contentDescription = null
                         )
                     }
                 }
@@ -84,7 +82,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                     }) {
                     Icon(
                         imageVector = Icons.Filled.Settings,
-                        contentDescription = "Settings"
+                        contentDescription = null
                     )
                 }
             })
@@ -95,23 +93,23 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                 }, icon = {
                     Icon(
                         painter = painterResource(id = R.drawable.speed_24px),
-                        contentDescription = "Resources"
+                        contentDescription = null
                     )
-                }, label = {Text("Resources")})
+                }, label = {Text(stringResource(strings.res))})
 
                 NavigationBarItem(selected = selectedscreen.intValue == 1, onClick = {
                     selectedscreen.intValue = 1
                 }, icon = {
                     Icon(
                         imageVector = Icons.Filled.PlayArrow,
-                        contentDescription = "Processes"
+                        contentDescription = null
                     )
-                }, label = {Text("Processes")})
+                }, label = {Text(stringResource(strings.procs))})
             }
         }) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)){
                 LaunchedEffect(Unit) {
-                    viewModel.refreshAuto()
+                    viewModel.refreshProcessesAuto()
                 }
                 when(selectedscreen.intValue){
                     0 -> {
@@ -144,13 +142,13 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
         Box(modifier = Modifier.fillMaxSize()){
             Column(modifier = Modifier.align(Alignment.Center)) {
                 LinearProgressIndicator()
-                Text("Waiting for daemon connection...")
+                Text(stringResource(strings.daemon_wait))
                 val context = LocalContext.current
 
                 LaunchedEffect(isConnected) {
                     delay(5000)
                     if (isConnected.not()){
-                        Toast.makeText(context, "TimeOut", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, strings.timeout.getString(), Toast.LENGTH_SHORT).show()
 
                         if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
                             navController.navigate(SettingsRoutes.SelectWorkingMode.route)

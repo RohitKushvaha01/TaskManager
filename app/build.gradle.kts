@@ -101,7 +101,7 @@ android {
 }
 
 tasks.whenTaskAdded {
-    if (name.contains("ArtProfile")) {
+    if (name.contains("ArtProfile") && false) {
         println("Skipped Task $name")
         enabled = false
     }

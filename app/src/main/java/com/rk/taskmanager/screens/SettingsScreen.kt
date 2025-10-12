@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,7 +31,9 @@ import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.startDaemon
 import com.rk.taskmanager.SettingsRoutes
+import com.rk.taskmanager.getString
 import com.rk.taskmanager.settings.Settings
+import com.rk.taskmanager.strings
 import com.rk.taskmanager.ui.theme.currentTheme
 import com.rk.taskmanager.ui.theme.dynamicTheme
 import com.rk.taskmanager.ui.theme.themes
@@ -46,11 +49,11 @@ import kotlinx.coroutines.withContext
 )
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
-    PreferenceLayout(label = "Settings") {
+    PreferenceLayout(label = stringResource(strings.settings),) {
         val context = LocalContext.current
         val selectedMode = remember { mutableIntStateOf(Settings.workingMode) }
 
-        PreferenceGroup(heading = "Working Mode") {
+        PreferenceGroup(heading = stringResource(strings.working_mode)) {
             WorkingMode.entries.forEach { mode ->
                 SettingsToggle(
                     label = mode.name,
@@ -60,14 +63,14 @@ fun SettingsScreen(modifier: Modifier = Modifier,navController: NavController) {
                         Settings.workingMode = mode.id
                         selectedMode.intValue = mode.id
 
-                        Toast.makeText(context, "Changes will take effect after next cold-start", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, strings.requires_daemon_restart.getString(), Toast.LENGTH_SHORT).show()
                     },
                     showSwitch = false,
                     startWidget = {
                         RadioButton(selected = selectedMode.intValue == mode.id, onClick = {
                             Settings.workingMode = mode.id
                             selectedMode.intValue = mode.id
-                            Toast.makeText(context, "Changes will take effect after next cold-start", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, strings.requires_daemon_restart.getString(), Toast.LENGTH_SHORT).show()
 
                         })
                     },

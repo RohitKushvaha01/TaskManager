@@ -14,90 +14,67 @@ import android.system.Os
 import android.system.OsConstants
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
+import androidx.core.graphics.createBitmap
 import androidx.navigation.NavController
+import com.rk.components.SettingsToggle
 import com.rk.components.TextCard
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.daemon_messages
 import com.rk.send_daemon_messages
+import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
-import com.rk.taskmanager.R
+import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
+import com.rk.taskmanager.getString
+import com.rk.taskmanager.shizuku.ShizukuShell
+import com.rk.taskmanager.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import rikka.shizuku.Shizuku
-import rikka.shizuku.ShizukuRemoteProcess
+import kotlinx.coroutines.withTimeout
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
-import java.lang.reflect.Method
-import java.util.concurrent.TimeUnit
-import kotlin.math.round
-import kotlin.math.roundToInt
-import androidx.core.graphics.createBitmap
-import com.rk.components.SettingsToggle
-import com.rk.taskmanager.SettingsRoutes
-import com.rk.taskmanager.shizuku.ShizukuShell
-import kotlinx.coroutines.isActive
 import java.text.DateFormat
 import java.util.Date
+import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 
 // Get ticks per second (usually 100 on Linux)
@@ -132,12 +109,12 @@ fun elapsedTimeToString(elapsedTicks: Long): String {
     val h = TimeUnit.SECONDS.toHours(seconds)
     val m = TimeUnit.SECONDS.toMinutes(seconds) % 60
     val s = seconds % 60
-    return String.format(java.util.Locale.ENGLISH,"%02d:%02d:%02d", h, m, s)
+    return String.format(java.util.Locale.ENGLISH, "%02d:%02d:%02d", h, m, s)
 }
 
 // This mimics sysconf(_SC_CLK_TCK) ≈ 100 on Linux
 fun sysconf(): Long {
-    return android.system.Os.sysconf(android.system.OsConstants._SC_CLK_TCK)
+    return Os.sysconf(OsConstants._SC_CLK_TCK)
 }
 
 fun isAppInstalled(context: Context, packageName: String): Boolean {
@@ -151,8 +128,12 @@ fun isAppInstalled(context: Context, packageName: String): Boolean {
 
 fun getApkNameFromPackage(context: Context, packageName: String): String? {
     return try {
-        context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(packageName,
-            PackageManager.GET_META_DATA)).toString()
+        context.packageManager.getApplicationLabel(
+            context.packageManager.getApplicationInfo(
+                packageName,
+                PackageManager.GET_META_DATA
+            )
+        ).toString()
     } catch (e: PackageManager.NameNotFoundException) {
         null
     }
@@ -180,7 +161,7 @@ fun getAppIcon(context: Context, packageName: String): Drawable? {
     }
 }
 
-fun drawableTobitMap(drawable: Drawable?): Bitmap?{
+fun drawableTobitMap(drawable: Drawable?): Bitmap? {
     return drawable?.let {
         if (it is BitmapDrawable) {
             it.bitmap
@@ -200,6 +181,38 @@ fun getAppIconBitmap(context: Context, packageName: String): Bitmap? {
 }
 
 
+suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
+    var killResult = false
+
+    val isApk = isAppInstalled(TaskManager.getContext(), proc.cmdLine)
+
+
+    killResult = withContext(Dispatchers.IO) {
+        runCatching {
+            withTimeout(3000L) {
+                val resultDeferred = async {
+                    daemon_messages.first { message ->
+                        message.startsWith("KILL_RESULT:")
+                    }.removePrefix("KILL_RESULT:").toBoolean()
+                }
+
+                // Send kill command
+                if (isApk) {
+                    send_daemon_messages.emit("FORCE_STOP:${proc.cmdLine}")
+                } else {
+                    send_daemon_messages.emit("KILL:${proc.pid}")
+                }
+
+                // Wait for result
+                resultDeferred.await()
+            }
+        }.onFailure {
+            it.printStackTrace()
+        }.getOrDefault(false)
+    }
+
+    return killResult
+}
 
 
 @OptIn(
@@ -213,30 +226,28 @@ fun ProcessInfo(
     viewModel: ProcessViewModel,
     pid: Int
 ) {
-    val proc = remember { mutableStateOf<ProcessViewModel.Process?>(null) }
+    val proc = remember { mutableStateOf<ProcessUiModel?>(null) }
     val username = remember { mutableStateOf("Unknown") }
-    val kill_result = remember { mutableStateOf<Boolean?>(null) }
-    val killing = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val isApk = remember { mutableStateOf<Boolean>(false) }
     val cpuUsage = remember { mutableIntStateOf(-1) }
-    //val isApkForceStopped = remember { mutableStateOf<Boolean?>(false) }
+    val uiProcesses by viewModel.uiProcesses.collectAsState()
 
 
     LaunchedEffect(Unit) {
         proc.value = withContext(Dispatchers.IO) {
-            delay(700)
-            viewModel.processes.toList().find { it.pid == pid }
+            uiProcesses.find { it.proc.pid == pid }
         }
         if (proc.value != null) {
-            username.value = getUsernameFromUid(proc.value!!.uid) ?: proc.value!!.uid.toString()
+            username.value =
+                getUsernameFromUid(proc.value!!.proc.uid) ?: proc.value!!.proc.uid.toString()
         }
-        isApk.value = isAppInstalled(TaskManager.getContext(), proc.value!!.cmdLine)
+        isApk.value = isAppInstalled(TaskManager.getContext(), proc.value!!.proc.cmdLine)
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         TopAppBar(title = {
-            Text("ProcessInfo")
+            Text(stringResource(strings.proc_info))
         }, navigationIcon = {
             IconButton(onClick = {
                 navController.popBackStack()
@@ -256,45 +267,23 @@ fun ProcessInfo(
             } else {
                 Column(modifier.verticalScroll(rememberScrollState())) {
                     PreferenceGroup {
-                        val enabled = proc.value!!.pid > 1
+                        val enabled = proc.value!!.proc.pid > 1 && proc.value!!.killed.value.not()
                         val interactionSource = remember { MutableInteractionSource() }
                         PreferenceTemplate(
                             modifier = modifier
                                 .combinedClickable(
-                                enabled = enabled,
-                                indication = ripple(),
-                                interactionSource = interactionSource,
-                                onClick = {
-                                    if ((kill_result.value != true) && !killing.value){
-                                        GlobalScope.launch(Dispatchers.IO) {
-                                            killing.value = true
-
-                                            runCatching {
-
-                                                launch {
-                                                    daemon_messages.collect { message ->
-                                                        if (message.startsWith("KILL_RESULT:")){
-                                                            kill_result.value = message.removePrefix("KILL_RESULT:").toBoolean()
-                                                            killing.value = false
-                                                        }
-                                                    }
-                                                }
-
-                                                if (isApk.value && ShizukuShell.isShell()){
-                                                    send_daemon_messages.emit("FORCE_STOP:${proc.value!!.cmdLine}")
-                                                }else{
-                                                    send_daemon_messages.emit("KILL:${proc.value!!.pid}")
-                                                }
-
-
-                                                viewModel.refreshProcesses()
-                                            }.onFailure {
-                                                it.printStackTrace()
-                                            }
+                                    enabled = enabled,
+                                    indication = ripple(),
+                                    interactionSource = interactionSource,
+                                    onClick = {
+                                        scope.launch {
+                                            proc.value!!.killing.value = true
+                                            proc.value!!.killed.value = killProc(proc.value!!.proc)
+                                            delay(300)
+                                            proc.value!!.killing.value = false
                                         }
                                     }
-                                }
-                            ),
+                                ),
                             contentModifier = Modifier
                                 .fillMaxHeight()
                                 .padding(vertical = 16.dp)
@@ -302,203 +291,226 @@ fun ProcessInfo(
                             title = {
                                 Text(
                                     fontWeight = FontWeight.Bold,
-                                    text = if (killing.value){if (isApk.value){"Stopping..."}else{"Killing..."}}else{
-                                        kill_result.value?.let {
-                                            if (it) {
-                                                if (isApk.value){"Killed"}else{"Stopped"}
-                                            } else {
-                                                if (ShizukuShell.isShell() && !isApk.value){
-                                                    "Kill failed (Permission denied)"
-                                                }else{
-                                                    "Kill failed (try again?)"
+                                    text =
+                                        if (proc.value!!.killing.value) {
+                                            stringResource(
+                                                if (isApk.value) {
+                                                    strings.stopping
+                                                } else {
+                                                    strings.killing
                                                 }
+                                            )
+                                        } else {
+                                            if (proc.value!!.killed.value!!) {
+                                                stringResource(
+                                                    if (isApk.value) {
+                                                        strings.killed
+                                                    } else {
+                                                        strings.stopped
+                                                    }
+                                                )
+                                            } else {
+                                                stringResource(strings.kill)
                                             }
-                                        } ?: if (isApk.value){"Force Stop"}else{"Kill"}
-                                    },
+                                        },
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             },
-                            description = { Text("Kill Process") },
+                            description = { Text(stringResource(strings.kill_proc)) },
                             enabled = enabled,
                             applyPaddings = false,
                             endWidget = null,
                             startWidget = {
-                                if (killing.value) {
+                                if (proc.value!!.killing.value) {
                                     CircularProgressIndicator(
                                         modifier = Modifier
                                             .padding(start = 16.dp)
                                             .alpha(if (enabled) 1f else 0.3f),
                                     )
                                 } else {
-                                    kill_result.value?.let {
-                                        if (it) {
-                                            Icon(
-                                                modifier = Modifier
-                                                    .padding(start = 16.dp)
-                                                    .alpha(if (enabled) 1f else 0.3f),
-                                                imageVector = Icons.Rounded.Check,
-                                                contentDescription = null
-                                            )
-                                        } else {
-                                            Icon(
-                                                modifier = Modifier
-                                                    .padding(start = 16.dp)
-                                                    .alpha(if (enabled) 1f else 0.3f),
-                                                imageVector = Icons.Rounded.Close,
-                                                contentDescription = null
-                                            )
-                                        }
-                                    } ?: Icon(
-                                        modifier = Modifier
-                                            .padding(start = 16.dp)
-                                            .alpha(if (enabled) 1f else 0.3f),
-                                        imageVector = Icons.Rounded.Close,
-                                        contentDescription = null
-                                    )
+                                    if (proc.value!!.killed.value) {
+                                        Icon(
+                                            modifier = Modifier
+                                                .padding(start = 16.dp)
+                                                .alpha(if (enabled) 1f else 0.3f),
+                                            imageVector = Icons.Outlined.Check,
+                                            contentDescription = null
+                                        )
+                                    }else{
+                                        Icon(
+                                            modifier = Modifier
+                                                .padding(start = 16.dp)
+                                                .alpha(if (enabled) 1f else 0.3f),
+                                            imageVector = Icons.Outlined.Close,
+                                            contentDescription = null
+                                        )
+                                    }
+
                                 }
                             }
                         )
                     }
 
                     PreferenceGroup {
-                        var name by remember { mutableStateOf("Loading") }
+                        var name by remember { mutableStateOf(strings.loading.getString()) }
 
 
                         LaunchedEffect(Unit) {
-                            name = getApkNameFromPackage(TaskManager.getContext(), proc.value!!.cmdLine) ?: proc.value!!.name
+                            name = getApkNameFromPackage(
+                                TaskManager.getContext(),
+                                proc.value!!.proc.cmdLine
+                            ) ?: proc.value!!.proc.name
                         }
 
-                        TextCard(text = "Name", description = name.trim())
-                        TextCard(text = "PID", description = proc.value!!.pid.toString())
+                        TextCard(text = stringResource(strings.name), description = name.trim())
+                        TextCard(text = "PID", description = proc.value!!.proc.pid.toString())
                         TextCard(
-                            text = if(isApk.value){"Package"}else{"Command"},
-                            description = proc.value!!.cmdLine.ifEmpty {
-                                "No Command"
+                            text = stringResource(
+                                if (isApk.value) {
+                                    strings.str_package
+                                } else {
+                                    strings.command
+                                }
+                            ),
+                            description = proc.value!!.proc.cmdLine.ifEmpty {
+                                stringResource(strings.no_cmd)
                             }
                         )
-                        TextCard(text = "User", description = username.value)
-                        if (proc.value!!.parentPid != 0) {
+                        TextCard(text = stringResource(strings.user), description = username.value)
+                        if (proc.value!!.proc.parentPid != 0) {
 
-                            val text = "Parent PID"
-                            val description = proc.value!!.parentPid.toString()
-                            SettingsToggle(label = text, description = description, default = false, showSwitch = false, onLongClick = {
-                                val clipboard = TaskManager.getContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText(text, description)
-                                clipboard.setPrimaryClip(clip)
+                            val text = stringResource(strings.parent_pid)
+                            val description = proc.value!!.proc.parentPid.toString()
+                            SettingsToggle(
+                                label = text,
+                                description = description,
+                                default = false,
+                                showSwitch = false,
+                                onLongClick = {
+                                    val clipboard = TaskManager.getContext()
+                                        .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    val clip = ClipData.newPlainText(text, description)
+                                    clipboard.setPrimaryClip(clip)
 
-                                Toast.makeText(TaskManager.getContext(), "Copied", Toast.LENGTH_SHORT).show()
-                            }, endWidget = {
-                                Icon(modifier = Modifier.padding(end = 16.dp), imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,contentDescription = null)
-                            }, sideEffect = {
-                                navController.navigate(SettingsRoutes.ProcessInfo.createRoute(proc.value!!.parentPid))
-                            })
+                                    Toast.makeText(
+                                        TaskManager.getContext(),
+                                        strings.copied.getString(),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
+                                endWidget = {
+                                    Icon(
+                                        modifier = Modifier.padding(end = 16.dp),
+                                        imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                        contentDescription = null
+                                    )
+                                },
+                                sideEffect = {
+                                    navController.navigate(
+                                        SettingsRoutes.ProcessInfo.createRoute(
+                                            proc.value!!.proc.parentPid
+                                        )
+                                    )
+                                })
 
                         }
 
                         LaunchedEffect(Unit) {
                             daemon_messages.collect { message ->
-                                if (message.startsWith("CPU_PID:")){
-                                    cpuUsage.intValue = message.removePrefix("CPU_PID:").toFloat().toInt()
+                                if (message.startsWith("CPU_PID:")) {
+                                    cpuUsage.intValue =
+                                        message.removePrefix("CPU_PID:").toFloat().toInt()
                                 }
                             }
                         }
 
                         LaunchedEffect(Unit) {
-                            while (isActive){
-                                if (proc.value != null){
-                                    send_daemon_messages.emit("PING_PID_CPU:${proc.value!!.pid}")
+                            while (isActive) {
+                                if (proc.value != null) {
+                                    send_daemon_messages.emit("PING_PID_CPU:${proc.value!!.proc.pid}")
                                 }
                                 delay(1000)
                             }
                         }
 
-                        TextCard(text = "CPU Usage", description = (if (cpuUsage.intValue == -1){
-                            proc.value!!.cpuUsage.roundToInt().toString()
-                        }else{
-                            cpuUsage.intValue
-                        }).toString() + "% (estimated)")
                         TextCard(
-                            text = "Foreground",
-                            description = proc.value!!.isForeground.toString()
+                            text = stringResource(strings.cpu_usage),
+                            description = (if (cpuUsage.intValue == -1) {
+                                proc.value!!.proc.cpuUsage.roundToInt().toString()
+                            } else {
+                                cpuUsage.intValue
+                            }).toString() + "% (${strings.estimated.getString()})"
+                        )
+                        TextCard(
+                            text = stringResource(strings.is_foreground),
+                            description = proc.value!!.proc.isForeground.toString()
                         )
 
                         fun formatSize(kb: Long): String {
                             return if (kb >= 1000) {
                                 val mb = kb / 1024f
-                                String.format(java.util.Locale.US,"%.2f MB", mb)
+                                String.format(java.util.Locale.US, "%.2f MB", mb)
                             } else {
                                 "$kb KB"
                             }
                         }
 
                         TextCard(
-                            text = "RAM Usage",
-                            description = formatSize(proc.value!!.memoryUsageKb)
+                            text = stringResource(strings.ram_usage),
+                            description = formatSize(proc.value!!.proc.memoryUsageKb)
                         )
 
-                        if (proc.value!!.residentSetSizeKb != proc.value!!.memoryUsageKb) {
+                        if (proc.value!!.proc.residentSetSizeKb != proc.value!!.proc.memoryUsageKb) {
                             TextCard(
-                                text = "Actual Ram Usage (RSS)",
-                                description = formatSize(proc.value!!.residentSetSizeKb)
+                                text = stringResource(strings.actual_ram_usage),
+                                description = formatSize(proc.value!!.proc.residentSetSizeKb)
                             )
                         }
 
 
                         TextCard(
-                            text = "Niceness",
-                            description = "${proc.value!!.nice}"
+                            text = stringResource(strings.niceness),
+                            description = "${proc.value!!.proc.nice}"
                         )
 
                         TextCard(
-                            text = "Status",
-                            description = when (proc.value!!.state.toString()
-                                .lowercase()) {
-                                "r" -> "Running"
-                                "s" -> "Sleeping"
-                                "d" -> "Uninterruptible sleep"
-                                "z" -> "Sleeping"
-                                "t" -> "Stopped"
-                                "x" -> "Dead"
-                                else -> proc.value!!.state.toString()
-                            }
+                            text = stringResource(strings.status),
+                            description = proc.value!!.proc.state
                         )
 
-                        TextCard(text = "Threads", description = proc.value!!.threads.toString())
+                        TextCard(
+                            text = stringResource(strings.threads),
+                            description = proc.value!!.proc.threads.toString()
+                        )
 
                         TextCard(
-                            text = "Start Time",
+                            text = stringResource(strings.start_time),
                             description = DateFormat.getDateTimeInstance().format(
-                                Date(startTimeToMillis(proc.value!!.startTime))
+                                Date(startTimeToMillis(proc.value!!.proc.startTime))
                             )
                         )
 
                         var elapsed by remember { mutableStateOf("") }
 
-                        val startTimeTicks = proc.value!!.startTime
+                        val startTimeTicks = proc.value!!.proc.startTime
                         LaunchedEffect(startTimeTicks) {
-                            while (true) {
+                            while (isActive) {
                                 elapsed = elapsedFromStartTime(startTimeTicks)
-                                kotlinx.coroutines.delay(1000)
+                                delay(1000)
                             }
                         }
 
                         TextCard(
-                            text = "Elapsed Time",
+                            text = stringResource(strings.elapsed_time),
                             description = elapsed
                         )
 
-
-
-//                        TextCard(
-//                            text = "Virtual Memory",
-//                            description = "${proc.value!!.virtualMemoryKb}KB"
-//                        )
-
-                        //TextCard(text = "Cgroup", description = proc.value!!.cgroup)
-
-                        if (proc.value!!.executablePath != "null") {
-                            TextCard(text = "Executable", description = proc.value!!.executablePath)
+                        if (proc.value!!.proc.executablePath != "null") {
+                            TextCard(
+                                text = stringResource(strings.exec_path),
+                                description = proc.value!!.proc.executablePath
+                            )
                         }
 
 

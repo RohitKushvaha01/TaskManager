@@ -2,6 +2,7 @@ package com.rk.taskmanager
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -21,8 +22,12 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.rk.daemon_messages
 import com.rk.send_daemon_messages
+import com.rk.taskmanager.settings.Settings
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import org.json.JSONArray
 
 data class ProcessUiModel(
@@ -31,15 +36,58 @@ data class ProcessUiModel(
     val icon: ImageBitmap?,
     val isSystemApp: Boolean,
     val isUserApp: Boolean,
-    val isApp: Boolean
+    val isApp: Boolean,
+    val killing: MutableState<Boolean> = mutableStateOf(false),
+    val killed: MutableState<Boolean> = mutableStateOf(false)
 )
 
 class ProcessViewModel : ViewModel() {
 
-    var processes = mutableStateListOf<Process>()
-        private set
-
     private val _uiProcesses = MutableStateFlow<List<ProcessUiModel>>(emptyList())
+
+
+    private val _showUserApps = MutableStateFlow(Settings.showUserApps)
+    private val _showSystemApps = MutableStateFlow(Settings.showSystemApps)
+    private val _showLinuxProcess = MutableStateFlow(Settings.showLinuxProcess)
+
+    val showUserApps: StateFlow<Boolean> = _showUserApps
+    val showSystemApps: StateFlow<Boolean> = _showSystemApps
+    val showLinuxProcess: StateFlow<Boolean> = _showLinuxProcess
+
+    // Filtered processes flow
+    val filteredProcesses: StateFlow<List<ProcessUiModel>> = combine(
+        _uiProcesses,
+        _showUserApps,
+        _showSystemApps,
+        _showLinuxProcess
+    ) { processes, showUser, showSystem, showLinux ->
+        processes.filter { process ->
+            when {
+                process.isApp && process.isUserApp && showUser -> true
+                process.isApp && process.isSystemApp && showSystem -> true
+                process.isApp.not() && showLinux -> true
+                else -> false
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun setShowUserApps(value: Boolean) {
+        _showUserApps.value = value
+    }
+
+    fun setShowSystemApps(value: Boolean) {
+        _showSystemApps.value = value
+    }
+
+    fun setShowLinuxProcess(value: Boolean) {
+        _showLinuxProcess.value = value
+    }
+
+
     val uiProcesses: StateFlow<List<ProcessUiModel>> = _uiProcesses
 
     var isLoading = mutableStateOf(true)
@@ -65,7 +113,7 @@ class ProcessViewModel : ViewModel() {
     )
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             daemon_messages.collect { message ->
                 if (message.startsWith("[") && message.endsWith("]")) {
                     try {
@@ -97,9 +145,8 @@ class ProcessViewModel : ViewModel() {
                             )
                         }
 
-                        Log.d("ProcessList", "Received ${processes.size} processes")
                         val uiList = newProcesses.map { proc ->
-                            async {
+                            async(Dispatchers.IO) {
                                 val context = TaskManager.getContext()
                                 val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
                                 val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
@@ -109,11 +156,9 @@ class ProcessViewModel : ViewModel() {
                             }
                         }.awaitAll()
 
+                        _uiProcesses.value = uiList
 
                         withContext(Dispatchers.Main) {
-                            processes.clear()
-                            processes.addAll(newProcesses)
-                            _uiProcesses.value = uiList
                             isLoading.value = false
                         }
 
@@ -125,22 +170,23 @@ class ProcessViewModel : ViewModel() {
         }
 
         viewModelScope.launch {
-            refreshProcesses()
+            refreshProcessesAuto()
         }
 
     }
 
 
-    fun refreshProcesses() {
+    fun refreshProcessesManual() {
         isLoading.value = true
         viewModelScope.launch {
             send_daemon_messages.emit("LIST_PROCESS")
         }
     }
 
-    fun refreshAuto() {
-        if (processes.isEmpty()) {
-            refreshProcesses()
+    fun refreshProcessesAuto() {
+        //isLoading.value = true
+        viewModelScope.launch {
+            send_daemon_messages.emit("LIST_PROCESS")
         }
     }
 }

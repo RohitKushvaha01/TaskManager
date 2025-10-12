@@ -21,9 +21,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ripple
@@ -33,6 +38,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -40,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.rk.components.SettingsToggle
 import com.rk.components.XedDialog
@@ -51,7 +58,11 @@ import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.strings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.random.Random
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,34 +78,30 @@ fun Processes(
         XedDialog(onDismissRequest = {showFilter.value = false}) {
             DividerColumn {
 
-                SettingsToggle(label = stringResource(strings.show_user_app), description = null, showSwitch = true, default = showUserApps.value, sideEffect = {
+                SettingsToggle(label = stringResource(strings.show_user_app), description = null, showSwitch = true, default = viewModel.showUserApps.collectAsState().value, sideEffect = {
                     scope.launch{
                         Settings.showUserApps = it
-                        showUserApps.value = it
+                        viewModel.setShowUserApps(it)
                     }
 
                 })
 
-                SettingsToggle(label = stringResource(strings.show_system_app), description = null, showSwitch = true, default = showSystemApps.value, sideEffect = {
+                SettingsToggle(label = stringResource(strings.show_system_app), description = null, showSwitch = true, default = viewModel.showSystemApps.collectAsState().value, sideEffect = {
                     scope.launch{
                         Settings.showSystemApps = it
-                        showSystemApps.value = it
+                        viewModel.setShowSystemApps(it)
                     }
 
                 })
 
-                SettingsToggle(label = stringResource(strings.show_linux_process), description = null, showSwitch = true, default = showLinuxProcess.value, sideEffect = {
+                SettingsToggle(label = stringResource(strings.show_linux_process), description = null, showSwitch = true, default = viewModel.showLinuxProcess.collectAsState().value, sideEffect = {
                     scope.launch{
                         Settings.showLinuxProcess = it
-                        showLinuxProcess.value = it
+                        viewModel.setShowLinuxProcess(it)
                     }
                 })
             }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.refreshAuto()
     }
 
     Box(
@@ -102,22 +109,12 @@ fun Processes(
         contentAlignment = Alignment.Center
     ) {
         PullToRefreshBox(isRefreshing = viewModel.isLoading.value, onRefresh = {
-            viewModel.refreshProcesses()
+            viewModel.refreshProcessesManual()
         }) {
             val listState = rememberLazyListState()
 
-            val uiProcesses by viewModel.uiProcesses.collectAsState()
+            val filteredProcesses by viewModel.filteredProcesses.collectAsState()
 
-            val filteredProcesses = remember(uiProcesses, showSystemApps.value,showUserApps.value, showLinuxProcess.value) {
-                uiProcesses.filter { process ->
-                    when {
-                        process.isApp && process.isUserApp && showUserApps.value -> true
-                        process.isApp && process.isSystemApp && showSystemApps.value -> true
-                        process.isApp.not() && showLinuxProcess.value -> true
-                        else -> false
-                    }
-                }
-            }
 
 
             if (filteredProcesses.isNotEmpty()){
@@ -126,7 +123,7 @@ fun Processes(
                     state = listState
                 ) {
                     items(filteredProcesses, key = { it.proc.pid }) { uiProc ->
-                        ProcessItem(modifier, uiProc, navController = navController)
+                        ProcessItem(modifier, uiProc, navController = navController,viewModel)
                     }
 
                     item {
@@ -161,7 +158,8 @@ const val textLimit = 40
 fun ProcessItem(
     modifier: Modifier,
     uiProc: ProcessUiModel,
-    navController: NavController
+    navController: NavController,
+    viewModel: ProcessViewModel
 ) {
 
     PreferenceTemplate(
@@ -177,6 +175,7 @@ fun ProcessItem(
             .fillMaxHeight()
             .padding(vertical = 16.dp)
             .padding(start = 16.dp),
+        enabled = !uiProc.killed.value,
         title = {
             Text(
                 fontWeight = FontWeight.Bold,
@@ -190,7 +189,6 @@ fun ProcessItem(
         description = {
             Text(uiProc.proc.cmdLine.removePrefix("/system/bin/").take(textLimit))
         },
-        enabled = true,
         applyPaddings = false,
         startWidget = {
             if (uiProc.icon != null) {
@@ -214,41 +212,37 @@ fun ProcessItem(
                 Image(
                     painter = painterResource(id = fallbackId),
                     contentDescription = "Fallback Icon",
-                    modifier = Modifier.padding(start = 16.dp).size(24.dp),
+                    modifier = Modifier.padding(start = 16.dp).size(24.dp).alpha(if (!uiProc.killed.value) 1f else 0.3f),
                 )
             }
+        },
+        endWidget = {
+            if (uiProc.isUserApp){
+                if (uiProc.killing.value){
+                    CircularProgressIndicator(modifier = Modifier.padding(end = 16.dp).size(16.dp), strokeWidth = 2.dp)
+                }else{
+                    IconButton(
+                        enabled = !uiProc.killed.value,
+                        onClick = {
+                            viewModel.viewModelScope.launch {
+                                uiProc.killing.value = true
+                                uiProc.killed.value = killProc(uiProc.proc)
+                                delay(300)
+                                uiProc.killing.value = false
+                            }
+                        }) {
+                        if (uiProc.killed.value){
+                            Icon(imageVector = Icons.Outlined.Check,null)
+                        }else{
+                            Icon(imageVector = Icons.Outlined.Close,null)
+                        }
+                    }
+                }
+
+            }
+
         }
 
     )
-}
 
-
-
-fun launchShizuku(context: Context) {
-    val packageName = "moe.shizuku.privileged.api"
-
-    try {
-        val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
-        if (launchIntent != null) {
-            context.startActivity(launchIntent)
-            Log.d("Shizuku", "Successfully launched Shizuku")
-        } else {
-            Toast.makeText(context, "Shizuku is not installed or has no launch activity", Toast.LENGTH_SHORT).show()
-        }
-    } catch (e: Exception) {
-        Log.e("Shizuku", "Error launching Shizuku: ${e.message}")
-        Toast.makeText(context, "Failed to launch Shizuku: ${e.message}", Toast.LENGTH_SHORT).show()
-    }
-}
-
-private fun openPlayStore(context: Context, packageName: String) {
-    try {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
-        context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
-        // Play Store not available, open web version
-        val intent = Intent(Intent.ACTION_VIEW,
-            Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))
-        context.startActivity(intent)
-    }
 }

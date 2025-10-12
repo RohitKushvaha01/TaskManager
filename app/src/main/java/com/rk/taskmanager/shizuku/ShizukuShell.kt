@@ -40,7 +40,12 @@ object ShizukuShell {
     }
 
     fun isShizukuRunning(): Boolean{
-        return Shizuku.getBinder() != null && Shizuku.pingBinder()
+        return try {
+            Shizuku.getBinder() != null && Shizuku.pingBinder()
+        }catch (e: Exception){
+            e.printStackTrace()
+            return false
+        }
     }
 
 
@@ -54,10 +59,16 @@ object ShizukuShell {
     }
 
     fun isRoot(): Boolean{
+        if (isShizukuRunning().not()){
+            return false
+        }
         return Shizuku.getUid() == 0
     }
 
     fun isShell(): Boolean{
+        if (isShizukuRunning().not()){
+            return false
+        }
         return Shizuku.getUid() == 2000
     }
 

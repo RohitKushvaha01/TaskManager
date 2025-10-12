@@ -14,15 +14,47 @@
     <string name="show_user_app">Show user apps</string>
     <string name="show_system_app">Show system apps</string>
     <string name="show_linux_process">Show linux processes</string>
+    <string name="proc_info">Process Info</string>
+    <string name="killing">Killing…</string>
+    <string name="stopping">Stopping…</string>
+    <string name="kill">Kill Process</string>
+    <string name="killed">Killed</string>
+    <string name="stopped">Stopped</string>
+    <string name="kill_fail">Kill Failed</string>
+    <string name="kill_proc">Terminate this process</string>
+
+    <!-- Process Details -->
+    <string name="loading">Loading…</string>
+    <string name="name">Name</string>
+    <string name="str_package">Package</string>
+    <string name="command">Command</string>
+    <string name="no_cmd">No command</string>
+    <string name="user">User</string>
+    <string name="parent_pid">Parent PID</string>
+    <string name="cpu_usage">CPU Usage</string>
+    <string name="estimated">estimated</string>
+    <string name="is_foreground">Is Foreground</string>
+    <string name="ram_usage">RAM Usage</string>
+    <string name="actual_ram_usage">Actual RAM Usage (RSS)</string>
+    <string name="niceness">Nice Value</string>
+    <string name="status">Status</string>
+    <string name="threads">Threads</string>
+    <string name="start_time">Start Time</string>
+    <string name="elapsed_time">Elapsed Time</string>
+    <string name="exec_path">Executable Path</string>
+    <string name="requires_daemon_restart">Changes will take effect after next cold-start</string>
+    <string name="daemon_wait">Waiting for daemon connection…</string>
+    <string name="timeout">Timeout</string>
+    <string name="res">Resources</string>
+    <string name="procs">Processes</string>
+
+
+    <!-- General -->
+    <string name="copied">Copied to clipboard</string>
+    <string name="settings">Settings</string>
 
     <string name="intro">TaskManager needs elevated permissions to function properly. Please select the working mode you’d like to use.</string>
-    <string name="noob"><![CDATA[
-This app needs special permission to manage system tasks. Your device doesn’t have this access right now.
-
-To continue, please:
-• Install the Shizuku app and start it, or
-• Use a rooted device.
-]]></string>
+    <string name="noob">This app needs special permission to manage system tasks. Your device doesn’t have this access right now. To continue, please:\m• Install the Shizuku app and start it, or\n• Use a rooted device.></string>
 
 
 </resources>

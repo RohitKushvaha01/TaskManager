@@ -25,6 +25,7 @@ import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SelectedWorkingMode
 import com.rk.taskmanager.screens.SettingsScreen
+import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.screens.updateCpuGraph
 import com.rk.taskmanager.screens.updateRamAndSwapGraph
 import com.rk.taskmanager.settings.Settings
@@ -64,31 +65,30 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             daemon_messages.collect { message ->
-                if (message.startsWith("CPU:") && graphMutex.tryLock()){
-                    updateCpuGraph(message.removePrefix("CPU:").toInt())
-                    delay(32)
-                    graphMutex.unlock()
-                }
+                launch {
+                    graphMutex.lock()
+                    if (message.startsWith("CPU:")){
+                        updateCpuGraph(message.removePrefix("CPU:").toInt())
+                        delay(32)
+                    }
 
-                if (message.startsWith("SWAP:") && graphMutex.tryLock()){
-                    val parts = message.removePrefix("SWAP:").split(":")
+                    if (message.startsWith("SWAP:")){
+                        val parts = message.removePrefix("SWAP:").split(":")
+                        if (parts.size == 2) {
+                            val used = parts[0]
+                            val total = parts[1]
 
-                    if (parts.size == 2) {
-                        val used = parts[0]
-                        val total = parts[1]
+                            val usedValue = used.toFloatOrNull() ?: 0f
+                            val totalValue = total.toFloatOrNull() ?: 1f
 
-                        val usedValue = used.toFloatOrNull() ?: 0f
-                        val totalValue = total.toFloatOrNull() ?: 1f
+                            val percentage = (usedValue / totalValue) * 100
 
-                        val percentage = (usedValue / totalValue) * 100
-
-                        updateRamAndSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
+                            updateRamAndSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
+                        }
                     }
 
                     graphMutex.unlock()
                 }
-
-                delay(16)
             }
         }
 
@@ -101,7 +101,12 @@ class MainActivity : ComponentActivity() {
                         send_daemon_messages.emit("SWAP_PING")
                     }
                 }
-                delay(Settings.updateFrequency.toLong())
+                val delayMs = if (selectedscreen.intValue == 0) {
+                    Settings.updateFrequency.toLong()
+                }else{
+                    Settings.updateFrequency.toLong() * 2
+                }
+                delay(delayMs)
             }
         }
 
@@ -160,7 +165,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        viewModel.refreshAuto()
+        viewModel.refreshProcessesAuto()
     }
 }
 

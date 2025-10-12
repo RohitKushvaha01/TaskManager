@@ -4,7 +4,7 @@
 [<img src="https://shields.rbtlog.dev/simple/com.rk.taskmanager" alt="RB shield">](https://shields.rbtlog.dev/com.rk.taskmanager)
 
 > [!IMPORTANT]
-Task Manager requires shizuku to work
+Task Manager requires shizuku/root to work
 
 # Features
 - [x] Moniter cpu usage

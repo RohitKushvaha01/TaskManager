@@ -8,7 +8,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -48,7 +54,10 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
         isNoob = isSuInPath().not() && ShizukuShell.isShizukuInstalled().not()
     }
 
-    PreferenceLayout(label = stringResource(strings.working_mode)) {
+    PreferenceLayout(
+        modifier = modifier,
+        label = stringResource(strings.working_mode)
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
             InfoBlock(icon = {
@@ -75,13 +84,14 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
                             message = ""
 
                             GlobalScope.launch(Dispatchers.IO) {
-                                val daemonResult = startDaemon(context,mode.id)
+                                val daemonResult = startDaemon(context, mode.id)
 
-                                withContext(Dispatchers.Main){
-                                    when(daemonResult){
+                                withContext(Dispatchers.Main) {
+                                    when (daemonResult) {
                                         DaemonResult.OK -> {
                                             navController.navigate(SettingsRoutes.Home.route)
                                         }
+
                                         else -> {
                                             message = daemonResult.message.toString()
                                         }
@@ -103,7 +113,7 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
                 }
             }
 
-            if (isNoob){
+            if (isNoob) {
                 message = stringResource(strings.noob)
             }
 

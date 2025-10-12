@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,25 +21,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.rk.taskmanager.ProcessViewModel
-import com.rk.taskmanager.SettingsRoutes
-import com.rk.taskmanager.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.lifecycleScope
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.rk.DaemonResult
 import com.rk.isConnected
 import com.rk.startDaemon
 import com.rk.taskmanager.MainActivity
+import com.rk.taskmanager.ProcessViewModel
+import com.rk.taskmanager.R
+import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.getString
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.strings
@@ -51,87 +50,107 @@ import kotlinx.coroutines.launch
 var selectedscreen = mutableIntStateOf(0)
 var showFilter = mutableStateOf(false)
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewModel: ProcessViewModel) {
-    if (isConnected){
-        Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
-            TopAppBar(title = {
-                Text(stringResource(strings.app_name))
-            }, actions = {
+fun MainScreen(modifier: Modifier = Modifier, navController: NavController, viewModel: ProcessViewModel) {
+    if (isConnected) {
+        Scaffold(
+            modifier = modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(strings.app_name)) },
+                    actions = {
+                        if (selectedscreen.intValue == 1) {
+                            IconButton(
+                                modifier = Modifier.padding(8.dp),
+                                onClick = {
+                                    showFilter.value = !showFilter.value
+                                }) {
+                                Icon(
+                                    imageVector = Filter,
+                                    contentDescription = null
+                                )
+                            }
+                        }
 
-                if (selectedscreen.intValue == 1){
-                    IconButton(
-                        modifier = Modifier.padding(8.dp),
-                        onClick = {
-                            showFilter.value = !showFilter.value
-                        }) {
-                        Icon(
-                            imageVector = Filter,
-                            contentDescription = null
-                        )
+                        IconButton(
+                            modifier = Modifier.padding(8.dp),
+                            onClick = {
+                                navController.navigate(SettingsRoutes.Settings.route)
+                            }) {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = null
+                            )
+                        }
                     }
-                }
+                )
+            },
+            bottomBar = {
+                NavigationBar {
+                    NavigationBarItem(
+                        selected = selectedscreen.intValue == 0, onClick = {
+                            selectedscreen.intValue = 0
+                        },
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.speed_24px),
+                                contentDescription = null
+                            )
+                        },
+                        label = { Text(stringResource(strings.res)) }
+                    )
 
-
-                IconButton(
-                    modifier = Modifier.padding(8.dp),
-                    onClick = {
-                        navController.navigate(SettingsRoutes.Settings.route)
-                    }) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = null
+                    NavigationBarItem(
+                        selected = selectedscreen.intValue == 1,
+                        onClick = {
+                            selectedscreen.intValue = 1
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = null
+                            )
+                        },
+                        label = { Text(stringResource(strings.procs)) }
                     )
                 }
-            })
-        },bottomBar = {
-            NavigationBar {
-                NavigationBarItem(selected = selectedscreen.intValue == 0, onClick = {
-                    selectedscreen.intValue = 0
-                }, icon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.speed_24px),
-                        contentDescription = null
-                    )
-                }, label = {Text(stringResource(strings.res))})
-
-                NavigationBarItem(selected = selectedscreen.intValue == 1, onClick = {
-                    selectedscreen.intValue = 1
-                }, icon = {
-                    Icon(
-                        imageVector = Icons.Filled.PlayArrow,
-                        contentDescription = null
-                    )
-                }, label = {Text(stringResource(strings.procs))})
             }
-        }) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)){
+        ) { innerPadding ->
+
+            Box(modifier = Modifier.padding(innerPadding)) {
                 LaunchedEffect(Unit) {
                     viewModel.refreshProcessesAuto()
                 }
-                when(selectedscreen.intValue){
+
+                when (selectedscreen.intValue) {
                     0 -> {
                         Resources(modifier = Modifier.padding(horizontal = 4.dp))
                     }
+
                     1 -> {
                         Processes(viewModel = viewModel, navController = navController)
                     }
                 }
             }
         }
-    }else{
+    } else {
+        val scope = rememberCoroutineScope()
+
         LaunchedEffect(Unit) {
-            if (Settings.workingMode != -1){
-                MainActivity.scope?.launch(Dispatchers.Main) {
+            if (Settings.workingMode != -1) {
+                scope.launch(Dispatchers.Main) {
                     val daemonResult = startDaemon(context = MainActivity.instance!!, Settings.workingMode)
-                    if (daemonResult != DaemonResult.OK){
+                    if (daemonResult != DaemonResult.OK) {
                         delay(2000)
-                        if (isConnected.not()){
+                        if (isConnected.not()) {
                             println(daemonResult.name)
-                            Toast.makeText(MainActivity.instance!!, daemonResult.message ?: "Unable to start daemon!", Toast.LENGTH_SHORT).show()
-                            if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
+                            Toast.makeText(
+                                MainActivity.instance!!,
+                                daemonResult.message ?: "Unable to start daemon!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route) {
                                 navController.navigate(SettingsRoutes.SelectWorkingMode.route)
                             }
                         }
@@ -139,7 +158,7 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
                 }
             }
         }
-        Box(modifier = Modifier.fillMaxSize()){
+        Box(modifier = modifier.fillMaxSize()) {
             Column(modifier = Modifier.align(Alignment.Center)) {
                 LinearProgressIndicator()
                 Text(stringResource(strings.daemon_wait))
@@ -147,10 +166,10 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
 
                 LaunchedEffect(isConnected) {
                     delay(5000)
-                    if (isConnected.not()){
+                    if (isConnected.not()) {
                         Toast.makeText(context, strings.timeout.getString(), Toast.LENGTH_SHORT).show()
 
-                        if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
+                        if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route) {
                             navController.navigate(SettingsRoutes.SelectWorkingMode.route)
                         }
                     }
@@ -158,8 +177,6 @@ fun MainScreen(modifier: Modifier = Modifier,navController: NavController,viewMo
             }
         }
     }
-
-
 }
 
 

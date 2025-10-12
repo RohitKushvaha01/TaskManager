@@ -10,11 +10,11 @@ import com.rk.taskmanager.TaskManager
 
 @Composable
 fun TextCard(modifier: Modifier = Modifier,text: String,description: String? = null) {
-    SettingsToggle(label = text, description = description, default = false, showSwitch = false, onLongClick = {
-        val clipboard = TaskManager.getContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    SettingsToggle(modifier = modifier, label = text, description = description, default = false, showSwitch = false, onLongClick = {
+        val clipboard = TaskManager.requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(text, description)
         clipboard.setPrimaryClip(clip)
 
-        Toast.makeText(TaskManager.getContext(), "Copied", Toast.LENGTH_SHORT).show()
+        Toast.makeText(TaskManager.requireContext(), "Copied", Toast.LENGTH_SHORT).show()
     })
 }

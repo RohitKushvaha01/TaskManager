@@ -1,17 +1,9 @@
 package com.rk.taskmanager.screens
 
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,15 +23,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ripple
-import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,11 +50,8 @@ import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.strings
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.random.Random
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,32 +63,50 @@ fun Processes(
 ) {
     val scope = rememberCoroutineScope()
 
-    if (showFilter.value){
-        XedDialog(onDismissRequest = {showFilter.value = false}) {
+    if (showFilter.value) {
+        XedDialog(onDismissRequest = { showFilter.value = false }) {
             DividerColumn {
 
-                SettingsToggle(label = stringResource(strings.show_user_app), description = null, showSwitch = true, default = viewModel.showUserApps.collectAsState().value, sideEffect = {
-                    scope.launch{
-                        Settings.showUserApps = it
-                        viewModel.setShowUserApps(it)
+                SettingsToggle(
+                    label = stringResource(strings.show_user_app),
+                    description = null,
+                    showSwitch = true,
+                    default = viewModel.showUserApps.collectAsState().value,
+                    sideEffect = {
+                        scope.launch {
+                            Settings.showUserApps = it
+                            viewModel.setShowUserApps(it)
+                        }
+
                     }
+                )
 
-                })
+                SettingsToggle(
+                    label = stringResource(strings.show_system_app),
+                    description = null,
+                    showSwitch = true,
+                    default = viewModel.showSystemApps.collectAsState().value,
+                    sideEffect = {
+                        scope.launch {
+                            Settings.showSystemApps = it
+                            viewModel.setShowSystemApps(it)
+                        }
 
-                SettingsToggle(label = stringResource(strings.show_system_app), description = null, showSwitch = true, default = viewModel.showSystemApps.collectAsState().value, sideEffect = {
-                    scope.launch{
-                        Settings.showSystemApps = it
-                        viewModel.setShowSystemApps(it)
                     }
+                )
 
-                })
-
-                SettingsToggle(label = stringResource(strings.show_linux_process), description = null, showSwitch = true, default = viewModel.showLinuxProcess.collectAsState().value, sideEffect = {
-                    scope.launch{
-                        Settings.showLinuxProcess = it
-                        viewModel.setShowLinuxProcess(it)
+                SettingsToggle(
+                    label = stringResource(strings.show_linux_process),
+                    description = null,
+                    showSwitch = true,
+                    default = viewModel.showLinuxProcess.collectAsState().value,
+                    sideEffect = {
+                        scope.launch {
+                            Settings.showLinuxProcess = it
+                            viewModel.setShowLinuxProcess(it)
+                        }
                     }
-                })
+                )
             }
         }
     }
@@ -115,22 +122,20 @@ fun Processes(
 
             val filteredProcesses by viewModel.filteredProcesses.collectAsState()
 
-
-
-            if (filteredProcesses.isNotEmpty()){
+            if (filteredProcesses.isNotEmpty()) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     state = listState
                 ) {
                     items(filteredProcesses, key = { it.proc.pid }) { uiProc ->
-                        ProcessItem(modifier, uiProc, navController = navController,viewModel)
+                        ProcessItem(modifier, uiProc, navController = navController, viewModel)
                     }
 
                     item {
                         Spacer(modifier = Modifier.padding(bottom = 32.dp))
                     }
                 }
-            }else{
+            } else {
                 val messages = listOf(
                     "¯\\_(ツ)_/¯",
                     "(¬_¬ )",
@@ -147,8 +152,6 @@ fun Processes(
             }
 
         }
-
-
     }
 }
 
@@ -195,7 +198,9 @@ fun ProcessItem(
                 Image(
                     bitmap = uiProc.icon,
                     contentDescription = "App Icon",
-                    modifier = Modifier.padding(start = 16.dp).size(24.dp),
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .size(24.dp),
                 )
             } else {
                 val fallbackId = when {
@@ -212,15 +217,20 @@ fun ProcessItem(
                 Image(
                     painter = painterResource(id = fallbackId),
                     contentDescription = "Fallback Icon",
-                    modifier = Modifier.padding(start = 16.dp).size(24.dp).alpha(if (!uiProc.killed.value) 1f else 0.3f),
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .size(24.dp)
+                        .alpha(if (!uiProc.killed.value) 1f else 0.3f),
                 )
             }
         },
         endWidget = {
-            if (uiProc.isUserApp){
-                if (uiProc.killing.value){
-                    CircularProgressIndicator(modifier = Modifier.padding(end = 16.dp).size(16.dp), strokeWidth = 2.dp)
-                }else{
+            if (uiProc.isUserApp) {
+                if (uiProc.killing.value) {
+                    CircularProgressIndicator(modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(16.dp), strokeWidth = 2.dp)
+                } else {
                     IconButton(
                         enabled = !uiProc.killed.value,
                         onClick = {
@@ -231,10 +241,10 @@ fun ProcessItem(
                                 uiProc.killing.value = false
                             }
                         }) {
-                        if (uiProc.killed.value){
-                            Icon(imageVector = Icons.Outlined.Check,null)
-                        }else{
-                            Icon(imageVector = Icons.Outlined.Close,null)
+                        if (uiProc.killed.value) {
+                            Icon(imageVector = Icons.Outlined.Check, null)
+                        } else {
+                            Icon(imageVector = Icons.Outlined.Close, null)
                         }
                     }
                 }

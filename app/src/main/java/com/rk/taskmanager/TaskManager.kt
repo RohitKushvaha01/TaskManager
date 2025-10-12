@@ -1,22 +1,24 @@
 package com.rk.taskmanager
 
 import android.app.Application
-import kotlinx.coroutines.DelicateCoroutinesApi
-
+import android.content.Context
 
 class TaskManager : Application() {
-    companion object{
-        private var application: Application? = null
-        fun getContext(): Application{
-            if (application == null){
-                throw RuntimeException("application is null")
+    companion object {
+        private lateinit var instance: TaskManager
+        val application get() = instance
+
+        fun requireContext(): Context {
+            if (::instance.isInitialized.not()) {
+                throw IllegalStateException("Application not initialized")
+            } else {
+                return instance.applicationContext
             }
-            return application!!
         }
     }
-    @OptIn(DelicateCoroutinesApi::class)
+
     override fun onCreate() {
-        application = this
         super.onCreate()
+        instance = this
     }
 }

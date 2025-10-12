@@ -58,7 +58,6 @@ import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.getString
-import com.rk.taskmanager.shizuku.ShizukuShell
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -184,7 +183,7 @@ fun getAppIconBitmap(context: Context, packageName: String): Bitmap? {
 suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
     var killResult = false
 
-    val isApk = isAppInstalled(TaskManager.getContext(), proc.cmdLine)
+    val isApk = isAppInstalled(TaskManager.requireContext(), proc.cmdLine)
 
 
     killResult = withContext(Dispatchers.IO) {
@@ -242,7 +241,7 @@ fun ProcessInfo(
             username.value =
                 getUsernameFromUid(proc.value!!.proc.uid) ?: proc.value!!.proc.uid.toString()
         }
-        isApk.value = isAppInstalled(TaskManager.getContext(), proc.value!!.proc.cmdLine)
+        isApk.value = isAppInstalled(TaskManager.requireContext(), proc.value!!.proc.cmdLine)
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
@@ -358,7 +357,7 @@ fun ProcessInfo(
 
                         LaunchedEffect(Unit) {
                             name = getApkNameFromPackage(
-                                TaskManager.getContext(),
+                                TaskManager.requireContext(),
                                 proc.value!!.proc.cmdLine
                             ) ?: proc.value!!.proc.name
                         }
@@ -388,13 +387,13 @@ fun ProcessInfo(
                                 default = false,
                                 showSwitch = false,
                                 onLongClick = {
-                                    val clipboard = TaskManager.getContext()
+                                    val clipboard = TaskManager.requireContext()
                                         .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     val clip = ClipData.newPlainText(text, description)
                                     clipboard.setPrimaryClip(clip)
 
                                     Toast.makeText(
-                                        TaskManager.getContext(),
+                                        TaskManager.requireContext(),
                                         strings.copied.getString(),
                                         Toast.LENGTH_SHORT
                                     ).show()

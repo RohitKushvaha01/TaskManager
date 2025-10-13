@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -104,7 +103,7 @@ fun formatRamGB(bytes: Long): String =
 
 
 suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalBytes: Long) {
-    val ramUsage = getSystemRamUsage(TaskManager.getContext())
+    val ramUsage = getSystemRamUsage(TaskManager.requireContext())
 
     // Update values
     RamUsage = ramUsage

@@ -1,36 +1,38 @@
 package com.rk
 
 import android.content.Context
-import com.rk.taskmanager.TaskManager
-import com.rk.taskmanager.screens.WorkingMode
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
-import android.net.LocalServerSocket
-import android.net.LocalSocket
-import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastJoinToString
 import com.rk.DaemonServer.received_messages
+import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.getString
+import com.rk.taskmanager.screens.WorkingMode
 import com.rk.taskmanager.shizuku.ShizukuShell
 import com.rk.taskmanager.strings
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.IOException
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.Date
+import java.util.Locale
 
 val daemon_messages = received_messages.asSharedFlow()
-val send_daemon_messages = MutableSharedFlow<String>(extraBufferCapacity = 10,onBufferOverflow = BufferOverflow.DROP_OLDEST)
+val send_daemon_messages = MutableSharedFlow<String>(extraBufferCapacity = 10, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 var isConnected by mutableStateOf(false)
     private set
 
@@ -39,7 +41,8 @@ private object DaemonServer {
     private var server: ServerSocket? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    val received_messages = MutableSharedFlow<String>(extraBufferCapacity = 10,onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val received_messages =
+        MutableSharedFlow<String>(extraBufferCapacity = 10, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
 
     private var acceptJob: Job? = null
@@ -52,10 +55,10 @@ private object DaemonServer {
         println("[$ts] [DaemonServer] $msg")
     }
 
-    suspend fun start(): Pair<Int,Exception?> {
+    suspend fun start(): Pair<Int, Exception?> {
         if (server != null && server!!.isBound) {
             log("Server already running, ignoring start request")
-            return Pair(server!!.localPort,null)
+            return Pair(server!!.localPort, null)
         }
 
         return try {
@@ -67,7 +70,7 @@ private object DaemonServer {
             log("ERROR: Failed to start server: ${e.message}")
             e.printStackTrace()
             server = null
-            Pair(-1,e)
+            Pair(-1, e)
         }
     }
 
@@ -85,7 +88,8 @@ private object DaemonServer {
                         try {
                             client.outputStream.write("BUSY\n".toByteArray())
                             client.outputStream.flush()
-                        } catch (_: IOException) {}
+                        } catch (_: IOException) {
+                        }
                         client.close()
                         continue
                     }
@@ -179,7 +183,7 @@ private object DaemonServer {
     }
 }
 
-enum class DaemonResult(var message: String?){
+enum class DaemonResult(var message: String?) {
     OK(null),
     SHIZUKU_PERMISSION_DENIED(strings.shizuku_permission_denied.getString()),
     SHIZUKU_NOT_RUNNING(if (ShizukuShell.isShizukuInstalled()) strings.shizuku_not_running.getString() else strings.shizuku_not_installed.getString()),
@@ -195,9 +199,9 @@ suspend fun startDaemon(
     context: Context,
     mode: Int
 ): DaemonResult {
-    val daemonFile = File(TaskManager.getContext().applicationInfo.nativeLibraryDir,"libtaskmanagerd.so")
+    val daemonFile = File(TaskManager.requireContext().applicationInfo.nativeLibraryDir, "libtaskmanagerd.so")
     val result = withContext(Dispatchers.IO) {
-        if (daemonCalled){
+        if (daemonCalled) {
             return@withContext DaemonResult.DAEMON_ALREADY_BEING_STARTED
         }
         daemonCalled = true
@@ -205,13 +209,15 @@ suspend fun startDaemon(
         println(daemonFile.absolutePath)
 
         val daemonServer = DaemonServer.start()
-        if (daemonServer.second != null){
+        if (daemonServer.second != null) {
             return@withContext DaemonResult.UNKNOWN_ERROR.also { it.message = daemonServer.second?.message.toString() }
         }
 
         val port = daemonServer.first
-        if (port <= 0){
-            return@withContext DaemonResult.UNKNOWN_ERROR.also { it.message = strings.port_busy.getString(mapOf("%port" to port.toString())) }
+        if (port <= 0) {
+            return@withContext DaemonResult.UNKNOWN_ERROR.also {
+                it.message = strings.port_busy.getString(mapOf("%port" to port.toString()))
+            }
         }
 
         try {
@@ -221,7 +227,7 @@ suspend fun startDaemon(
                     loading.setMessage(strings.starting_daemon.getString())
                     loading.show()
 
-                    if (!ShizukuShell.isShizukuRunning()){
+                    if (!ShizukuShell.isShizukuRunning()) {
                         loading.hide()
                         return@withContext DaemonResult.SHIZUKU_NOT_RUNNING
                     }
@@ -232,7 +238,7 @@ suspend fun startDaemon(
                     }
 
                     val processResult = ShizukuShell.newProcess(
-                        cmd = arrayOf(daemonFile.absolutePath,"-p",port.toString(),"-D"),
+                        cmd = arrayOf(daemonFile.absolutePath, "-p", port.toString(), "-D"),
                         env = arrayOf(),
                         dir = "/"
                     )
@@ -255,16 +261,16 @@ suspend fun startDaemon(
                     loading.setMessage(strings.starting_daemon.getString())
                     loading.show()
 
-                    if (!isSuInPath()){
+                    if (!isSuInPath()) {
                         loading.hide()
                         return@withContext DaemonResult.SU_NOT_IN_PATH
                     }
-                    val cmd = arrayOf("su", "-c", daemonFile.absolutePath,"-p",port.toString(),"-D")
+                    val cmd = arrayOf("su", "-c", daemonFile.absolutePath, "-p", port.toString(), "-D")
                     val result = newProcess(cmd = cmd, env = arrayOf(), workingDir = "/")
-                    if (result.first == 0){
+                    if (result.first == 0) {
                         loading.hide()
                         DaemonResult.OK
-                    }else{
+                    } else {
                         loading.hide()
                         DaemonResult.DAEMON_REFUSED.also {
                             it.message = result.second
@@ -302,7 +308,7 @@ private suspend fun newProcess(
     cmd: Array<String>,
     env: Array<String>,
     workingDir: String
-): Pair<Int,String> = withContext(Dispatchers.IO){
+): Pair<Int, String> = withContext(Dispatchers.IO) {
     return@withContext try {
         val processBuilder = ProcessBuilder(*cmd)
         processBuilder.redirectErrorStream(true)
@@ -325,9 +331,9 @@ private suspend fun newProcess(
         }
 
         val process = processBuilder.start()
-        Pair(process.waitFor(),process.inputStream.bufferedReader().readLines().fastJoinToString("\n"))
+        Pair(process.waitFor(), process.inputStream.bufferedReader().readLines().fastJoinToString("\n"))
     } catch (e: Exception) {
         e.printStackTrace()
-        Pair(-1,e.message.toString())
+        Pair(-1, e.message.toString())
     }
 }

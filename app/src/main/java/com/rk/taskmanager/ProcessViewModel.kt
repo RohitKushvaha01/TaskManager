@@ -1,33 +1,31 @@
 package com.rk.taskmanager
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rk.daemon_messages
+import com.rk.send_daemon_messages
 import com.rk.taskmanager.screens.getApkNameFromPackage
 import com.rk.taskmanager.screens.getAppIconBitmap
 import com.rk.taskmanager.screens.isAppInstalled
 import com.rk.taskmanager.screens.isSystemApp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import com.rk.daemon_messages
-import com.rk.send_daemon_messages
 import com.rk.taskmanager.settings.Settings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 
 data class ProcessUiModel(
@@ -42,17 +40,15 @@ data class ProcessUiModel(
 )
 
 class ProcessViewModel : ViewModel() {
-
     private val _uiProcesses = MutableStateFlow<List<ProcessUiModel>>(emptyList())
-
 
     private val _showUserApps = MutableStateFlow(Settings.showUserApps)
     private val _showSystemApps = MutableStateFlow(Settings.showSystemApps)
     private val _showLinuxProcess = MutableStateFlow(Settings.showLinuxProcess)
 
-    val showUserApps: StateFlow<Boolean> = _showUserApps
-    val showSystemApps: StateFlow<Boolean> = _showSystemApps
-    val showLinuxProcess: StateFlow<Boolean> = _showLinuxProcess
+    val showUserApps = _showUserApps.asStateFlow()
+    val showSystemApps = _showSystemApps.asStateFlow()
+    val showLinuxProcess = _showLinuxProcess.asStateFlow()
 
     // Filtered processes flow
     val filteredProcesses: StateFlow<List<ProcessUiModel>> = combine(
@@ -87,9 +83,7 @@ class ProcessViewModel : ViewModel() {
         _showLinuxProcess.value = value
     }
 
-
-    val uiProcesses: StateFlow<List<ProcessUiModel>> = _uiProcesses
-
+    val uiProcesses = _uiProcesses.asStateFlow()
     var isLoading = mutableStateOf(true)
 
     data class Process(
@@ -147,7 +141,7 @@ class ProcessViewModel : ViewModel() {
 
                         val uiList = newProcesses.map { proc ->
                             async(Dispatchers.IO) {
-                                val context = TaskManager.getContext()
+                                val context = TaskManager.requireContext()
                                 val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
                                 val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
                                 val system = isSystemApp(context, proc.cmdLine)
@@ -156,12 +150,11 @@ class ProcessViewModel : ViewModel() {
                             }
                         }.awaitAll()
 
-                        _uiProcesses.value = uiList
+                        _uiProcesses.update { uiList }
 
                         withContext(Dispatchers.Main) {
                             isLoading.value = false
                         }
-
                     } catch (e: Exception) {
                         Log.e("ProcessList", "Failed to parse process list: ${e.message}")
                     }
@@ -172,7 +165,6 @@ class ProcessViewModel : ViewModel() {
         viewModelScope.launch {
             refreshProcessesAuto()
         }
-
     }
 
 

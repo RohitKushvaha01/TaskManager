@@ -1,5 +1,5 @@
 # TaskManager
-**Task Manager** is tool for android inpired from gnome system moniter
+**Task Manager** is tool for android inspired from gnome system monitor
 
 [<img src="https://shields.rbtlog.dev/simple/com.rk.taskmanager" alt="RB shield">](https://shields.rbtlog.dev/com.rk.taskmanager)
 
@@ -7,9 +7,9 @@
 Task Manager requires shizuku/root to work
 
 # Features
-- [x] Moniter cpu usage
-- [x] Moniter Ram usage
-- [x] Moniter running linux processes
+- [x] Monitor cpu usage
+- [x] Monitor Ram usage
+- [x] Monitor running linux processes
 - [x] List process info (eg. ram usage,priority etc.)
 - [x] Kill running process (Needs shizuku to be started by root)
 

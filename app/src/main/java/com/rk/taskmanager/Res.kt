@@ -1,22 +1,17 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.rk.taskmanager
 
-import android.app.Application
 import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlin.text.replace
 
 typealias drawables = R.drawable
 typealias strings = R.string
 
 fun Int.getString(values: Map<String, Any>? = null): String {
-    val string = ContextCompat.getString(TaskManager.getContext(), this)
-    return if (values != null){
-        string.fillPlaceholders(values)
-    }else{
-        string
-    }
+    val string = ContextCompat.getString(TaskManager.requireContext(), this)
+    return if (values != null) string.fillPlaceholders(values) else string
 }
 
 inline fun Int.getDrawable(context: Context): Drawable? {

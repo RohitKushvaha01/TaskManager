@@ -11,8 +11,6 @@ import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.settings.Settings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
@@ -74,7 +72,7 @@ object ShizukuShell {
 
     fun isShizukuInstalled(): Boolean {
         return try {
-            TaskManager.getContext().packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
+            TaskManager.requireContext().packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
             true
         } catch (e: PackageManager.NameNotFoundException) {
             false

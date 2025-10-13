@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import com.rk.taskmanager.TaskManager
-import com.rk.taskmanager.screens.WorkingMode
 
 object Settings {
     var theme
@@ -51,7 +50,7 @@ object Settings {
 }
 
 object Preference {
-    private var sharedPreferences: SharedPreferences = TaskManager.getContext().getSharedPreferences("Settings", Context.MODE_PRIVATE)
+    private var sharedPreferences: SharedPreferences = TaskManager.requireContext().getSharedPreferences("Settings", Context.MODE_PRIVATE)
 
     //store the result into memory for faster access
     private val stringCache = hashMapOf<String, String?>()

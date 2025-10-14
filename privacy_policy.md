@@ -4,18 +4,7 @@ This privacy policy applies to the TaskManager app (hereby referred to as "Appli
 
 **Information Collection and Use**
 
-The Application collects information when you download and use it. This information may include information such as
-
-*   Your device's Internet Protocol address (e.g. IP address)
-*   The pages of the Application that you visit, the time and date of your visit, the time spent on those pages
-*   The time spent on the Application
-*   The operating system you use on your mobile device
-
-The Application does not gather precise information about the location of your mobile device.
-
-The Service Provider may use the information you provided to contact you from time to time to provide you with important information, required notices and marketing promotions.
-
-For a better experience, while using the Application, the Service Provider may require you to provide us with certain personally identifiable information. The information that the Service Provider request will be retained by them and used as described in this privacy policy.
+The Application does not collect any personally identifiable information. However, third-party libraries or SDKs used within the Application may collect certain data as described in their respective privacy policies.
 
 **Third Party Access**
 

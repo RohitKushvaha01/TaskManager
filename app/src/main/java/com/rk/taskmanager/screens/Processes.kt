@@ -171,6 +171,7 @@ fun ProcessItem(
             .clip(RoundedCornerShape(16.dp))
             .combinedClickable(
                 indication = ripple(),
+                enabled = !uiProc.killed.value,
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = { navController.navigate(SettingsRoutes.ProcessInfo.createRoute(uiProc.proc.pid)) }
             ),

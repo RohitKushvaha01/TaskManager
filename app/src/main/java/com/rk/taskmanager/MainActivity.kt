@@ -152,13 +152,9 @@ class MainActivity : ComponentActivity() {
                 val daemonResult = startDaemon(context = this@MainActivity, Settings.workingMode)
                 if (daemonResult != DaemonResult.OK) {
                     delay(3000)
-                    if (isConnected.not()) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            daemonResult.message ?: "Unable to start daemon!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        if (navControllerRef.get()?.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route) {
+
+                    if (isConnected.not()){
+                        if (navControllerRef.get()?.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
                             navControllerRef.get()?.navigate(SettingsRoutes.SelectWorkingMode.route)
                         }
 

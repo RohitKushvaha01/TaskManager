@@ -48,7 +48,7 @@
     <string name="copied">Copied to clipboard</string>
     <string name="settings">Settings</string>
     <string name="intro">TaskManager needs elevated permissions to function properly. Please select the working mode you’d like to use.</string>
-    <string name="noob">This app needs special permission to manage system tasks. Your device doesn’t have this access right now. To continue, please:\n• Install the Shizuku app and start it, or\n• Use a rooted device.</string>
+    <string name="noob">This app needs special permission to manage system tasks.\nYour device doesn’t have this access right now.\nTo continue, please:\n\n• Install the Shizuku app and start it, or\n• Use a rooted device.</string>
 
 
 </resources>

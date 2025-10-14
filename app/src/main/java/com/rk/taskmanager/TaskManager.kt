@@ -15,6 +15,10 @@ class TaskManager : Application() {
                 return instance.applicationContext
             }
         }
+
+        fun getContext(): Context {
+            return requireContext()
+        }
     }
 
     override fun onCreate() {

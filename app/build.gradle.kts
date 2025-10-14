@@ -1,4 +1,6 @@
 import java.util.Properties
+val isIzzyOrFdroid = false
+
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -12,8 +14,8 @@ android {
     compileSdk = 36
 
     dependenciesInfo {
-        includeInApk = false
-        includeInBundle = false
+        includeInApk = isIzzyOrFdroid.not()
+        includeInBundle = isIzzyOrFdroid.not()
     }
 
     signingConfigs {
@@ -48,9 +50,9 @@ android {
 
     buildTypes {
         release{
-            isMinifyEnabled = false
-            isCrunchPngs = false
-            isShrinkResources = false
+            isMinifyEnabled = isIzzyOrFdroid.not()
+            isCrunchPngs = isIzzyOrFdroid.not()
+            isShrinkResources = isIzzyOrFdroid.not()
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
@@ -69,8 +71,8 @@ android {
         targetSdk = 36
 
         //versioning
-        versionCode = 16
-        versionName = "1.1.5"
+        versionCode = 18
+        versionName = "1.1.8"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -101,7 +103,7 @@ android {
 }
 
 tasks.whenTaskAdded {
-    if (name.contains("ArtProfile") && false) {
+    if (name.contains("ArtProfile") && isIzzyOrFdroid) {
         println("Skipped Task $name")
         enabled = false
     }

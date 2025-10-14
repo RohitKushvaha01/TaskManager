@@ -232,16 +232,16 @@ fun ProcessInfo(
     val cpuUsage = remember { mutableIntStateOf(-1) }
     val uiProcesses by viewModel.uiProcesses.collectAsState()
 
-
     LaunchedEffect(Unit) {
         proc.value = withContext(Dispatchers.IO) {
             uiProcesses.find { it.proc.pid == pid }
         }
-        if (proc.value != null) {
+
+        if(proc.value != null){
             username.value =
                 getUsernameFromUid(proc.value!!.proc.uid) ?: proc.value!!.proc.uid.toString()
+            isApk.value = isAppInstalled(TaskManager.getContext(), proc.value!!.proc.cmdLine)
         }
-        isApk.value = isAppInstalled(TaskManager.requireContext(), proc.value!!.proc.cmdLine)
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {

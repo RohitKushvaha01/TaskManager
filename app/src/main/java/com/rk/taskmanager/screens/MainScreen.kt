@@ -143,14 +143,8 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
                     val daemonResult = startDaemon(context = MainActivity.instance!!, Settings.workingMode)
                     if (daemonResult != DaemonResult.OK) {
                         delay(2000)
-                        if (isConnected.not()) {
-                            println(daemonResult.name)
-                            Toast.makeText(
-                                MainActivity.instance!!,
-                                daemonResult.message ?: "Unable to start daemon!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route) {
+                        if (isConnected.not()){
+                            if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
                                 navController.navigate(SettingsRoutes.SelectWorkingMode.route)
                             }
                         }
@@ -166,10 +160,8 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
 
                 LaunchedEffect(isConnected) {
                     delay(5000)
-                    if (isConnected.not()) {
-                        Toast.makeText(context, strings.timeout.getString(), Toast.LENGTH_SHORT).show()
-
-                        if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route) {
+                    if (isConnected.not()){
+                        if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
                             navController.navigate(SettingsRoutes.SelectWorkingMode.route)
                         }
                     }

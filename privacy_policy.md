@@ -4,7 +4,7 @@ This privacy policy applies to the TaskManager app (hereby referred to as "Appli
 
 **Information Collection and Use**
 
-The Application does not collect any personally identifiable information. However, third-party libraries or SDKs used within the Application may collect certain data as described in their respective privacy policies.
+The Application does not collect any personally identifiable information.
 
 **Third Party Access**
 

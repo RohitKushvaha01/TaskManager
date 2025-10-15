@@ -22,7 +22,7 @@ Task Manager requires shizuku/root to work
 
 # Download
 
-[Download](/dl_play.svg)
+![Download](/dl_play.svg)
 
 ## Find this app useful? :heart:
 Support it by giving a star :star: <br>

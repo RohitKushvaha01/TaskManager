@@ -20,6 +20,10 @@ Task Manager requires shizuku/root to work
     <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/03.jpg" width="32%" />
 </div>
 
+# Download
+
+[Download](/dl_play.svg)
+
 ## Find this app useful? :heart:
 Support it by giving a star :star: <br>
 Also, **__[follow](https://github.com/Rohitkushvaha01)__** me for my next creations!

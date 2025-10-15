@@ -22,7 +22,7 @@ Task Manager requires shizuku/root to work
 
 # Download
 
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get it on Google Play" height="60">](https://play.google.com/store/apps/details?id=com.rk.taskmanager)
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get it on Google Play" height="75">](https://play.google.com/store/apps/details?id=com.rk.taskmanager)
 
 ## Find this app useful? :heart:
 Support it by giving a star :star: <br>

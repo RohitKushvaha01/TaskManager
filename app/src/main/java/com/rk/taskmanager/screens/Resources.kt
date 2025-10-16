@@ -38,6 +38,8 @@ import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import com.rk.components.SettingsToggle
 import com.rk.components.rememberMarker
+import com.rk.taskmanager.MainActivity
+import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -122,7 +124,7 @@ suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalByte
 
 
     // Update chart model with both lines
-    if (selectedscreen.intValue == 0) {
+    if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
     RamModelProducer.runTransaction {
         lineSeries {
             series(x = xValues, y = ramYValues) // RAM line
@@ -141,7 +143,7 @@ suspend fun updateCpuGraph(usage: Int) {
     cpuYValues.removeFirst()
     cpuYValues.addLast(CpuUsage)
 
-    if (selectedscreen.intValue == 0) {
+    if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
         CpuModelProducer.runTransaction {
             lineSeries {
                 series(x = xValues, y = cpuYValues)

@@ -1,6 +1,6 @@
 [versions]
 accompanistSwiperefresh = "0.36.0"
-agp = "8.6.1"
+agp = "8.13.0"
 annotation = "1.9.1"
 anrwatchdog = "1.4.0"
 api = "12.2.0"
@@ -15,6 +15,7 @@ eventbus = "3.3.1"
 foundation = "1.8.3"
 foundationVersion = "1.8.3"
 glide = "4.16.0"
+javascriptengine = "1.0.0"
 ktsh = "1.0.0"
 lsp4j = "0.23.1"
 material = "1.12.0"
@@ -38,6 +39,7 @@ nbJavacAndroid = "17.0.0.3"
 okhttp = "4.12.0"
 orgEclipseJgit = "6.2.0.202206071550-r"
 photoview = "2.3.0"
+playServicesAds = "24.7.0"
 quickjsAndroid = "0.9.2"
 sshj = "0.39.0"
 swiperefreshlayout = "1.1.0"
@@ -63,10 +65,12 @@ materialVersion = "1.13.0"
 
 [libraries]
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
+androidx-javascriptengine = { module = "androidx.javascriptengine:javascriptengine", version.ref = "javascriptengine" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 anrwatchdog = { module = "com.github.anrwatchdog:anrwatchdog", version.ref = "anrwatchdog" }
+play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "api" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 browser = { module = "androidx.browser:browser", version.ref = "browser" }

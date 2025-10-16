@@ -13,11 +13,13 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.ads.MobileAds
 import com.rk.DaemonResult
 import com.rk.daemon_messages
 import com.rk.isConnected
 import com.rk.send_daemon_messages
 import com.rk.startDaemon
+import com.rk.taskmanager.ads.loadAd
 import com.rk.taskmanager.animations.NavigationAnimationTransitions
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
@@ -49,12 +51,24 @@ class MainActivity : ComponentActivity() {
             private set
     }
 
-    private var navControllerRef: WeakReference<NavController?> = WeakReference(null)
+    var navControllerRef: WeakReference<NavController?> = WeakReference(null)
+        private set
+    var isinitialized = false
+        private set
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            MobileAds.initialize(this@MainActivity)
+            isinitialized = true
+            loadAd(this@MainActivity)
+        }
+
+
+
         scope = this.lifecycleScope
         instance = this
 
@@ -98,7 +112,7 @@ class MainActivity : ComponentActivity() {
                         send_daemon_messages.emit("SWAP_PING")
                     }
                 }
-                val delayMs = if (selectedscreen.intValue == 0) {
+                val delayMs = if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
                     Settings.updateFrequency.toLong()
                 } else {
                     Settings.updateFrequency.toLong() * 2
@@ -163,6 +177,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         viewModel.refreshProcessesAuto()
+        loadAd(this)
     }
 }
 

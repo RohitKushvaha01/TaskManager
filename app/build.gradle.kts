@@ -12,6 +12,7 @@ plugins {
 android {
     namespace = "com.rk.taskmanager"
     compileSdk = 36
+    buildFeatures.buildConfig = true
 
     dependenciesInfo {
         includeInApk = isIzzyOrFdroid.not()
@@ -60,7 +61,6 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
         debug{
-            applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
         }
     }
@@ -71,8 +71,8 @@ android {
         targetSdk = 36
 
         //versioning
-        versionCode = 18
-        versionName = "1.1.8"
+        versionCode = 20
+        versionName = "1.2.0"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -125,4 +125,8 @@ dependencies {
     implementation(libs.accompanist.swiperefresh)
     implementation(libs.google.material)
     implementation(project(":taskmanagerd"))
+    implementation(libs.androidx.javascriptengine)
+
+    //its time to make some money 💵💵💵💵💵💵💵💵
+    implementation(libs.play.services.ads)
 }

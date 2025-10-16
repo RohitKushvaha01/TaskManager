@@ -42,3 +42,4 @@
     native * shizuku* (...);
     native * rikka* (...);
 }
+

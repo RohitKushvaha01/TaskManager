@@ -223,19 +223,17 @@ suspend fun startDaemon(
         try {
             when (mode) {
                 WorkingMode.SHIZUKU.id -> {
-                    val loading = LoadingPopup(ctx = context)
-                    loading.setMessage(strings.starting_daemon.getString())
-                    loading.show()
-
                     if (!ShizukuShell.isShizukuRunning()) {
-                        loading.hide()
                         return@withContext DaemonResult.SHIZUKU_NOT_RUNNING
                     }
 
                     if (!ShizukuShell.isPermissionGranted()) {
-                        loading.hide()
                         return@withContext DaemonResult.SHIZUKU_PERMISSION_DENIED
                     }
+
+                    val loading = LoadingPopup(ctx = context)
+                    loading.setMessage(strings.starting_daemon.getString())
+                    loading.show()
 
                     val processResult = ShizukuShell.newProcess(
                         cmd = arrayOf(daemonFile.absolutePath, "-p", port.toString(), "-D"),
@@ -257,21 +255,15 @@ suspend fun startDaemon(
                 }
 
                 WorkingMode.ROOT.id -> {
-                    val loading = LoadingPopup(ctx = context)
-                    loading.setMessage(strings.starting_daemon.getString())
-                    loading.show()
-
                     if (!isSuInPath()) {
-                        loading.hide()
                         return@withContext DaemonResult.SU_NOT_IN_PATH
                     }
+
                     val cmd = arrayOf("su", "-c", daemonFile.absolutePath, "-p", port.toString(), "-D")
                     val result = newProcess(cmd = cmd, env = arrayOf(), workingDir = "/")
                     if (result.first == 0) {
-                        loading.hide()
                         DaemonResult.OK
                     } else {
-                        loading.hide()
                         DaemonResult.DAEMON_REFUSED.also {
                             it.message = result.second
                         }

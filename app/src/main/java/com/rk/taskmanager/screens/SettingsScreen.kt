@@ -1,21 +1,27 @@
 package com.rk.taskmanager.screens
 
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -25,11 +31,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
+import com.rk.taskmanager.MainActivity
+import com.rk.taskmanager.ads.isAdAvailable
+import com.rk.taskmanager.ads.loadAd
+import com.rk.taskmanager.ads.showAd
 import com.rk.taskmanager.getString
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.strings
@@ -47,6 +58,14 @@ import kotlinx.coroutines.launch
 )
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) {
+    var showAdCallback by remember { mutableStateOf<(()->Unit)?>(null) }
+    var showAdDialog by remember { mutableStateOf(false) }
+    val activity = LocalActivity.current as MainActivity
+
+    LaunchedEffect(Unit) {
+        loadAd(activity!!)
+    }
+
     PreferenceLayout(
         modifier = modifier,
         label = stringResource(strings.settings),
@@ -80,17 +99,34 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             }
         }
 
-        PreferenceGroup(heading = "Theme") {
 
+
+        PreferenceGroup(heading = stringResource(strings.theme)) {
             SelectableCard(
                 selected = dynamicTheme.value,
-                label = "Dynamic Theme",
+                label = stringResource(strings.dynamic_theme),
                 description = null,
                 isEnaled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                 onClick = {
-                    GlobalScope.launch {
-                        dynamicTheme.value = true
-                        Settings.monet = true
+                    if (isAdAvailable()){
+                        showAdCallback = {
+                            showAd(activity = activity!!){
+                                showAdDialog = false
+                                Log.d("Settings","OK")
+                                MainActivity.instance?.lifecycleScope?.launch {
+                                    dynamicTheme.value = true
+                                    Settings.monet = true
+                                }
+
+                            }
+                        }
+                        showAdDialog = true
+                    }else{
+                        MainActivity.instance?.lifecycleScope?.launch {
+                            dynamicTheme.value = true
+                            Settings.monet = true
+                        }
+                        loadAd(activity!!)
                     }
                 })
 
@@ -100,13 +136,33 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                     label = it.value::class.simpleName.toString(),
                     description = null,
                     onClick = {
-                        GlobalScope.launch {
-                            currentTheme.intValue = it.key
-                            Settings.theme = it.key
-                            if (dynamicTheme.value) {
-                                dynamicTheme.value = false
-                                Settings.monet = false
+                        if (isAdAvailable()){
+                            showAdCallback= {
+                                showAd(activity = activity!!){
+                                    showAdDialog = false
+                                    Log.d("Settings","OK")
+                                    MainActivity.instance?.lifecycleScope?.launch {
+                                        currentTheme.intValue = it.key
+                                        Settings.theme = it.key
+                                        if (dynamicTheme.value) {
+                                            dynamicTheme.value = false
+                                            Settings.monet = false
+                                        }
+                                    }
+
+                                }
                             }
+                            showAdDialog = true
+                        }else{
+                            MainActivity.instance?.lifecycleScope?.launch {
+                                currentTheme.intValue = it.key
+                                Settings.theme = it.key
+                                if (dynamicTheme.value) {
+                                    dynamicTheme.value = false
+                                    Settings.monet = false
+                                }
+                            }
+                            loadAd(activity!!)
                         }
                     })
             }
@@ -141,6 +197,12 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             }
         }
 
+        if (showAdDialog){
+            RewardAdDialog(onDismiss = { showAdDialog = false }, onWatchAd = {
+                showAdDialog = false
+                showAdCallback?.invoke()
+            })
+        }
 
     }
 }
@@ -175,6 +237,31 @@ fun SelectableCard(
         endWidget = null,
         startWidget = {
             RadioButton(selected = selected, onClick = onClick, modifier = Modifier.padding(start = 8.dp))
+        }
+    )
+}
+
+
+@Composable
+fun RewardAdDialog(
+    onDismiss: () -> Unit,
+    onWatchAd: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Ad") },
+        text = {
+            Text("A short ad video will play before changing the theme.")
+        },
+        confirmButton = {
+            TextButton(onClick = onWatchAd) {
+                Text("Ok")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
         }
     )
 }

@@ -43,6 +43,7 @@ import com.rk.taskmanager.ads.loadAd
 import com.rk.taskmanager.ads.showAd
 import com.rk.taskmanager.getString
 import com.rk.taskmanager.settings.Settings
+import com.rk.taskmanager.settings.Settings.shouldPreLoadThemeAd
 import com.rk.taskmanager.strings
 import com.rk.taskmanager.ui.theme.currentTheme
 import com.rk.taskmanager.ui.theme.dynamicTheme
@@ -117,6 +118,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                                     dynamicTheme.value = true
                                     Settings.monet = true
                                 }
+                                Settings.shouldPreLoadThemeAd = false
 
                             }
                         }
@@ -149,6 +151,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                                             Settings.monet = false
                                         }
                                     }
+                                    Settings.shouldPreLoadThemeAd = false
 
                                 }
                             }

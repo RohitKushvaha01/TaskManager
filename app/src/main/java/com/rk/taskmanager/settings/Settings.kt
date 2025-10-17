@@ -7,10 +7,15 @@ import android.os.Build
 import com.rk.taskmanager.TaskManager
 
 object Settings {
+    var shouldPreLoadThemeAd
+        get() = Preference.getBoolean(key = "theme-ad",true)
+        set(value) = Preference.setBoolean(key = "theme-ad",value)
+
+
     var theme
         //0 is the id of the theme in the themes hashmap
         get() = Preference.getInt(key = "theme",0)
-        set(value) = Preference.setInt(key = "theme",value)
+        set(value) { Preference.setInt(key = "theme",value) }
 
     var updateFrequency
         //0 is the id of the theme in the themes hashmap

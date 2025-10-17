@@ -64,7 +64,9 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             MobileAds.initialize(this@MainActivity)
             isinitialized = true
-            loadAd(this@MainActivity)
+            if (Settings.shouldPreLoadThemeAd){
+                loadAd(this@MainActivity)
+            }
         }
 
 
@@ -177,7 +179,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         viewModel.refreshProcessesAuto()
-        loadAd(this)
     }
 }
 

@@ -19,7 +19,7 @@ object Settings {
 
     var updateFrequency
         //0 is the id of the theme in the themes hashmap
-        get() = Preference.getInt(key = "updateFrequency",1000)
+        get() = Preference.getInt(key = "updateFrequency",800)
         set(value) = Preference.setInt(key = "updateFrequency",value)
 
     var workingMode

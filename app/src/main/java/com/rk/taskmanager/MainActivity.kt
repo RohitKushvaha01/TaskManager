@@ -14,12 +14,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.rk.DaemonResult
 import com.rk.daemon_messages
 import com.rk.isConnected
 import com.rk.send_daemon_messages
 import com.rk.startDaemon
-import com.rk.taskmanager.ads.loadAd
+import com.rk.taskmanager.ads.InterstitialsAds
+import com.rk.taskmanager.ads.RewardedAds
 import com.rk.taskmanager.animations.NavigationAnimationTransitions
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
@@ -61,13 +63,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            MobileAds.initialize(this@MainActivity)
-            isinitialized = true
-            if (Settings.shouldPreLoadThemeAd){
-                loadAd(this@MainActivity)
-            }
+        MobileAds.initialize(this@MainActivity)
+        MobileAds.setRequestConfiguration(
+            RequestConfiguration.Builder()
+
+                //IF YOU ARE BUILDING THIS APP ADD YOUR DEVICE AS A TEST DEVICE
+                .setTestDeviceIds(listOf("01AAD58E267D992B923B739EB497E211"))
+                .build()
+        )
+
+        isinitialized = true
+        if (Settings.shouldPreLoadThemeAd){
+            RewardedAds.loadAd(this@MainActivity)
         }
+        InterstitialsAds.loadAd(this@MainActivity){}
+
 
 
 

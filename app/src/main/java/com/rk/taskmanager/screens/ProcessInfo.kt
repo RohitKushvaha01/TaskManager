@@ -53,10 +53,12 @@ import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.daemon_messages
 import com.rk.send_daemon_messages
+import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
+import com.rk.taskmanager.ads.InterstitialsAds
 import com.rk.taskmanager.getString
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -209,6 +211,11 @@ suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
             it.printStackTrace()
         }.getOrDefault(false)
     }
+
+    MainActivity.instance?.let { activity -> InterstitialsAds.showAd(activity){
+        InterstitialsAds.loadAd(activity){}
+    } }
+
 
     return killResult
 }

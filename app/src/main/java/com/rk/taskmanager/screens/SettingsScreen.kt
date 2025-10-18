@@ -38,9 +38,7 @@ import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.MainActivity
-import com.rk.taskmanager.ads.isAdAvailable
-import com.rk.taskmanager.ads.loadAd
-import com.rk.taskmanager.ads.showAd
+import com.rk.taskmanager.ads.RewardedAds
 import com.rk.taskmanager.getString
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.settings.Settings.shouldPreLoadThemeAd
@@ -64,7 +62,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
     val activity = LocalActivity.current as MainActivity
 
     LaunchedEffect(Unit) {
-        loadAd(activity!!)
+        RewardedAds.loadAd(activity!!)
     }
 
     PreferenceLayout(
@@ -109,9 +107,9 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                 description = null,
                 isEnaled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                 onClick = {
-                    if (isAdAvailable()){
+                    if (RewardedAds.isAdAvailable()){
                         showAdCallback = {
-                            showAd(activity = activity!!){
+                            RewardedAds.showAd(activity = activity!!){
                                 showAdDialog = false
                                 Log.d("Settings","OK")
                                 MainActivity.instance?.lifecycleScope?.launch {
@@ -128,7 +126,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                             dynamicTheme.value = true
                             Settings.monet = true
                         }
-                        loadAd(activity!!)
+                        RewardedAds.loadAd(activity!!)
                     }
                 })
 
@@ -138,9 +136,9 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                     label = it.value::class.simpleName.toString(),
                     description = null,
                     onClick = {
-                        if (isAdAvailable()){
+                        if (RewardedAds.isAdAvailable()){
                             showAdCallback= {
-                                showAd(activity = activity!!){
+                                RewardedAds.showAd(activity = activity!!){
                                     showAdDialog = false
                                     Log.d("Settings","OK")
                                     MainActivity.instance?.lifecycleScope?.launch {
@@ -165,7 +163,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                                     Settings.monet = false
                                 }
                             }
-                            loadAd(activity!!)
+                            RewardedAds.loadAd(activity!!)
                         }
                     })
             }

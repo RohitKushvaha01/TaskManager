@@ -49,7 +49,7 @@ object Settings {
     var showLinuxProcess
         get() = Preference.getBoolean(
             key = "showLinuxProcess",
-            default = true
+            default = false
         )
         set(value) = Preference.setBoolean(key = "showLinuxProcess",value)
 }

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "org.robok.engine.core.components"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24
@@ -29,13 +29,11 @@ android {
 }
 
 dependencies {
-    implementation(libs.material)
     implementation(libs.appcompat)
-
     implementation(platform(libs.compose.bom))
     implementation(libs.material3)
-    implementation(libs.material)
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.activity.compose)
+    implementation(libs.androidx.material.icons.extended)
 }

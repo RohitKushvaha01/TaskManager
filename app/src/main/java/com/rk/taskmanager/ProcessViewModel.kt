@@ -15,6 +15,7 @@ import com.rk.taskmanager.screens.isAppInstalled
 import com.rk.taskmanager.screens.isSystemApp
 import com.rk.taskmanager.settings.Settings
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -39,6 +41,7 @@ data class ProcessUiModel(
     val killed: MutableState<Boolean> = mutableStateOf(false)
 )
 
+@OptIn(FlowPreview::class)
 class ProcessViewModel : ViewModel() {
     private val _uiProcesses = MutableStateFlow<List<ProcessUiModel>>(emptyList())
 
@@ -50,7 +53,6 @@ class ProcessViewModel : ViewModel() {
     val showSystemApps = _showSystemApps.asStateFlow()
     val showLinuxProcess = _showLinuxProcess.asStateFlow()
 
-    // Filtered processes flow
     val filteredProcesses: StateFlow<List<ProcessUiModel>> = combine(
         _uiProcesses,
         _showUserApps,
@@ -70,6 +72,31 @@ class ProcessViewModel : ViewModel() {
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
+    // Use StateFlow for search query with debouncing
+    private val _searchQuery = MutableStateFlow("")
+
+    val searchResults: StateFlow<List<ProcessUiModel>> = combine(
+        _searchQuery.debounce(150), // Debounce by 150ms
+        filteredProcesses
+    ) { query, processes ->
+        if (query.isEmpty()) {
+            processes
+        } else {
+            processes.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                        it.proc.cmdLine.contains(query, ignoreCase = true)
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun search(query: String) {
+        _searchQuery.value = query
+    }
 
     fun setShowUserApps(value: Boolean) {
         _showUserApps.value = value
@@ -150,9 +177,9 @@ class ProcessViewModel : ViewModel() {
                             }
                         }.awaitAll()
 
-                        _uiProcesses.update { uiList }
-
+                        // Update state on Main thread to avoid snapshot issues
                         withContext(Dispatchers.Main) {
+                            _uiProcesses.update { uiList }
                             isLoading.value = false
                         }
                     } catch (e: Exception) {
@@ -167,7 +194,6 @@ class ProcessViewModel : ViewModel() {
         }
     }
 
-
     fun refreshProcessesManual() {
         isLoading.value = true
         viewModelScope.launch {
@@ -176,7 +202,6 @@ class ProcessViewModel : ViewModel() {
     }
 
     fun refreshProcessesAuto() {
-        //isLoading.value = true
         viewModelScope.launch {
             send_daemon_messages.emit("LIST_PROCESS")
         }

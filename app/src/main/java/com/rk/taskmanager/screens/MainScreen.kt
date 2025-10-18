@@ -40,7 +40,7 @@ import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
-import com.rk.taskmanager.getString
+import com.rk.taskmanager.components.ProcessSearchBar
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.Dispatchers
@@ -57,34 +57,39 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
         Scaffold(
             modifier = modifier.fillMaxSize(),
             topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(strings.app_name)) },
-                    actions = {
-                        if (selectedscreen.intValue == 1) {
+                if (selectedscreen.intValue == 0){
+                    TopAppBar(
+                        title = { Text(stringResource(strings.app_name)) },
+                        actions = {
+                            if (selectedscreen.intValue == 1) {
+                                IconButton(
+                                    modifier = Modifier.padding(8.dp),
+                                    onClick = {
+                                        showFilter.value = !showFilter.value
+                                    }) {
+                                    Icon(
+                                        imageVector = Filter,
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+
                             IconButton(
                                 modifier = Modifier.padding(8.dp),
                                 onClick = {
-                                    showFilter.value = !showFilter.value
+                                    navController.navigate(SettingsRoutes.Settings.route)
                                 }) {
                                 Icon(
-                                    imageVector = Filter,
+                                    imageVector = Icons.Filled.Settings,
                                     contentDescription = null
                                 )
                             }
                         }
+                    )
+                }else{
+                    ProcessSearchBar(viewModel = viewModel, navController = navController)
+                }
 
-                        IconButton(
-                            modifier = Modifier.padding(8.dp),
-                            onClick = {
-                                navController.navigate(SettingsRoutes.Settings.route)
-                            }) {
-                            Icon(
-                                imageVector = Icons.Filled.Settings,
-                                contentDescription = null
-                            )
-                        }
-                    }
-                )
             },
             bottomBar = {
                 NavigationBar {

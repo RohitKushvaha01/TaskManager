@@ -252,18 +252,18 @@ fun RewardAdDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Ad") },
+        title = { Text(stringResource(strings.ad)) },
         text = {
-            Text("A short ad video will play before changing the theme.")
+            Text(stringResource(strings.ad_desc))
         },
         confirmButton = {
             TextButton(onClick = onWatchAd) {
-                Text("Ok")
+                Text(stringResource(strings.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(strings.cancel))
             }
         }
     )

@@ -123,9 +123,11 @@ dependencies {
     implementation(libs.vico.compose.m3)
     implementation(project(":components"))
     implementation(libs.accompanist.swiperefresh)
-    implementation(libs.google.material)
+    implementation(libs.material)
+    implementation(libs.material3)
     implementation(project(":taskmanagerd"))
     implementation(libs.androidx.javascriptengine)
+    implementation(libs.androidx.material.icons.extended)
 
     //its time to make some money 💵💵💵💵💵💵💵💵
     implementation(libs.play.services.ads)

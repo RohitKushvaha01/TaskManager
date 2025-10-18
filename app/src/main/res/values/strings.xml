@@ -51,5 +51,8 @@
     <string name="noob">This app needs special permission to manage system tasks.\nYour device doesn’t have this access right now.\nTo continue, please:\n\n• Install the Shizuku app and start it, or\n• Use a rooted device.</string>
     <string name="theme">Theme</string>
     <string name="dynamic_theme">Dynamic Theme</string>
+    <string name="ad_desc">To change the theme, please watch a short ad video. This helps keep the app free for everyone.</string>
+    <string name="ok">Ok</string>
+    <string name="ad">Ad</string>
 
 </resources>

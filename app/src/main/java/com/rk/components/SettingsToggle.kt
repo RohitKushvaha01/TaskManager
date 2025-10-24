@@ -6,6 +6,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -34,6 +35,8 @@ fun SettingsToggle(
     onLongClick: (() -> Unit)? = null,
     isEnabled: Boolean = true,
     isSwitchLocked: Boolean = false,
+    applyPaddingsNoSwitch: Boolean = false,
+    selection: Boolean = false,
     startWidget: (@Composable () -> Unit)? = null,
     endWidget: (@Composable () -> Unit)? = null,
 ) {
@@ -88,12 +91,26 @@ fun SettingsToggle(
                 .padding(start = 16.dp),
             title = {
                 if (label != null) {
-                    Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                   if (selection){
+                       SelectionContainer {
+                           Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                       }
+                   }else{
+                       Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                   }
                 }
             },
-            description = { description?.let { Text(text = it) } },
+            description = { description?.let {
+                if (selection){
+                    SelectionContainer {
+                        Text(text = it)
+                    }
+                }else{
+                    Text(it)
+                }
+            } },
             enabled = true,
-            applyPaddings = false,
+            applyPaddings = applyPaddingsNoSwitch,
             endWidget = endWidget,
             startWidget = startWidget
         )

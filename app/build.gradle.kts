@@ -5,9 +5,8 @@ val isIzzyOrFdroid = false
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
-//    alias(libs.plugins.kotlinParcelize)
     alias(libs.plugins.compose.compiler)
-    id("org.jetbrains.kotlin.kapt")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -72,8 +71,8 @@ android {
         targetSdk = 36
 
         //versioning
-        versionCode = 22
-        versionName = "1.2.2"
+        versionCode = 23
+        versionName = "1.2.3"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -97,9 +96,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "2.1.10"
     }
 }
 
@@ -130,4 +126,8 @@ dependencies {
     implementation(libs.androidx.javascriptengine)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.play.services.ads)
+
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
 }

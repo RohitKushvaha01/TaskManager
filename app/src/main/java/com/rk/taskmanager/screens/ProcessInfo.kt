@@ -33,6 +33,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -77,12 +78,6 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
-
-// Get ticks per second (usually 100 on Linux)
-fun ticksPerSecond(): Long = Os.sysconf(OsConstants._SC_CLK_TCK)
-
-
-// Calculate elapsed time from startTime ticks
 fun elapsedFromStartTime(startTimeTicks: Long): String {
     val processStartMillis = startTimeToMillis(startTimeTicks)
     val now = System.currentTimeMillis()
@@ -95,7 +90,6 @@ fun elapsedFromStartTime(startTimeTicks: Long): String {
     return String.format("%02d:%02d:%02d", h, m, s)
 }
 
-// Convert process start time (ticks since boot) → wall clock time (ms since epoch)
 fun startTimeToMillis(startTimeTicks: Long): Long {
     val ticksPerSecond = sysconf() // custom helper below
     val bootTimeMillis = System.currentTimeMillis() - SystemClock.elapsedRealtime()
@@ -103,7 +97,6 @@ fun startTimeToMillis(startTimeTicks: Long): Long {
     return processStartMillis
 }
 
-// Convert elapsed ticks → duration string
 fun elapsedTimeToString(elapsedTicks: Long): String {
     val ticksPerSecond = sysconf()
     val seconds = elapsedTicks / ticksPerSecond
@@ -113,7 +106,6 @@ fun elapsedTimeToString(elapsedTicks: Long): String {
     return String.format(java.util.Locale.ENGLISH, "%02d:%02d:%02d", h, m, s)
 }
 
-// This mimics sysconf(_SC_CLK_TCK) ≈ 100 on Linux
 fun sysconf(): Long {
     return Os.sysconf(OsConstants._SC_CLK_TCK)
 }
@@ -273,7 +265,7 @@ fun ProcessInfo(
             } else {
                 Column(modifier.verticalScroll(rememberScrollState())) {
                     PreferenceGroup {
-                        val enabled = proc.value!!.proc.pid > 1 && proc.value!!.killed.value.not()
+                        val enabled = proc.value!!.proc.pid > 1 && proc.value!!.killed.value.not() && proc.value!!.proc.cmdLine != "zygote" && proc.value!!.proc.cmdLine != "zygote64"
                         val interactionSource = remember { MutableInteractionSource() }
                         PreferenceTemplate(
                             modifier = modifier
@@ -522,6 +514,34 @@ fun ProcessInfo(
 
                     }
 
+
+                    if (proc?.value?.isApp == true) {
+
+                        val descriptionState by produceState<DescriptionState>(initialValue = DescriptionState.Loading, key1 = proc.value?.proc?.cmdLine) {
+                            val db = TaskManager.getDatabase(TaskManager.requireContext())
+                            val desc = withContext(Dispatchers.IO) {
+                                db.appDao().getDescription(proc.value!!.proc.cmdLine)
+                            }
+
+                            value = if (desc.isNullOrBlank()) {
+                                DescriptionState.Empty
+                            } else {
+                                DescriptionState.Success(desc)
+                            }
+                        }
+
+                        PreferenceGroup(heading = "Debloater info") {
+                            when (descriptionState) {
+                                is DescriptionState.Loading -> TextCard(text = stringResource(strings.loading), description = null, selection = true, copyDesOnLong = false)
+                                is DescriptionState.Success -> TextCard(text = null, description = (descriptionState as DescriptionState.Success).text, selection = true,copyDesOnLong = false)
+                                is DescriptionState.Empty -> TextCard(text = null, description = "No info available for this process", selection = true,copyDesOnLong = false)
+                            }
+                        }
+                    }
+
+
+
+
                     Spacer(modifier = Modifier.padding(16.dp))
                 }
             }
@@ -539,4 +559,10 @@ suspend fun getUsernameFromUid(uid: Int): String? = withContext(Dispatchers.IO) 
     } catch (e: Exception) {
         null
     }
+}
+
+sealed class DescriptionState {
+    object Loading : DescriptionState()
+    data class Success(val text: String) : DescriptionState()
+    object Empty : DescriptionState()
 }

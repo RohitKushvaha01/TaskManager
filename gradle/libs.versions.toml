@@ -7,7 +7,7 @@ api = "12.2.0"
 appcompat = "1.7.1"
 javascriptengine = "1.0.0"
 material = "1.13.0"
-kotlin = "2.2.20"
+kotlin = "2.1.21"
 playServicesAds = "24.7.0"
 kotlinPlugin = "2.2.20"
 junit = "4.13.2"
@@ -18,12 +18,18 @@ lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
 composeBom = "2025.10.00"
 navigationCompose = "2.9.5"
+roomRuntime = "2.8.3"
+roomCompiler = "2.8.3"
+roomKtx = "2.8.3"
 vico = "2.0.3"
 
 [libraries]
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
 androidx-javascriptengine = { module = "androidx.javascriptengine:javascriptengine", version.ref = "javascriptengine" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "api" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }

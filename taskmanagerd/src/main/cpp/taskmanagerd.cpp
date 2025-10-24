@@ -29,12 +29,11 @@
 
 namespace fs = std::filesystem;
 
-// Cache regex for better performance
 static std::regex pid_regex("\\d+");
 
 std::vector<int> listPids() {
     std::vector<int> pids;
-    pids.reserve(256); // Reserve space to avoid reallocations
+    pids.reserve(256);
 
     try {
         for (const auto &entry : fs::directory_iterator("/proc")) {
@@ -46,7 +45,7 @@ std::vector<int> listPids() {
             }
         }
     } catch (...) {
-        // Handle filesystem errors gracefully
+
     }
     return pids;
 }
@@ -100,7 +99,6 @@ struct CpuStat {
     }
 };
 
-// Optimized: Read only first line, don't iterate through entire file
 CpuStat readCpuStat() {
     std::ifstream file("/proc/stat");
     if (!file.is_open()) {
@@ -125,7 +123,6 @@ CpuStat readCpuStat() {
     return CpuStat{0,0,0,0,0,0,0,0};
 }
 
-// Optimized: Reduced sleep time for faster response
 int calculateCpuUsage() {
     CpuStat prev = readCpuStat();
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -176,7 +173,6 @@ struct Proc {
     std::string executablePath;
 };
 
-// Helper to get system uptime in clock ticks
 long getSystemUptime() {
     std::ifstream uptime("/proc/uptime");
     double uptimeSeconds = 0.0;
@@ -186,7 +182,6 @@ long getSystemUptime() {
     return static_cast<long>(uptimeSeconds * sysconf(_SC_CLK_TCK));
 }
 
-// Helper to calculate CPU usage for a process
 float calculateProcessCpuUsage(int pid) {
     std::string statPath = "/proc/" + std::to_string(pid) + "/stat";
     std::ifstream statFile(statPath);
@@ -212,7 +207,6 @@ float calculateProcessCpuUsage(int pid) {
 
     iss >> utime >> stime;
 
-    // Skip to field 22 (starttime)
     for (int i = 0; i < 6; ++i) {
         std::string dummy;
         iss >> dummy;
@@ -229,7 +223,6 @@ float calculateProcessCpuUsage(int pid) {
     return 0.0f;
 }
 
-// Check if process is foreground (checking OOM score adjust)
 bool isForegroundProcess(int pid) {
     std::string oomPath = "/proc/" + std::to_string(pid) + "/oom_score_adj";
     std::ifstream oomFile(oomPath);
@@ -244,7 +237,6 @@ bool isForegroundProcess(int pid) {
     return oomScore <= 100;
 }
 
-// Get cgroup info
 std::string getCgroup(int pid) {
     std::string cgroupPath = "/proc/" + std::to_string(pid) + "/cgroup";
     std::ifstream cgroupFile(cgroupPath);
@@ -252,7 +244,6 @@ std::string getCgroup(int pid) {
     if (!cgroupFile.is_open()) return "";
 
     std::string line;
-    // Get first line (usually the most relevant)
     if (std::getline(cgroupFile, line)) {
         size_t colonPos = line.find_last_of(':');
         if (colonPos != std::string::npos) {
@@ -262,7 +253,6 @@ std::string getCgroup(int pid) {
     return line;
 }
 
-// Get executable path
 std::string getExecutablePath(int pid) {
     std::string exePath = "/proc/" + std::to_string(pid) + "/exe";
     char path[PATH_MAX];
@@ -281,19 +271,16 @@ Proc readProc(int pid) {
 
     std::string procPath = "/proc/" + std::to_string(pid);
 
-    // Read name
     std::ifstream commFile(procPath + "/comm");
     if (commFile.is_open()) {
         std::getline(commFile, p.name);
     }
 
-    // Read cmdline
     std::ifstream cmdFile(procPath + "/cmdline", std::ios::binary);
     if (cmdFile.is_open()) {
         std::getline(cmdFile, p.cmdLine, '\0');
     }
 
-    // Read /proc/<pid>/stat for timing and nice value
     std::ifstream statFile(procPath + "/stat");
     if (statFile.is_open()) {
         std::string line;
@@ -332,11 +319,9 @@ Proc readProc(int pid) {
         }
     }
 
-    // Calculate elapsed time
     long uptime = getSystemUptime();
     p.elapsedTime = static_cast<float>(uptime - p.startTime) / sysconf(_SC_CLK_TCK);
 
-    // Read /proc/<pid>/status
     std::ifstream statusFile(procPath + "/status");
     std::string line;
     int fieldsFound = 0;
@@ -365,16 +350,12 @@ Proc readProc(int pid) {
         }
     }
 
-    // Calculate CPU usage
     p.cpuUsage = calculateProcessCpuUsage(pid);
 
-    // Check if foreground
     p.isForeground = isForegroundProcess(pid);
 
-    // Get cgroup
     p.cgroup = getCgroup(pid);
 
-    // Get executable path
     p.executablePath = getExecutablePath(pid);
 
     return p;
@@ -411,7 +392,7 @@ std::vector<Proc> collectProcs() {
         try {
             procs.push_back(readProc(pid));
         } catch (...) {
-            // Skip processes that disappeared or can't be read
+
         }
     }
 
@@ -443,7 +424,7 @@ std::string getSwapUsageBytes() {
         }
 
         if (swapTotalKB != 0 && swapFreeKB != 0) {
-            break; // got both values
+            break;
         }
     }
 
@@ -461,7 +442,7 @@ void processCommand(int sock, const std::string &received) {
     if (cmd == "PING") {
         send_msg(sock, "PONG");
     } else if (cmd == "KILL") {
-        int arg;
+        int arg = -1;
         if (colonPos != std::string::npos) {
             try {
                 arg = std::stoi(received.substr(colonPos + 1));
@@ -479,14 +460,39 @@ void processCommand(int sock, const std::string &received) {
             log_line("KILL command missing PID");
         }
     } else if(cmd == "FORCE_STOP"){
-        std::string cmd = "am force-stop " + received.substr(colonPos+1);
+        std::string packageName = received.substr(colonPos+1);
+
+        // Strict validation: only allow alphanumeric, dots, and underscores
+        std::regex package_regex("^[a-zA-Z0-9._]+$");
+        if (!std::regex_match(packageName, package_regex)) {
+            send_msg(sock, "KILL_RESULT:false");
+            log_line("Invalid package name: " + packageName);
+            return;
+        }
+
+        // Length check
+        if (packageName.empty() || packageName.length() > 255) {
+            send_msg(sock, "KILL_RESULT:false");
+            return;
+        }
+
+        // Additional safety: check for path traversal attempts
+        if (packageName.find("..") != std::string::npos ||
+            packageName.find("/") != std::string::npos) {
+            send_msg(sock, "KILL_RESULT:false");
+            log_line("Suspicious package name pattern");
+            return;
+        }
+
+        // Now safe to use with system()
+        std::string cmd = "am force-stop " + packageName;
         if (system(cmd.c_str()) == 0) {
             send_msg(sock, "KILL_RESULT:true");
         } else {
             send_msg(sock, "KILL_RESULT:false");
         }
     } else if (cmd == "KILL_GROUP") {
-        int arg;
+        int arg = -1;
         if (colonPos != std::string::npos) {
             try {
                 arg = std::stoi(received.substr(colonPos + 1));
@@ -527,7 +533,7 @@ void processCommand(int sock, const std::string &received) {
         log_line(cpuUsage);
         send_msg(sock, cpuUsage);
     }  else if (cmd == "PING_PID_CPU") {
-        int arg;
+        int arg = -1;
         if (colonPos != std::string::npos) {
             try {
                 arg = std::stoi(received.substr(colonPos + 1));

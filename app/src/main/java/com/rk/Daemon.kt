@@ -259,7 +259,8 @@ suspend fun startDaemon(
                         return@withContext DaemonResult.SU_NOT_IN_PATH
                     }
 
-                    val cmd = arrayOf("su", "-c", daemonFile.absolutePath, "-p", port.toString(), "-D")
+                    //val cmd = arrayOf("su", "-c", daemonFile.absolutePath, "-p", port.toString(), "-D")
+                    val cmd = arrayOf("su", "-c", "${daemonFile.absolutePath} -p ${port.toString()} -D")
                     val result = newProcess(cmd = cmd, env = arrayOf(), workingDir = "/")
                     if (result.first == 0) {
                         DaemonResult.OK

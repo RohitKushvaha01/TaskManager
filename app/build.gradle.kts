@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlinAndroid)
 //    alias(libs.plugins.kotlinParcelize)
     alias(libs.plugins.compose.compiler)
+    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
@@ -71,8 +72,8 @@ android {
         targetSdk = 36
 
         //versioning
-        versionCode = 21
-        versionName = "1.2.1"
+        versionCode = 22
+        versionName = "1.2.2"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -128,7 +129,5 @@ dependencies {
     implementation(project(":taskmanagerd"))
     implementation(libs.androidx.javascriptengine)
     implementation(libs.androidx.material.icons.extended)
-
-    //its time to make some money 💵💵💵💵💵💵💵💵
     implementation(libs.play.services.ads)
 }

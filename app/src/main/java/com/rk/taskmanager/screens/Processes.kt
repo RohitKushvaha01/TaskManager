@@ -173,7 +173,7 @@ fun ProcessItem(
                 indication = ripple(),
                 enabled = !uiProc.killed.value,
                 interactionSource = remember { MutableInteractionSource() },
-                onClick = { navController.navigate(SettingsRoutes.ProcessInfo.createRoute(uiProc.proc.pid)) }
+                onClick = { procInfo = uiProc }
             ),
         contentModifier = Modifier
             .fillMaxHeight()
@@ -200,7 +200,7 @@ fun ProcessItem(
                     bitmap = uiProc.icon,
                     contentDescription = "App Icon",
                     modifier = Modifier
-                        .padding(start = 16.dp)
+                        .padding(start = 19.dp)
                         .size(24.dp),
                 )
             } else {
@@ -217,9 +217,9 @@ fun ProcessItem(
 
                 Image(
                     painter = painterResource(id = fallbackId),
-                    contentDescription = "Fallback Icon",
+                    contentDescription = null,
                     modifier = Modifier
-                        .padding(start = 16.dp)
+                        .padding(start = 19.dp)
                         .size(24.dp)
                         .alpha(if (!uiProc.killed.value) 1f else 0.3f),
                 )
@@ -233,6 +233,7 @@ fun ProcessItem(
                         .size(16.dp), strokeWidth = 2.dp)
                 } else {
                     IconButton(
+                        modifier = Modifier.padding(end = 7.dp),
                         enabled = !uiProc.killed.value,
                         onClick = {
                             viewModel.viewModelScope.launch {

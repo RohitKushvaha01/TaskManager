@@ -8,6 +8,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -27,6 +30,7 @@ import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SelectedWorkingMode
 import com.rk.taskmanager.screens.SettingsScreen
+import com.rk.taskmanager.screens.procInfo
 import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.screens.updateCpuGraph
 import com.rk.taskmanager.screens.updateRamAndSwapGraph
@@ -57,6 +61,8 @@ class MainActivity : ComponentActivity() {
         private set
     var isinitialized = false
         private set
+
+    var procInfo by mutableStateOf<ProcessUiModel?>(null)
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,36 +142,37 @@ class MainActivity : ComponentActivity() {
         setContent {
             TaskManagerTheme {
                 Surface {
-                    val navController = rememberNavController()
-                    navControllerRef = WeakReference(navController)
-                    NavHost(
-                        navController = navController,
-                        startDestination = if (Settings.workingMode == -1) {
-                            SettingsRoutes.SelectWorkingMode.route
-                        } else {
-                            SettingsRoutes.Home.route
-                        },
-                        enterTransition = { NavigationAnimationTransitions.enterTransition },
-                        exitTransition = { NavigationAnimationTransitions.exitTransition },
-                        popEnterTransition = { NavigationAnimationTransitions.popEnterTransition },
-                        popExitTransition = { NavigationAnimationTransitions.popExitTransition },
-                    ) {
-                        composable(SettingsRoutes.Home.route) {
-                            MainScreen(navController = navController, viewModel = viewModel)
-                        }
+                    if (procInfo != null){
+                        ProcessInfo(proc = procInfo!!, navController = navController, viewModel = viewModel)
+                    }else{
+                        val navController = rememberNavController()
+                        navControllerRef = WeakReference(navController)
+                        NavHost(
+                            navController = navController,
+                            startDestination = if (Settings.workingMode == -1) {
+                                SettingsRoutes.SelectWorkingMode.route
+                            } else {
+                                SettingsRoutes.Home.route
+                            },
+                            enterTransition = { NavigationAnimationTransitions.enterTransition },
+                            exitTransition = { NavigationAnimationTransitions.exitTransition },
+                            popEnterTransition = { NavigationAnimationTransitions.popEnterTransition },
+                            popExitTransition = { NavigationAnimationTransitions.popExitTransition },
+                        ) {
+                            composable(SettingsRoutes.Home.route) {
+                                MainScreen(navController = navController, viewModel = viewModel)
+                            }
 
-                        composable(SettingsRoutes.SelectWorkingMode.route) {
-                            SelectedWorkingMode(navController = navController)
-                        }
+                            composable(SettingsRoutes.SelectWorkingMode.route) {
+                                SelectedWorkingMode(navController = navController)
+                            }
 
-                        composable(SettingsRoutes.Settings.route) {
-                            SettingsScreen(navController = navController)
-                        }
-                        composable("proc/{pid}") {
-                            val pid = it.arguments?.getString("pid")!!.toInt()
-                            ProcessInfo(pid = pid, navController = navController, viewModel = viewModel)
+                            composable(SettingsRoutes.Settings.route) {
+                                SettingsScreen(navController = navController)
+                            }
                         }
                     }
+
                 }
             }
         }
@@ -196,7 +203,4 @@ sealed class SettingsRoutes(val route: String) {
     data object Home : SettingsRoutes("home")
     data object Settings : SettingsRoutes("settings")
     data object SelectWorkingMode : SettingsRoutes("SelectWorkingMode")
-    data object ProcessInfo : SettingsRoutes("proc/{pid}") {
-        fun createRoute(pid: Int) = "proc/$pid"
-    }
 }

@@ -52,6 +52,7 @@ import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -173,7 +174,7 @@ fun ProcessItem(
                 indication = ripple(),
                 enabled = !uiProc.killed.value,
                 interactionSource = remember { MutableInteractionSource() },
-                onClick = { procInfo = uiProc }
+                onClick = { navController.navigate(SettingsRoutes.ProcessInfo.createRoute(uiProc)) }
             ),
         contentModifier = Modifier
             .fillMaxHeight()
@@ -229,7 +230,7 @@ fun ProcessItem(
             if (uiProc.isUserApp) {
                 if (uiProc.killing.value) {
                     CircularProgressIndicator(modifier = Modifier
-                        .padding(end = 16.dp)
+                        .padding(end = 22.dp)
                         .size(16.dp), strokeWidth = 2.dp)
                 } else {
                     IconButton(

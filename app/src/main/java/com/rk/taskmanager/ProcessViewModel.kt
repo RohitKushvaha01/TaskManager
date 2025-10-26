@@ -143,6 +143,13 @@ class ProcessViewModel : ViewModel() {
 
                         for (i in 0 until jsonArray.length()) {
                             val obj = jsonArray.getJSONObject(i)
+
+                            val cmdLine = obj.optString("cmdLine", "")
+                            if (cmdLine == TaskManager.requireContext().packageName){
+                                //do not show taskmanager itself
+                                continue
+                            }
+
                             newProcesses.add(
                                 Process(
                                     name = obj.optString("name", ""),

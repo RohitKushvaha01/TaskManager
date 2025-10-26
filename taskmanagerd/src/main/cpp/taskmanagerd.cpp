@@ -634,13 +634,6 @@ int main(int argc, char* argv[]) {
         std::cerr << "Invalid port received: " << port << std::endl;
     }
 
-    std::thread compileThread([]() {
-        system("pm compile -m speed com.rk.taskmanager > /dev/null 2>&1");
-        system("pm compile -r bg-dexopt com.rk.taskmanager > /dev/null 2>&1");
-    });
-
-    compileThread.detach();
-
 
     log_line("=== Client starting ===");
 

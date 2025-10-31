@@ -1,5 +1,6 @@
 package com.rk.taskmanager.screens
 
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -9,8 +10,11 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -31,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.rk.components.SettingsToggle
@@ -196,6 +201,28 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                     }
                 )
             }
+        }
+
+        PreferenceGroup {
+            SettingsToggle(
+                label = "Privacy Policy",
+                description = "Privacy policy of ${strings.app_name.getString()}",
+                isEnabled = true,
+                showSwitch = false,
+                default = false,
+                endWidget = {
+                    Icon(
+                        modifier = Modifier.padding(16.dp),
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null
+                    )
+                },
+                sideEffect = {
+                    val url = "https://raw.githubusercontent.com/RohitKushvaha01/TaskManager/refs/heads/main/privacy_policy.md"
+                    val intent = Intent(Intent.ACTION_VIEW).apply { data = url.toUri() }
+                    context.startActivity(intent)
+                }
+            )
         }
 
         if (showAdDialog){

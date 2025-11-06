@@ -80,7 +80,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
         PreferenceGroup(heading = stringResource(strings.working_mode)) {
             WorkingMode.entries.forEach { mode ->
                 SettingsToggle(
-                    label = mode.name,
+                    label = stringResource(mode.nameRes),
                     description = null,
                     default = selectedMode.intValue == mode.id,
                     sideEffect = {
@@ -138,7 +138,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             themes.forEach {
                 SelectableCard(
                     selected = currentTheme.intValue == it.key && !dynamicTheme.value,
-                    label = it.value::class.simpleName.toString(),
+                    label = stringResource(it.value.nameRes),
                     description = null,
                     onClick = {
                         if (RewardedAds.isAdAvailable()){
@@ -187,7 +187,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
 
         PreferenceGroup {
             PreferenceTemplate(title = {
-                Text("Graph update frequency")
+                Text(stringResource(strings.graph_update))
             }) {
                 val currentFreq = (minFreq + (sliderPosition * (maxFreq - minFreq))).toInt()
                 Text("${currentFreq}ms")
@@ -205,8 +205,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
 
         PreferenceGroup {
             SettingsToggle(
-                label = "Privacy Policy",
-                description = "Privacy policy of ${strings.app_name.getString()}",
+                label = stringResource(strings.privacy_policy),
+                description = stringResource(strings.privacy_desc),
                 isEnabled = true,
                 showSwitch = false,
                 default = false,

@@ -3,11 +3,13 @@ package com.rk.taskmanager.ui.theme.frostfall
 import androidx.annotation.Keep
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import com.rk.taskmanager.strings
 import com.rk.taskmanager.ui.theme.Theme
 
 @Keep
 object Frostfall : Theme() {
 
+    override val nameRes: Int = strings.frostfall
     override val lightScheme = lightColorScheme(
         primary = primaryLight,
         onPrimary = onPrimaryLight,

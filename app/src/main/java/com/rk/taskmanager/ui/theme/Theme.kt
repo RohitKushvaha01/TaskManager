@@ -1,6 +1,7 @@
 package com.rk.taskmanager.ui.theme
 
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import com.rk.taskmanager.ui.theme.frostfall.Frostfall
 import com.rk.taskmanager.ui.theme.spring.Spring
 
 abstract class Theme{
+    abstract val nameRes:Int
     abstract val lightScheme: ColorScheme
     abstract val darkScheme: ColorScheme
 }

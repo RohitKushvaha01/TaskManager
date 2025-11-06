@@ -54,5 +54,13 @@
     <string name="ad_desc">To change the theme, please watch a short ad video. This helps keep the app free for everyone.</string>
     <string name="ok">Ok</string>
     <string name="ad">Ad</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_desc">Privacy Policy of TaskManager</string>
+    <string name="graph_update">Graph update delay</string>
+    <string name="autumn">Autumn</string>
+    <string name="frostfall">Frostfall</string>
+    <string name="spring">Spring</string>
+    <string name="root">Root</string>
+    <string name="shizuku">Shizuku</string>
 
 </resources>

@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
     val viewModel: ProcessViewModel by viewModels()
 
     companion object {
-        const val TEST_DEVICE_HASHED_ID = "T01AAD58E267D992B923B739EB497E211"
+        const val TEST_DEVICE_HASHED_ID = "01AAD58E267D992B923B739EB497E211"
 
         var scope: CoroutineScope? = null
             private set

@@ -1,6 +1,5 @@
 package com.rk.taskmanager.ads
 
-import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.ads.AdError
@@ -34,7 +33,7 @@ object InterstitialsAds {
         if (interstitialAd != null) {
             return
         }
-        if (MainActivity.instance?.isinitialized == false) {
+        if (MainActivity.instance?.initialized == false) {
             return
         }
 
@@ -67,7 +66,7 @@ object InterstitialsAds {
     }
 
     fun showAd(activity: MainActivity, callback: (Boolean) -> Unit) {
-        if (MainActivity.instance?.isinitialized == false) {
+        if (MainActivity.instance?.initialized == false) {
             return
         }
         if (adRateLimiter.canRun("showAd").not()){

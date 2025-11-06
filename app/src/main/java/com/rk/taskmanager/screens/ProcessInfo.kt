@@ -83,6 +83,7 @@ import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import kotlinx.coroutines.flow.toList
+import java.lang.ref.WeakReference
 import java.util.WeakHashMap
 
 fun elapsedFromStartTime(startTimeTicks: Long): String {
@@ -215,11 +216,10 @@ suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
         InterstitialsAds.loadAd(activity){}
     } }
 
-
     return killResult
 }
 
-val procByPid= WeakHashMap<Int, ProcessUiModel>()
+val procByPid = mutableStateMapOf<Int, WeakReference<ProcessUiModel?>?>()
 
 
 @OptIn(
@@ -231,22 +231,14 @@ fun ProcessInfo(
     modifier: Modifier = Modifier,
     navController: NavController,
     viewModel: ProcessViewModel,
-    pid: Int
+    proc: ProcessUiModel
 ) {
-    val proc = remember { procByPid.get(pid) }
-
-    if (proc == null){
-        navController.popBackStack()
-    }
 
     val username = remember { mutableStateOf("Unknown") }
     val scope = rememberCoroutineScope()
     val cpuUsage = remember { mutableIntStateOf(-1) }
 
     LaunchedEffect(proc) {
-        if (proc == null){
-            return@LaunchedEffect
-        }
         username.value = getUsernameFromUid(proc?.proc?.uid!!) ?: proc?.proc?.uid.toString()
     }
 
@@ -266,329 +258,323 @@ fun ProcessInfo(
         })
     }) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding), contentAlignment = Alignment.Center) {
-            if (proc == null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                Column(modifier.verticalScroll(rememberScrollState())) {
-                    PreferenceGroup {
-                        val enabled = proc!!.proc.pid > 1 && proc!!.killed.value.not() && proc!!.proc.cmdLine != "zygote" && proc!!.proc.cmdLine != "zygote64"
-                        val interactionSource = remember { MutableInteractionSource() }
-                        PreferenceTemplate(
-                            modifier = modifier
-                                .combinedClickable(
-                                    enabled = enabled,
-                                    indication = ripple(),
-                                    interactionSource = interactionSource,
-                                    onClick = {
-                                        scope.launch {
-                                            proc!!.killing.value = true
-                                            proc!!.killed.value = killProc(proc!!.proc)
-                                            delay(300)
-                                            proc!!.killing.value = false
-                                        }
+            Column(modifier.verticalScroll(rememberScrollState())) {
+                PreferenceGroup {
+                    val enabled = proc!!.proc.pid > 1 && proc!!.killed.value.not() && proc!!.proc.cmdLine != "zygote" && proc!!.proc.cmdLine != "zygote64"
+                    val interactionSource = remember { MutableInteractionSource() }
+                    PreferenceTemplate(
+                        modifier = modifier
+                            .combinedClickable(
+                                enabled = enabled,
+                                indication = ripple(),
+                                interactionSource = interactionSource,
+                                onClick = {
+                                    scope.launch {
+                                        proc!!.killing.value = true
+                                        proc!!.killed.value = killProc(proc!!.proc)
+                                        delay(300)
+                                        proc!!.killing.value = false
                                     }
-                                ),
-                            contentModifier = Modifier
-                                .fillMaxHeight()
-                                .padding(vertical = 16.dp)
-                                .padding(start = 16.dp),
-                            title = {
-                                Text(
-                                    fontWeight = FontWeight.Bold,
-                                    text =
-                                        if (proc!!.killing.value) {
+                                }
+                            ),
+                        contentModifier = Modifier
+                            .fillMaxHeight()
+                            .padding(vertical = 16.dp)
+                            .padding(start = 16.dp),
+                        title = {
+                            Text(
+                                fontWeight = FontWeight.Bold,
+                                text =
+                                    if (proc!!.killing.value) {
+                                        stringResource(
+                                            if (proc.isApp) {
+                                                strings.stopping
+                                            } else {
+                                                strings.killing
+                                            }
+                                        )
+                                    } else {
+                                        if (proc!!.killed.value!!) {
                                             stringResource(
                                                 if (proc.isApp) {
-                                                    strings.stopping
+                                                    strings.killed
                                                 } else {
-                                                    strings.killing
+                                                    strings.stopped
                                                 }
                                             )
                                         } else {
-                                            if (proc!!.killed.value!!) {
-                                                stringResource(
-                                                    if (proc.isApp) {
-                                                        strings.killed
-                                                    } else {
-                                                        strings.stopped
-                                                    }
-                                                )
-                                            } else {
-                                                stringResource(strings.kill)
-                                            }
-                                        },
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
+                                            stringResource(strings.kill)
+                                        }
+                                    },
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        description = { Text(stringResource(strings.kill_proc)) },
+                        enabled = enabled,
+                        applyPaddings = false,
+                        endWidget = null,
+                        startWidget = {
+                            if (proc!!.killing.value) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .padding(start = 16.dp)
+                                        .alpha(if (enabled) 1f else 0.3f),
                                 )
-                            },
-                            description = { Text(stringResource(strings.kill_proc)) },
-                            enabled = enabled,
-                            applyPaddings = false,
-                            endWidget = null,
-                            startWidget = {
-                                if (proc!!.killing.value) {
-                                    CircularProgressIndicator(
+                            } else {
+                                if (proc!!.killed.value) {
+                                    Icon(
                                         modifier = Modifier
                                             .padding(start = 16.dp)
                                             .alpha(if (enabled) 1f else 0.3f),
-                                    )
-                                } else {
-                                    if (proc!!.killed.value) {
-                                        Icon(
-                                            modifier = Modifier
-                                                .padding(start = 16.dp)
-                                                .alpha(if (enabled) 1f else 0.3f),
-                                            imageVector = Icons.Outlined.Check,
-                                            contentDescription = null
-                                        )
-                                    }else{
-                                        Icon(
-                                            modifier = Modifier
-                                                .padding(start = 16.dp)
-                                                .alpha(if (enabled) 1f else 0.3f),
-                                            imageVector = Icons.Outlined.Close,
-                                            contentDescription = null
-                                        )
-                                    }
-
-                                }
-                            }
-                        )
-                    }
-
-                    PreferenceGroup {
-                        var name by remember { mutableStateOf(strings.loading.getString()) }
-
-
-                        LaunchedEffect(Unit) {
-                            name = getApkNameFromPackage(
-                                TaskManager.requireContext(),
-                                proc!!.proc.cmdLine
-                            ) ?: proc!!.proc.name
-                        }
-
-                        TextCard(text = stringResource(strings.name), description = name.trim())
-                        TextCard(text = "PID", description = proc!!.proc.pid.toString())
-                        TextCard(
-                            text = stringResource(
-                                if (proc.isApp) {
-                                    strings.str_package
-                                } else {
-                                    strings.command
-                                }
-                            ),
-                            description = proc!!.proc.cmdLine.ifEmpty {
-                                stringResource(strings.no_cmd)
-                            }
-                        )
-                        TextCard(text = stringResource(strings.user), description = username.value)
-
-
-                        LaunchedEffect(Unit) {
-                            daemon_messages.collect { message ->
-                                if (message.startsWith("CPU_PID:")) {
-                                    cpuUsage.intValue =
-                                        message.removePrefix("CPU_PID:").toFloat().toInt()
-                                }
-                            }
-                        }
-
-                        LaunchedEffect(Unit) {
-                            while (isActive) {
-                                send_daemon_messages.emit("PING_PID_CPU:${proc!!.proc.pid}")
-                                delay(1000)
-                            }
-                        }
-
-                        TextCard(
-                            text = stringResource(strings.cpu_usage),
-                            description = (if (cpuUsage.intValue == -1) {
-                                proc!!.proc.cpuUsage.roundToInt().toString()
-                            } else {
-                                cpuUsage.intValue
-                            }).toString() + "% (${strings.estimated.getString()})"
-                        )
-                        TextCard(
-                            text = stringResource(strings.is_foreground),
-                            description = proc!!.proc.isForeground.toString()
-                        )
-
-                        fun formatSize(kb: Long): String {
-                            return if (kb >= 1000) {
-                                val mb = kb / 1024f
-                                String.format(java.util.Locale.US, "%.2f MB", mb)
-                            } else {
-                                "$kb KB"
-                            }
-                        }
-
-                        TextCard(
-                            text = stringResource(strings.ram_usage),
-                            description = formatSize(proc!!.proc.memoryUsageKb)
-                        )
-
-                        if (proc!!.proc.residentSetSizeKb != proc!!.proc.memoryUsageKb) {
-                            TextCard(
-                                text = stringResource(strings.actual_ram_usage),
-                                description = formatSize(proc!!.proc.residentSetSizeKb)
-                            )
-                        }
-
-
-                        TextCard(
-                            text = stringResource(strings.niceness),
-                            description = "${proc!!.proc.nice}"
-                        )
-
-                        TextCard(
-                            text = stringResource(strings.status),
-                            description = proc!!.proc.state
-                        )
-
-                        TextCard(
-                            text = stringResource(strings.threads),
-                            description = proc!!.proc.threads.toString()
-                        )
-
-                        TextCard(
-                            text = stringResource(strings.start_time),
-                            description = DateFormat.getDateTimeInstance().format(
-                                Date(startTimeToMillis(proc!!.proc.startTime))
-                            )
-                        )
-
-                        var elapsed by remember { mutableStateOf("") }
-
-                        val startTimeTicks = proc!!.proc.startTime
-                        LaunchedEffect(startTimeTicks) {
-                            while (isActive) {
-                                elapsed = elapsedFromStartTime(startTimeTicks)
-                                delay(1000)
-                            }
-                        }
-
-                        TextCard(
-                            text = stringResource(strings.elapsed_time),
-                            description = elapsed
-                        )
-
-                        if (proc!!.proc.executablePath != "null") {
-                            TextCard(
-                                text = stringResource(strings.exec_path),
-                                description = proc!!.proc.executablePath
-                            )
-                        }
-
-                        if (proc!!.proc.parentPid != 0) {
-
-                            val text = stringResource(strings.parent_pid)
-                            val description = proc!!.proc.parentPid.toString()
-                            SettingsToggle(
-                                label = text,
-                                description = description,
-                                default = false,
-                                showSwitch = false,
-                                onLongClick = {
-                                    val clipboard = TaskManager.requireContext()
-                                        .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    val clip = ClipData.newPlainText(text, description)
-                                    clipboard.setPrimaryClip(clip)
-
-                                    Toast.makeText(
-                                        TaskManager.requireContext(),
-                                        strings.copied.getString(),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                },
-                                endWidget = {
-                                    Icon(
-                                        modifier = Modifier.padding(end = 16.dp),
-                                        imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                        imageVector = Icons.Outlined.Check,
                                         contentDescription = null
                                     )
-                                },
-                                sideEffect = {
-                                    scope.launch(Dispatchers.IO) {
-                                        val parent = viewModel.uiProcesses.value.find {
-                                            it.proc.pid == proc!!.proc.parentPid
-                                        }
-
-                                        withContext(Dispatchers.Main){
-                                            if (parent != null){
-                                                navController.navigate(
-                                                    SettingsRoutes.ProcessInfo.createRoute(
-                                                        parent
-                                                    )
-                                                )
-                                            }else{
-                                                Toast.makeText(TaskManager.requireContext(), "Unable to find parent by its pid", Toast.LENGTH_SHORT).show()
-                                            }
-                                        }
-
-                                    }
-
-                                })
-
-                        }
-
-                        val context = LocalContext.current
-                        if (proc.isApp){
-                            SettingsToggle(
-                                label = "App info",
-                                description = "Application info settings",
-                                default = false,
-                                showSwitch = false,
-                                endWidget = {
+                                }else{
                                     Icon(
-                                        modifier = Modifier.padding(end = 16.dp),
-                                        imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                        modifier = Modifier
+                                            .padding(start = 16.dp)
+                                            .alpha(if (enabled) 1f else 0.3f),
+                                        imageVector = Icons.Outlined.Close,
                                         contentDescription = null
                                     )
-                                },
-                                sideEffect = {
-                                    val packageName = proc!!.proc.cmdLine
-                                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                        data = "package:$packageName".toUri()
-                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    }
-                                    context.startActivity(intent)
-                                })
-                        }
+                                }
 
-
-                    }
-
-
-                    if (proc?.isApp == true) {
-                        val descriptionState by produceState<DescriptionState>(initialValue = DescriptionState.Loading, key1 = proc?.proc?.cmdLine) {
-                            val db = TaskManager.getDatabase(TaskManager.requireContext())
-                            val desc = withContext(Dispatchers.IO) {
-                                db.appDao().getDescription(proc!!.proc.cmdLine)
-                            }
-
-                            value = if (desc.isNullOrBlank()) {
-                                DescriptionState.Empty
-                            } else {
-                                DescriptionState.Success(desc)
                             }
                         }
-
-                        PreferenceGroup(heading = "Debloater info") {
-                            when (descriptionState) {
-                                is DescriptionState.Loading -> TextCard(text = stringResource(strings.loading), description = null, selection = true, copyDesOnLong = false)
-                                is DescriptionState.Success -> TextCard(text = null, description = (descriptionState as DescriptionState.Success).text, selection = true,copyDesOnLong = false)
-                                is DescriptionState.Empty -> TextCard(text = null, description = "No info available for this process", selection = true,copyDesOnLong = false)
-                            }
-                        }
-                    }
-
-
-
-
-                    Spacer(modifier = Modifier.padding(16.dp))
+                    )
                 }
+
+                PreferenceGroup {
+                    var name by remember { mutableStateOf(strings.loading.getString()) }
+
+
+                    LaunchedEffect(Unit) {
+                        name = getApkNameFromPackage(
+                            TaskManager.requireContext(),
+                            proc!!.proc.cmdLine
+                        ) ?: proc!!.proc.name
+                    }
+
+                    TextCard(text = stringResource(strings.name), description = name.trim())
+                    TextCard(text = "PID", description = proc!!.proc.pid.toString())
+                    TextCard(
+                        text = stringResource(
+                            if (proc.isApp) {
+                                strings.str_package
+                            } else {
+                                strings.command
+                            }
+                        ),
+                        description = proc!!.proc.cmdLine.ifEmpty {
+                            stringResource(strings.no_cmd)
+                        }
+                    )
+                    TextCard(text = stringResource(strings.user), description = username.value)
+
+
+                    LaunchedEffect(Unit) {
+                        daemon_messages.collect { message ->
+                            if (message.startsWith("CPU_PID:")) {
+                                cpuUsage.intValue =
+                                    message.removePrefix("CPU_PID:").toFloat().toInt()
+                            }
+                        }
+                    }
+
+                    LaunchedEffect(Unit) {
+                        while (isActive) {
+                            send_daemon_messages.emit("PING_PID_CPU:${proc!!.proc.pid}")
+                            delay(1000)
+                        }
+                    }
+
+                    TextCard(
+                        text = stringResource(strings.cpu_usage),
+                        description = (if (cpuUsage.intValue == -1) {
+                            proc!!.proc.cpuUsage.roundToInt().toString()
+                        } else {
+                            cpuUsage.intValue
+                        }).toString() + "% (${strings.estimated.getString()})"
+                    )
+                    TextCard(
+                        text = stringResource(strings.is_foreground),
+                        description = proc!!.proc.isForeground.toString()
+                    )
+
+                    fun formatSize(kb: Long): String {
+                        return if (kb >= 1000) {
+                            val mb = kb / 1024f
+                            String.format(java.util.Locale.US, "%.2f MB", mb)
+                        } else {
+                            "$kb KB"
+                        }
+                    }
+
+                    TextCard(
+                        text = stringResource(strings.ram_usage),
+                        description = formatSize(proc!!.proc.memoryUsageKb)
+                    )
+
+                    if (proc!!.proc.residentSetSizeKb != proc!!.proc.memoryUsageKb) {
+                        TextCard(
+                            text = stringResource(strings.actual_ram_usage),
+                            description = formatSize(proc!!.proc.residentSetSizeKb)
+                        )
+                    }
+
+
+                    TextCard(
+                        text = stringResource(strings.niceness),
+                        description = "${proc!!.proc.nice}"
+                    )
+
+                    TextCard(
+                        text = stringResource(strings.status),
+                        description = proc!!.proc.state
+                    )
+
+                    TextCard(
+                        text = stringResource(strings.threads),
+                        description = proc!!.proc.threads.toString()
+                    )
+
+                    TextCard(
+                        text = stringResource(strings.start_time),
+                        description = DateFormat.getDateTimeInstance().format(
+                            Date(startTimeToMillis(proc!!.proc.startTime))
+                        )
+                    )
+
+                    var elapsed by remember { mutableStateOf("") }
+
+                    val startTimeTicks = proc!!.proc.startTime
+                    LaunchedEffect(startTimeTicks) {
+                        while (isActive) {
+                            elapsed = elapsedFromStartTime(startTimeTicks)
+                            delay(1000)
+                        }
+                    }
+
+                    TextCard(
+                        text = stringResource(strings.elapsed_time),
+                        description = elapsed
+                    )
+
+                    if (proc!!.proc.executablePath != "null") {
+                        TextCard(
+                            text = stringResource(strings.exec_path),
+                            description = proc!!.proc.executablePath
+                        )
+                    }
+
+                    if (proc!!.proc.parentPid != 0) {
+
+                        val text = stringResource(strings.parent_pid)
+                        val description = proc!!.proc.parentPid.toString()
+                        SettingsToggle(
+                            label = text,
+                            description = description,
+                            default = false,
+                            showSwitch = false,
+                            onLongClick = {
+                                val clipboard = TaskManager.requireContext()
+                                    .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText(text, description)
+                                clipboard.setPrimaryClip(clip)
+
+                                Toast.makeText(
+                                    TaskManager.requireContext(),
+                                    strings.copied.getString(),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            endWidget = {
+                                Icon(
+                                    modifier = Modifier.padding(end = 16.dp),
+                                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                    contentDescription = null
+                                )
+                            },
+                            sideEffect = {
+                                scope.launch(Dispatchers.IO) {
+                                    val parent = viewModel.uiProcesses.value.find {
+                                        it.proc.pid == proc!!.proc.parentPid
+                                    }
+
+                                    withContext(Dispatchers.Main){
+                                        if (parent != null){
+                                            navController.navigate(
+                                                SettingsRoutes.ProcessInfo.createRoute(
+                                                    parent
+                                                )
+                                            )
+                                        }else{
+                                            Toast.makeText(TaskManager.requireContext(), "Unable to find parent by its pid", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+
+                                }
+
+                            })
+
+                    }
+
+                    val context = LocalContext.current
+                    if (proc.isApp){
+                        SettingsToggle(
+                            label = "App info",
+                            description = "Application info settings",
+                            default = false,
+                            showSwitch = false,
+                            endWidget = {
+                                Icon(
+                                    modifier = Modifier.padding(end = 16.dp),
+                                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                    contentDescription = null
+                                )
+                            },
+                            sideEffect = {
+                                val packageName = proc!!.proc.cmdLine
+                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = "package:$packageName".toUri()
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(intent)
+                            })
+                    }
+
+
+                }
+
+
+                if (proc?.isApp == true) {
+                    val descriptionState by produceState<DescriptionState>(initialValue = DescriptionState.Loading, key1 = proc?.proc?.cmdLine) {
+                        val db = TaskManager.getDatabase(TaskManager.requireContext())
+                        val desc = withContext(Dispatchers.IO) {
+                            db.appDao().getDescription(proc!!.proc.cmdLine)
+                        }
+
+                        value = if (desc.isNullOrBlank()) {
+                            DescriptionState.Empty
+                        } else {
+                            DescriptionState.Success(desc)
+                        }
+                    }
+
+                    PreferenceGroup(heading = "Debloater info") {
+                        when (descriptionState) {
+                            is DescriptionState.Loading -> TextCard(text = stringResource(strings.loading), description = null, selection = true, copyDesOnLong = false)
+                            is DescriptionState.Success -> TextCard(text = null, description = (descriptionState as DescriptionState.Success).text, selection = true,copyDesOnLong = false)
+                            is DescriptionState.Empty -> TextCard(text = null, description = "No info available for this process", selection = true,copyDesOnLong = false)
+                        }
+                    }
+                }
+
+
+
+
+                Spacer(modifier = Modifier.padding(16.dp))
             }
         }
 

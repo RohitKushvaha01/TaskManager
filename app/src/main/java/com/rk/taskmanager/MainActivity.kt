@@ -1,13 +1,15 @@
 package com.rk.taskmanager
 
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -15,11 +17,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.ump.ConsentDebugSettings
+import com.google.android.ump.ConsentInformation
+import com.google.android.ump.ConsentRequestParameters
+import com.google.android.ump.UserMessagingPlatform
 import com.rk.DaemonResult
 import com.rk.daemon_messages
 import com.rk.isConnected
 import com.rk.send_daemon_messages
 import com.rk.startDaemon
+import com.rk.taskmanager.ads.GoogleMobileAdsConsentManager
 import com.rk.taskmanager.ads.InterstitialsAds
 import com.rk.taskmanager.ads.RewardedAds
 import com.rk.taskmanager.animations.NavigationAnimationTransitions
@@ -40,6 +47,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
 
 
@@ -48,6 +56,8 @@ class MainActivity : ComponentActivity() {
     val viewModel: ProcessViewModel by viewModels()
 
     companion object {
+        const val TEST_DEVICE_HASHED_ID = "T01AAD58E267D992B923B739EB497E211"
+
         var scope: CoroutineScope? = null
             private set
         var instance: MainActivity? = null
@@ -56,30 +66,44 @@ class MainActivity : ComponentActivity() {
 
     var navControllerRef: WeakReference<NavController?> = WeakReference(null)
         private set
-    var isinitialized = false
+    var initialized = false
         private set
+
+    private lateinit var googleMobileAdsConsentManager: GoogleMobileAdsConsentManager
+    private val TAG = "MainActivity"
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        Log.d(TAG, "Google Mobile Ads SDK Version: " + MobileAds.getVersion())
 
-        MobileAds.initialize(this@MainActivity)
-        MobileAds.setRequestConfiguration(
-            RequestConfiguration.Builder()
 
-                //IF YOU ARE BUILDING THIS APP ADD YOUR DEVICE AS A TEST DEVICE
-                .setTestDeviceIds(listOf("01AAD58E267D992B923B739EB497E211"))
-                .build()
-        )
+        googleMobileAdsConsentManager = GoogleMobileAdsConsentManager.getInstance(applicationContext)
 
-        isinitialized = true
-        if (Settings.shouldPreLoadThemeAd){
-            RewardedAds.loadAd(this@MainActivity)
+        googleMobileAdsConsentManager.gatherConsent(this) { error ->
+            if (error != null) {
+                // Consent not obtained in current session.
+                Log.d(TAG, "${error.errorCode}: ${error.message}")
+            }
+
+            if (googleMobileAdsConsentManager.canRequestAds) {
+                initializeMobileAdsSdk()
+            }
+
+            if (googleMobileAdsConsentManager.isPrivacyOptionsRequired) {
+                // Regenerate the options menu to include a privacy setting.
+                //invalidateOptionsMenu()
+                googleMobileAdsConsentManager.showPrivacyOptionsForm(this){
+                    println("dismissed")
+                }
+            }
         }
-        InterstitialsAds.loadAd(this@MainActivity){}
 
-
+        // This sample attempts to load ads using consent obtained in the previous session.
+        if (googleMobileAdsConsentManager.canRequestAds) {
+            initializeMobileAdsSdk()
+        }
 
 
         scope = this.lifecycleScope
@@ -164,12 +188,46 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("proc/{pid}") {
                             val pid = it.arguments?.getString("pid")!!.toInt()
-                            ProcessInfo(pid = pid, navController = navController, viewModel = viewModel)
+                            val proc = remember { procByPid[pid]?.get() }
+
+                            if (proc != null) {
+                                LaunchedEffect(Unit) {
+                                    if (proc.killed.value){
+                                        navController.popBackStack()
+                                        return@LaunchedEffect
+                                    }
+                                }
+                                ProcessInfo(proc = proc, navController = navController, viewModel = viewModel)
+                            }else{
+                                navController.popBackStack()
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun initializeMobileAdsSdk(){
+        MobileAds.setRequestConfiguration(
+            RequestConfiguration.Builder()
+
+                //IF YOU ARE BUILDING THIS APP ADD YOUR DEVICE AS A TEST DEVICE
+                .setTestDeviceIds(listOf(TEST_DEVICE_HASHED_ID))
+                .build()
+        )
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            MobileAds.initialize(this@MainActivity)
+            withContext(Dispatchers.Main){
+                initialized = true
+                if (Settings.shouldPreLoadThemeAd){
+                    RewardedAds.loadAd(this@MainActivity)
+                }
+                InterstitialsAds.loadAd(this@MainActivity){}
+            }
+        }
+
     }
 
     override fun onResume() {
@@ -199,7 +257,7 @@ sealed class SettingsRoutes(val route: String) {
     data object SelectWorkingMode : SettingsRoutes("SelectWorkingMode")
     data object ProcessInfo : SettingsRoutes("proc/{pid}") {
         fun createRoute(proc: ProcessUiModel):String{
-            procByPid[proc.proc.pid] = proc
+            procByPid[proc.proc.pid] = WeakReference(proc)
             return "proc/${proc.proc.pid}"
         }
     }

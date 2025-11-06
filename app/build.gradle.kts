@@ -71,8 +71,8 @@ android {
         targetSdk = 36
 
         //versioning
-        versionCode = 24
-        versionName = "1.2.4"
+        versionCode = 25
+        versionName = "1.2.6"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -130,4 +130,5 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.user.messaging.platform)
 }

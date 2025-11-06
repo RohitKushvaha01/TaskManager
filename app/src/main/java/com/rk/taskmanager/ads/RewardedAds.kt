@@ -31,9 +31,10 @@ object RewardedAds {
         if (rewardedAd != null) {
             return
         }
-        if (MainActivity.instance?.isinitialized == false) {
+        if (MainActivity.instance?.initialized == false) {
             return
         }
+
         activity.lifecycleScope.launch(Dispatchers.Main.immediate) {
             runCatching {
                 loadMutex.withLock {
@@ -64,7 +65,7 @@ object RewardedAds {
 
 
     fun showAd(activity: MainActivity, callback: () -> Unit) {
-        if (MainActivity.instance?.isinitialized == false) {
+        if (MainActivity.instance?.initialized == false) {
             return
         }
         activity.lifecycleScope.launch(Dispatchers.Main.immediate) {

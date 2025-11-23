@@ -8,7 +8,6 @@ appcompat = "1.7.1"
 javascriptengine = "1.0.0"
 material = "1.13.0"
 kotlin = "2.1.21"
-playServicesAds = "24.7.0"
 kotlinPlugin = "2.2.20"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -31,7 +30,6 @@ androidx-material-icons-extended = { module = "androidx.compose.material:materia
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
-play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "api" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

@@ -125,10 +125,9 @@ dependencies {
     implementation(project(":taskmanagerd"))
     implementation(libs.androidx.javascriptengine)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.play.services.ads)
+
 
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.user.messaging.platform)
 }

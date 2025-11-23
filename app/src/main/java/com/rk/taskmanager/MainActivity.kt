@@ -15,20 +15,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
-import com.google.android.ump.ConsentDebugSettings
-import com.google.android.ump.ConsentInformation
-import com.google.android.ump.ConsentRequestParameters
-import com.google.android.ump.UserMessagingPlatform
 import com.rk.DaemonResult
 import com.rk.daemon_messages
 import com.rk.isConnected
 import com.rk.send_daemon_messages
 import com.rk.startDaemon
-import com.rk.taskmanager.ads.GoogleMobileAdsConsentManager
-import com.rk.taskmanager.ads.InterstitialsAds
-import com.rk.taskmanager.ads.RewardedAds
 import com.rk.taskmanager.animations.NavigationAnimationTransitions
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
@@ -56,7 +47,6 @@ class MainActivity : ComponentActivity() {
     val viewModel: ProcessViewModel by viewModels()
 
     companion object {
-        const val TEST_DEVICE_HASHED_ID = "01AAD58E267D992B923B739EB497E211"
 
         var scope: CoroutineScope? = null
             private set
@@ -66,45 +56,13 @@ class MainActivity : ComponentActivity() {
 
     var navControllerRef: WeakReference<NavController?> = WeakReference(null)
         private set
-    var initialized = false
-        private set
 
-    private lateinit var googleMobileAdsConsentManager: GoogleMobileAdsConsentManager
-    private val TAG = "MainActivity"
+     private val TAG = "MainActivity"
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        Log.d(TAG, "Google Mobile Ads SDK Version: " + MobileAds.getVersion())
-
-
-        googleMobileAdsConsentManager = GoogleMobileAdsConsentManager.getInstance(applicationContext)
-
-        googleMobileAdsConsentManager.gatherConsent(this) { error ->
-            if (error != null) {
-                // Consent not obtained in current session.
-                Log.d(TAG, "${error.errorCode}: ${error.message}")
-            }
-
-            if (googleMobileAdsConsentManager.canRequestAds) {
-                initializeMobileAdsSdk()
-            }
-
-            if (googleMobileAdsConsentManager.isPrivacyOptionsRequired) {
-                // Regenerate the options menu to include a privacy setting.
-                //invalidateOptionsMenu()
-                googleMobileAdsConsentManager.showPrivacyOptionsForm(this){
-                    println("dismissed")
-                }
-            }
-        }
-
-        // This sample attempts to load ads using consent obtained in the previous session.
-        if (googleMobileAdsConsentManager.canRequestAds) {
-            initializeMobileAdsSdk()
-        }
-
 
         scope = this.lifecycleScope
         instance = this
@@ -206,28 +164,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    private fun initializeMobileAdsSdk(){
-        MobileAds.setRequestConfiguration(
-            RequestConfiguration.Builder()
-
-                //IF YOU ARE BUILDING THIS APP ADD YOUR DEVICE AS A TEST DEVICE
-                .setTestDeviceIds(listOf(TEST_DEVICE_HASHED_ID))
-                .build()
-        )
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            MobileAds.initialize(this@MainActivity)
-            withContext(Dispatchers.Main){
-                initialized = true
-                if (Settings.shouldPreLoadThemeAd){
-                    RewardedAds.loadAd(this@MainActivity)
-                }
-                InterstitialsAds.loadAd(this@MainActivity){}
-            }
-        }
-
     }
 
     override fun onResume() {

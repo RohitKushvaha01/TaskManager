@@ -27,10 +27,6 @@ For a better experience, while using the Application, the Service Provider may r
 
 Only aggregated, anonymized data is periodically transmitted to external services to aid the Service Provider in improving the Application and their service. The Service Provider may share your information with third parties in the ways that are described in this privacy statement.
 
-Please note that the Application utilizes third-party services that have their own Privacy Policy about handling data. Below are the links to the Privacy Policy of the third-party service providers used by the Application:
-
-*   [AdMob](https://support.google.com/admob/answer/6128543?hl=en)
-
 The Service Provider may disclose User Provided and Automatically Collected Information:
 
 *   as required by law, such as to comply with a subpoena, or similar legal process;

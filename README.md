@@ -11,7 +11,8 @@ Task Manager requires shizuku/root to work
 - [x] Monitor Ram usage
 - [x] Monitor running linux processes
 - [x] List process info (eg. ram usage,priority etc.)
-- [x] Kill running process (Needs shizuku to be started by root)
+- [x] Kill linux process (Needs shizuku to be started by root)
+- [x] Kill android apps
 
 # Screenshots
 <div>

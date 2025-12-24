@@ -72,6 +72,8 @@ object CpuInfoReader {
             "/sys/devices/platform/s5p-tmu/curr_temp"
         )
 
+        var maxTemp: Int? = null
+
         for (path in sensorPaths) {
             try {
                 val file = File(path)
@@ -79,15 +81,25 @@ object CpuInfoReader {
 
                 val raw = file.readText().trim().toInt()
 
-                // Most Android/Linux sensors report millidegrees
-                return (if (raw > 1000) raw / 1000 else raw).toString()
+                // Convert millidegrees to degrees if needed
+                val tempC = when {
+                    raw > 100_000 -> raw / 1000       // safety for weird sensors
+                    raw > 1_000   -> raw / 1000
+                    else          -> raw
+                }
+
+                // Filter out obviously broken values
+                if (tempC in 5..130) {
+                    maxTemp = if (maxTemp == null) tempC else maxOf(maxTemp!!, tempC)
+                }
             } catch (_: Exception) {
-                // Ignore and try next sensor
+                // Ignore and continue
             }
         }
 
-        return "N/A"
+        return maxTemp?.toString() ?: "N/A"
     }
+
 
     fun getUptimeFormatted(): String {
         // SystemClock.elapsedRealtime() returns milliseconds since boot

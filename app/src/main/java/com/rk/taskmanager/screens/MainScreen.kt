@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -60,68 +61,77 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
             modifier = modifier.fillMaxSize(),
             topBar = {
                 if (selectedscreen.intValue == 0){
-                    TopAppBar(
-                        title = { Text(stringResource(strings.app_name)) },
-                        actions = {
-                            if (selectedscreen.intValue == 1) {
+                    Column {
+                        TopAppBar(
+                            title = { Text(stringResource(strings.app_name)) },
+                            actions = {
+                                if (selectedscreen.intValue == 1) {
+                                    IconButton(
+                                        modifier = Modifier.padding(8.dp),
+                                        onClick = {
+                                            showFilter.value = !showFilter.value
+                                        }) {
+                                        Icon(
+                                            imageVector = Filter,
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
+
                                 IconButton(
                                     modifier = Modifier.padding(8.dp),
                                     onClick = {
-                                        showFilter.value = !showFilter.value
+                                        navController.navigate(SettingsRoutes.Settings.route)
                                     }) {
                                     Icon(
-                                        imageVector = Filter,
+                                        imageVector = Icons.Filled.Settings,
                                         contentDescription = null
                                     )
                                 }
                             }
-
-                            IconButton(
-                                modifier = Modifier.padding(8.dp),
-                                onClick = {
-                                    navController.navigate(SettingsRoutes.Settings.route)
-                                }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Settings,
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                    )
+                        )
+                        HorizontalDivider()
+                    }
                 }else{
                     ProcessSearchBar(viewModel = viewModel, navController = navController)
                 }
 
             },
             bottomBar = {
-                NavigationBar {
-                    NavigationBarItem(
-                        selected = selectedscreen.intValue == 0, onClick = {
-                            selectedscreen.intValue = 0
-                        },
-                        icon = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.speed_24px),
-                                contentDescription = null
-                            )
-                        },
-                        label = { Text(stringResource(strings.res)) }
-                    )
+                Column {
+                    if (selectedscreen.intValue == 0){
+                        HorizontalDivider()
+                    }
+                    NavigationBar {
+                        NavigationBarItem(
+                            selected = selectedscreen.intValue == 0, onClick = {
+                                selectedscreen.intValue = 0
+                            },
+                            icon = {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.speed_24px),
+                                    contentDescription = null
+                                )
+                            },
+                            label = { Text(stringResource(strings.res)) }
+                        )
 
-                    NavigationBarItem(
-                        selected = selectedscreen.intValue == 1,
-                        onClick = {
-                            selectedscreen.intValue = 1
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Filled.PlayArrow,
-                                contentDescription = null
-                            )
-                        },
-                        label = { Text(stringResource(strings.procs)) }
-                    )
+                        NavigationBarItem(
+                            selected = selectedscreen.intValue == 1,
+                            onClick = {
+                                selectedscreen.intValue = 1
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Filled.PlayArrow,
+                                    contentDescription = null
+                                )
+                            },
+                            label = { Text(stringResource(strings.procs)) }
+                        )
+                    }
                 }
+
             }
         ) { innerPadding ->
 
@@ -132,7 +142,7 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
 
                 when (selectedscreen.intValue) {
                     0 -> {
-                        Resources(modifier = Modifier.padding(horizontal = 4.dp))
+                        ResourceHostScreen(viewModel = viewModel,modifier = Modifier.fillMaxSize())
                     }
 
                     1 -> {

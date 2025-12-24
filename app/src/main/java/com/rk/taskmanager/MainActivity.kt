@@ -1,7 +1,6 @@
 package com.rk.taskmanager
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -27,7 +26,7 @@ import com.rk.taskmanager.screens.SelectedWorkingMode
 import com.rk.taskmanager.screens.SettingsScreen
 import com.rk.taskmanager.screens.procByPid
 import com.rk.taskmanager.screens.selectedscreen
-import com.rk.taskmanager.screens.updateCpuGraph
+import com.rk.taskmanager.screens.cpu.updateCpuGraph
 import com.rk.taskmanager.screens.updateRamAndSwapGraph
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
@@ -38,7 +37,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
 
 

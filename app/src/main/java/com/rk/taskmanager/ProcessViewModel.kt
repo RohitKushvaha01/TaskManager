@@ -52,6 +52,11 @@ class ProcessViewModel : ViewModel() {
     val showUserApps = _showUserApps.asStateFlow()
     val showSystemApps = _showSystemApps.asStateFlow()
     val showLinuxProcess = _showLinuxProcess.asStateFlow()
+    private val _threadCount = MutableStateFlow(0)
+    val threadCount = _threadCount.asStateFlow()
+
+    private val _procCount = MutableStateFlow(0)
+    val procCount = _procCount.asStateFlow()
 
     val filteredProcesses: StateFlow<List<ProcessUiModel>> = combine(
         _uiProcesses,
@@ -141,6 +146,7 @@ class ProcessViewModel : ViewModel() {
                         val jsonArray = JSONArray(message)
                         val newProcesses = mutableListOf<Process>()
 
+                        var totalThreads = 0
                         for (i in 0 until jsonArray.length()) {
                             val obj = jsonArray.getJSONObject(i)
 
@@ -162,7 +168,7 @@ class ProcessViewModel : ViewModel() {
                                     memoryUsageKb = obj.optLong("memoryUsageKb", 0L),
                                     cmdLine = obj.optString("cmdLine", ""),
                                     state = obj.optString("state", ""),
-                                    threads = obj.optInt("threads", 0),
+                                    threads = obj.optInt("threads", 0).also { totalThreads += it },
                                     startTime = obj.optLong("startTime", 0L),
                                     elapsedTime = obj.optDouble("elapsedTime", 0.0).toFloat(),
                                     residentSetSizeKb = obj.optLong("residentSetSizeKb", 0L),
@@ -172,6 +178,8 @@ class ProcessViewModel : ViewModel() {
                                 )
                             )
                         }
+
+                        _threadCount.value = totalThreads
 
                         val uiList = newProcesses.map { proc ->
                             async(Dispatchers.IO) {
@@ -183,6 +191,8 @@ class ProcessViewModel : ViewModel() {
                                 ProcessUiModel(proc, name, icon, system, isApp && !system, isApp = isApp)
                             }
                         }.awaitAll()
+
+                        _procCount.value = newProcesses.size
 
                         // Update state on Main thread to avoid snapshot issues
                         withContext(Dispatchers.Main) {

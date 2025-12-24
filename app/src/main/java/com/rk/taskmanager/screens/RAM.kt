@@ -6,8 +6,6 @@ import android.graphics.Typeface
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -29,59 +27,42 @@ import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import com.rk.components.SettingsToggle
 import com.rk.components.rememberMarker
 import com.rk.taskmanager.MainActivity
+import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
+import com.rk.taskmanager.screens.cpu.MAX_GRAPH_POINTS
+import com.rk.taskmanager.screens.cpu.MarkerValueFormatter
+import com.rk.taskmanager.screens.cpu.RangeProvider
+import com.rk.taskmanager.screens.cpu.StartAxisValueFormatter
+import com.rk.taskmanager.screens.cpu.xValues
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.text.DecimalFormat
 import java.util.Locale
 
-private const val MAX_POINTS = 120
-
-private val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = 100.0)
-private val YDecimalFormat = DecimalFormat("#.##'%'")
-private val StartAxisValueFormatter = CartesianValueFormatter.decimal(YDecimalFormat)
-private val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default(YDecimalFormat)
-
-val xValues = List(MAX_POINTS) { it.toDouble() }
+val ramYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GRAPH_POINTS) { add(0) } }
+val swapYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GRAPH_POINTS) { add(0) } }
 
 
-val cpuYValues = ArrayDeque<Int>(MAX_POINTS).apply { repeat(MAX_POINTS) { add(0) } }
-val ramYValues = ArrayDeque<Int>(MAX_POINTS).apply { repeat(MAX_POINTS) { add(0) } }
-val swapYValues = ArrayDeque<Int>(MAX_POINTS).apply { repeat(MAX_POINTS) { add(0) } }
-
-
-
-//CPU
-val CpuModelProducer = CartesianChartModelProducer()
-//val cpuYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
-var CpuUsage by mutableIntStateOf(0)
-
-
-//RAM
-val RamModelProducer = CartesianChartModelProducer()
+private val RamModelProducer = CartesianChartModelProducer()
 //val ramYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
 var RamUsage by mutableIntStateOf(0)
 var usedRam by mutableLongStateOf(0L)
 var totalRam by mutableLongStateOf(0L)
 
-//SWAP
 val SwapModelProducer = CartesianChartModelProducer()
 //val swapYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
 var SwapUsage by mutableIntStateOf(0)
 
 var usedSwap by mutableLongStateOf(0L)
 var totalSwap by mutableLongStateOf(0L)
+
 
 
 suspend fun getSystemRamUsage(context: Context): Int = withContext(Dispatchers.IO) {
@@ -101,7 +82,6 @@ suspend fun getSystemRamUsage(context: Context): Int = withContext(Dispatchers.I
 fun formatRamMB(bytes: Long): String = "${bytes / (1024 * 1024)} MB"
 fun formatRamGB(bytes: Long): String =
     String.format(Locale.ENGLISH, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
-
 
 
 suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalBytes: Long) {
@@ -125,99 +105,22 @@ suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalByte
 
     // Update chart model with both lines
     if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
-    RamModelProducer.runTransaction {
-        lineSeries {
-            series(x = xValues, y = ramYValues) // RAM line
-            series(x = xValues, y = swapYValues) // SWAP line
-        }
-    }
-    }
-}
-
-
-suspend fun updateCpuGraph(usage: Int) {
-    CpuUsage = usage
-    //cpuYValues.removeAt(0)
-    //cpuYValues.add(CpuUsage)
-
-    cpuYValues.removeFirst()
-    cpuYValues.addLast(CpuUsage)
-
-    if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
-        CpuModelProducer.runTransaction {
+        RamModelProducer.runTransaction {
             lineSeries {
-                series(x = xValues, y = cpuYValues)
+                series(x = xValues, y = ramYValues) // RAM line
+                series(x = xValues, y = swapYValues) // SWAP line
             }
         }
     }
-
 }
 
+
 @Composable
-fun Resources(modifier: Modifier = Modifier) {
-    val lineColor = MaterialTheme.colorScheme.primary
-
-    Column(modifier.verticalScroll(rememberScrollState())) {
-
-        CartesianChartHost(
-            rememberCartesianChart(
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(
-                        LineCartesianLayer.rememberLine(
-                            fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                            areaFill = LineCartesianLayer.AreaFill.single(
-                                fill(
-                                    ShaderProvider.verticalGradient(
-                                        intArrayOf(
-                                            lineColor.copy(alpha = 0.4f).toArgb(),
-                                            Color.Transparent.toArgb()
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                    rangeProvider = RangeProvider,
-                ),
-                startAxis = VerticalAxis.rememberStart(
-                    valueFormatter = StartAxisValueFormatter,
-                    label = TextComponent(
-                        color = MaterialTheme.colorScheme.onSurface.toArgb(),
-                        textSizeSp = 10f,
-                        lineCount = 1,
-                        typeface = Typeface.DEFAULT
-                    ),
-                    guideline = rememberAxisGuidelineComponent(),
-                ),
-                bottomAxis = null,
-                marker = rememberMarker(MarkerValueFormatter),
-            ),
-            CpuModelProducer,
-            modifier,
-            rememberVicoScrollState(scrollEnabled = false),
-            animateIn = false,
-            animationSpec = null,
-        )
-
-
-        SettingsToggle(
-            description = "CPU - ${
-                if (CpuUsage <= 0) {
-                    "No Data"
-                } else {
-                    "$CpuUsage%"
-                }
-            }",
-            showSwitch = false,
-            default = false
-        )
-
-        Spacer(modifier = Modifier.padding(vertical = 8.dp))
+fun RAM(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
+    Column {
         val ramColor = MaterialTheme.colorScheme.primary
         val swapColor = MaterialTheme.colorScheme.tertiary
 
-
-        HorizontalDivider()
         CartesianChartHost(
             rememberCartesianChart(
                 rememberLineCartesianLayer(
@@ -280,6 +183,16 @@ fun Resources(modifier: Modifier = Modifier) {
             showSwitch = false,
             default = false
         )
+
+        Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+
+
+        HorizontalDivider()
+
+        //ram info goes here
+
+
 
 
         Spacer(modifier = Modifier.padding(vertical = 16.dp))

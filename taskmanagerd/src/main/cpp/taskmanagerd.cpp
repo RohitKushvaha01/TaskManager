@@ -35,17 +35,18 @@ std::vector<int> listPids() {
     std::vector<int> pids;
     pids.reserve(256);
 
-    try {
-        for (const auto &entry : fs::directory_iterator("/proc")) {
+    for (const auto &entry : fs::directory_iterator("/proc")) {
+        // Fix to move the try catch block inside the loop
+        try {
             if (entry.is_directory()) {
                 std::string name = entry.path().filename();
                 if (std::regex_match(name, pid_regex)) {
                     pids.push_back(std::stoi(name));
                 }
             }
+        } catch (...) {
+        
         }
-    } catch (...) {
-
     }
     return pids;
 }

@@ -66,50 +66,60 @@ fun Processes(
 
     if (showFilter.value) {
         XedDialog(onDismissRequest = { showFilter.value = false }) {
+
+            val showUserApps by viewModel.showUserApps.collectAsState()
+            val showSystemApps by viewModel.showSystemApps.collectAsState()
+            val showLinuxProcess by viewModel.showLinuxProcess.collectAsState()
+
             DividerColumn {
 
+                // USER APPS
                 SettingsToggle(
                     label = stringResource(strings.show_user_app),
-                    description = null,
                     showSwitch = true,
-                    default = viewModel.showUserApps.collectAsState().value,
-                    sideEffect = {
+                    default = showUserApps,
+                    isEnabled = !(showUserApps && !showSystemApps && !showLinuxProcess),
+                    sideEffect = { newValue ->
+                        if (!newValue && !showSystemApps && !showLinuxProcess) return@SettingsToggle
                         scope.launch {
-                            Settings.showUserApps = it
-                            viewModel.setShowUserApps(it)
+                            Settings.showUserApps = newValue
+                            viewModel.setShowUserApps(newValue)
                         }
-
                     }
                 )
 
+                // SYSTEM APPS
                 SettingsToggle(
                     label = stringResource(strings.show_system_app),
-                    description = null,
                     showSwitch = true,
-                    default = viewModel.showSystemApps.collectAsState().value,
-                    sideEffect = {
+                    default = showSystemApps,
+                    isEnabled = !(showSystemApps && !showUserApps && !showLinuxProcess),
+                    sideEffect = { newValue ->
+                        if (!newValue && !showUserApps && !showLinuxProcess) return@SettingsToggle
                         scope.launch {
-                            Settings.showSystemApps = it
-                            viewModel.setShowSystemApps(it)
+                            Settings.showSystemApps = newValue
+                            viewModel.setShowSystemApps(newValue)
                         }
-
                     }
                 )
 
+                // LINUX PROCESS
                 SettingsToggle(
                     label = stringResource(strings.show_linux_process),
-                    description = null,
                     showSwitch = true,
-                    default = viewModel.showLinuxProcess.collectAsState().value,
-                    sideEffect = {
+                    default = showLinuxProcess,
+                    isEnabled = !(showLinuxProcess && !showUserApps && !showSystemApps),
+                    sideEffect = { newValue ->
+                        if (!newValue && !showUserApps && !showSystemApps) return@SettingsToggle
                         scope.launch {
-                            Settings.showLinuxProcess = it
-                            viewModel.setShowLinuxProcess(it)
+                            Settings.showLinuxProcess = newValue
+                            viewModel.setShowLinuxProcess(newValue)
                         }
                     }
                 )
             }
         }
+
     }
 
     Box(

@@ -20,14 +20,19 @@ import com.rk.isConnected
 import com.rk.send_daemon_messages
 import com.rk.startDaemon
 import com.rk.taskmanager.animations.NavigationAnimationTransitions
+import com.rk.taskmanager.screens.About
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.screens.SelectedWorkingMode
 import com.rk.taskmanager.screens.SettingsScreen
+import com.rk.taskmanager.screens.SupportSettingsScreen
+import com.rk.taskmanager.screens.Themes
 import com.rk.taskmanager.screens.procByPid
 import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.screens.cpu.updateCpuGraph
 import com.rk.taskmanager.screens.updateRamAndSwapGraph
+import com.rk.taskmanager.settings.DaemonSettings
+import com.rk.taskmanager.settings.GraphSettings
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
 import kotlinx.coroutines.CoroutineScope
@@ -142,6 +147,31 @@ class MainActivity : ComponentActivity() {
                         composable(SettingsRoutes.Settings.route) {
                             SettingsScreen(navController = navController)
                         }
+
+
+
+                        composable(SettingsRoutes.Daemon.route){
+                            DaemonSettings()
+                        }
+
+                        composable(SettingsRoutes.Graphs.route){
+                            GraphSettings()
+                        }
+
+                        composable(SettingsRoutes.Themes.route){
+                            Themes()
+                        }
+
+                        composable(SettingsRoutes.Support.route){
+                            SupportSettingsScreen()
+                        }
+
+                        composable(SettingsRoutes.About.route){
+                            About()
+                        }
+
+
+
                         composable("proc/{pid}") {
                             val pid = it.arguments?.getString("pid")!!.toInt()
                             val proc = remember { procByPid[pid]?.get() }
@@ -186,6 +216,7 @@ class MainActivity : ComponentActivity() {
 }
 
 sealed class SettingsRoutes(val route: String) {
+    //main
     data object Home : SettingsRoutes("home")
     data object Settings : SettingsRoutes("settings")
     data object SelectWorkingMode : SettingsRoutes("SelectWorkingMode")
@@ -195,4 +226,14 @@ sealed class SettingsRoutes(val route: String) {
             return "proc/${proc.proc.pid}"
         }
     }
+
+    //settings
+
+
+    data object Daemon : SettingsRoutes("daemon")
+    data object Graphs : SettingsRoutes("graphs")
+    data object Themes : SettingsRoutes("themes")
+    data object Support : SettingsRoutes("support")
+    data object About : SettingsRoutes("about")
+
 }

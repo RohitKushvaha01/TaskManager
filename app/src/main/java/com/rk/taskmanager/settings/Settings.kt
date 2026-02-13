@@ -52,6 +52,14 @@ object Settings {
             default = false
         )
         set(value) = Preference.setBoolean(key = "showLinuxProcess",value)
+
+    var kills get() = Preference.getInt(key = "kills", 0)
+        set(value) = Preference.setInt(key = "kills",value)
+
+    var supportDialogTimeStamp get() = Preference.getLong(key = "supportDialogTimeStamp", 0)
+        set(value) = Preference.setLong(key = "supportDialogTimeStamp",value)
+
+
 }
 
 object Preference {

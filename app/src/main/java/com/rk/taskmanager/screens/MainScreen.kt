@@ -150,7 +150,32 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
                     }
                 }
             }
+
+            var showSupportDialog by remember { mutableStateOf(false) }
+
+            LaunchedEffect(Settings.kills) {
+                val thirtyDaysMillis = 30L * 24 * 60 * 60 * 1000
+                val timePassed = System.currentTimeMillis() - Settings.supportDialogTimeStamp
+
+                showSupportDialog =
+                    Settings.kills > 20 && (timePassed > thirtyDaysMillis)
+            }
+
+            if(showSupportDialog){
+                SupportDialog(onDismiss = {
+                    Settings.supportDialogTimeStamp = System.currentTimeMillis()
+                    showSupportDialog = false
+                }, onSupportClick = {
+                    Settings.supportDialogTimeStamp = System.currentTimeMillis()
+                    showSupportDialog = false
+                    navController.navigate(SettingsRoutes.Support.route)
+                })
+            }
         }
+
+
+
+
     } else {
         val scope = rememberCoroutineScope()
 

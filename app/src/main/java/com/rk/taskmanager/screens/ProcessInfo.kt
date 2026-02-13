@@ -211,6 +211,7 @@ suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
         }.getOrDefault(false)
     }
 
+    com.rk.taskmanager.settings.Settings.kills++
     return killResult
 }
 

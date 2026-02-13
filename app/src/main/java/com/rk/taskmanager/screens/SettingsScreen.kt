@@ -1,58 +1,43 @@
 package com.rk.taskmanager.screens
 
-import android.content.Intent
-import android.os.Build
-import android.util.Log
-import android.widget.Toast
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.outlined.Android
+import androidx.compose.material.icons.outlined.ColorLens
+import androidx.compose.material.icons.outlined.HeartBroken
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import com.rk.components.SettingsToggle
-import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
-import com.rk.taskmanager.MainActivity
-import com.rk.taskmanager.getString
-import com.rk.taskmanager.settings.Settings
-import com.rk.taskmanager.settings.Settings.shouldPreLoadThemeAd
+import com.rk.components.compose.preferences.category.PreferenceCategory
+import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.strings
-import com.rk.taskmanager.ui.theme.currentTheme
-import com.rk.taskmanager.ui.theme.dynamicTheme
-import com.rk.taskmanager.ui.theme.themes
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.unit.dp
+
 
 
 @OptIn(
@@ -61,126 +46,66 @@ import kotlinx.coroutines.launch
 )
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) {
-    var showAdCallback by remember { mutableStateOf<(()->Unit)?>(null) }
-    var showAdDialog by remember { mutableStateOf(false) }
-    val activity = LocalActivity.current as MainActivity
 
     PreferenceLayout(
         modifier = modifier,
         label = stringResource(strings.settings),
     ) {
-        val context = LocalContext.current
-        val selectedMode = remember { mutableIntStateOf(Settings.workingMode) }
-
-        PreferenceGroup(heading = stringResource(strings.working_mode)) {
-            WorkingMode.entries.forEach { mode ->
-                SettingsToggle(
-                    label = stringResource(mode.nameRes),
-                    description = null,
-                    default = selectedMode.intValue == mode.id,
-                    sideEffect = {
-                        Settings.workingMode = mode.id
-                        selectedMode.intValue = mode.id
-
-                        Toast.makeText(context, strings.requires_daemon_restart.getString(), Toast.LENGTH_SHORT).show()
-                    },
-                    showSwitch = false,
-                    startWidget = {
-                        RadioButton(selected = selectedMode.intValue == mode.id, onClick = {
-                            Settings.workingMode = mode.id
-                            selectedMode.intValue = mode.id
-                            Toast.makeText(context, strings.requires_daemon_restart.getString(), Toast.LENGTH_SHORT)
-                                .show()
-
-                        })
-                    },
-                )
-            }
-        }
 
 
+        PreferenceCategory(
+            label = "Daemon",
+            description = "TaskManagerD settings",
+            startWidget = {
+                Icon(imageVector = Icons.Outlined.Android,null)
+            },
+            onNavigate = {
+                navController.navigate(SettingsRoutes.Daemon.route)
+                         },
+        )
+        PreferenceCategory(
+            label = "Graph",
+            description = "cpu,ram,swap graph settings",
+            startWidget = {
+                Icon(imageVector = Icons.Outlined.MonitorHeart,null)
+            },
+            onNavigate = {
+                navController.navigate(SettingsRoutes.Graphs.route)
+            },
+        )
 
-        PreferenceGroup(heading = stringResource(strings.theme)) {
-            SelectableCard(
-                selected = dynamicTheme.value,
-                label = stringResource(strings.dynamic_theme),
-                description = null,
-                isEnaled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
-                onClick = {
-                    MainActivity.instance?.lifecycleScope?.launch {
-                        dynamicTheme.value = true
-                        Settings.monet = true
-                    }
-                })
+        PreferenceCategory(
+            label = "Themes",
+            description = "look and feel",
+            startWidget = {
+                Icon(imageVector = Icons.Outlined.ColorLens,null)
+            },
+            onNavigate = {
+                navController.navigate(SettingsRoutes.Themes.route)
+            },
+        )
 
-            themes.forEach {
-                SelectableCard(
-                    selected = currentTheme.intValue == it.key && !dynamicTheme.value,
-                    label = stringResource(it.value.nameRes),
-                    description = null,
-                    onClick = {
-                        MainActivity.instance?.lifecycleScope?.launch {
-                            currentTheme.intValue = it.key
-                            Settings.theme = it.key
-                            if (dynamicTheme.value) {
-                                dynamicTheme.value = false
-                                Settings.monet = false
-                            }
-                        }
-                    })
-            }
-        }
+        PreferenceCategory(
+            label = "Support",
+            description = "support development",
+            startWidget = {
+                Icon(imageVector = FeatherHeart,null)
+            },
+            onNavigate = {
+                navController.navigate(SettingsRoutes.Support.route)
+            },
+        )
 
-
-        val minFreq = 150 // 150ms at 0%
-        val maxFreq = 1000
-
-        var sliderPosition by rememberSaveable {
-            mutableFloatStateOf(
-                ((Settings.updateFrequency - minFreq).toFloat() / (maxFreq - minFreq))
-                    .coerceIn(0f, 1f)
-            )
-        }
-
-        PreferenceGroup {
-            PreferenceTemplate(title = {
-                Text(stringResource(strings.graph_update))
-            }) {
-                val currentFreq = (minFreq + (sliderPosition * (maxFreq - minFreq))).toInt()
-                Text("${currentFreq}ms")
-            }
-            PreferenceTemplate(title = {}) {
-                Slider(
-                    value = sliderPosition,
-                    onValueChange = { sliderPosition = it },
-                    onValueChangeFinished = {
-                        Settings.updateFrequency = (minFreq + (sliderPosition * (maxFreq - minFreq))).toInt()
-                    }
-                )
-            }
-        }
-
-        PreferenceGroup {
-            SettingsToggle(
-                label = stringResource(strings.privacy_policy),
-                description = stringResource(strings.privacy_desc),
-                isEnabled = true,
-                showSwitch = false,
-                default = false,
-                endWidget = {
-                    Icon(
-                        modifier = Modifier.padding(16.dp),
-                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                        contentDescription = null
-                    )
-                },
-                sideEffect = {
-                    val url = "https://raw.githubusercontent.com/RohitKushvaha01/TaskManager/refs/heads/main/privacy_policy.md"
-                    val intent = Intent(Intent.ACTION_VIEW).apply { data = url.toUri() }
-                    context.startActivity(intent)
-                }
-            )
-        }
+        PreferenceCategory(
+            label = "About",
+            description = "Application info",
+            startWidget = {
+                Icon(imageVector = Icons.Outlined.Info,null)
+            },
+            onNavigate = {
+                navController.navigate(SettingsRoutes.About.route)
+            },
+        )
 
     }
 }
@@ -218,3 +143,41 @@ fun SelectableCard(
         }
     )
 }
+
+
+val FeatherHeart: ImageVector
+    get() {
+        if (_FeatherHeart != null) return _FeatherHeart!!
+
+        _FeatherHeart = ImageVector.Builder(
+            name = "heart",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Transparent),
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(20.84f, 4.61f)
+                arcToRelative(5.5f, 5.5f, 0f, false, false, -7.78f, 0f)
+                lineTo(12f, 5.67f)
+                lineToRelative(-1.06f, -1.06f)
+                arcToRelative(5.5f, 5.5f, 0f, false, false, -7.78f, 7.78f)
+                lineToRelative(1.06f, 1.06f)
+                lineTo(12f, 21.23f)
+                lineToRelative(7.78f, -7.78f)
+                lineToRelative(1.06f, -1.06f)
+                arcToRelative(5.5f, 5.5f, 0f, false, false, 0f, -7.78f)
+                close()
+            }
+        }.build()
+
+        return _FeatherHeart!!
+    }
+
+private var _FeatherHeart: ImageVector? = null

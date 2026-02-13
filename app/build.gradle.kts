@@ -9,6 +9,15 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+val gitCommitHash: Provider<String> =
+    providers.exec { commandLine("git", "rev-parse", "--short=8", "HEAD") }.standardOutput.asText.map { it.trim() }
+
+val fullGitCommitHash: Provider<String> =
+    providers.exec { commandLine("git", "rev-parse", "HEAD") }.standardOutput.asText.map { it.trim() }
+
+val gitCommitDate: Provider<String> =
+    providers.exec { commandLine("git", "show", "-s", "--format=%cI", "HEAD") }.standardOutput.asText.map { it.trim() }
+
 android {
     namespace = "com.rk.taskmanager"
     compileSdk = 36
@@ -59,9 +68,20 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
+
+
+
+            buildConfigField("String", "GIT_COMMIT_HASH", "\"${fullGitCommitHash.get()}\"")
+            buildConfigField("String", "GIT_SHORT_COMMIT_HASH", "\"${gitCommitHash.get()}\"")
+            buildConfigField("String", "GIT_COMMIT_DATE", "\"${gitCommitDate.get()}\"")
         }
         debug{
             versionNameSuffix = "-DEBUG"
+
+
+            buildConfigField("String", "GIT_COMMIT_HASH", "\"${fullGitCommitHash.get()}\"")
+            buildConfigField("String", "GIT_SHORT_COMMIT_HASH", "\"${gitCommitHash.get()}\"")
+            buildConfigField("String", "GIT_COMMIT_DATE", "\"${gitCommitDate.get()}\"")
         }
     }
 
@@ -125,6 +145,8 @@ dependencies {
     implementation(project(":taskmanagerd"))
     implementation(libs.androidx.javascriptengine)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 
 
     implementation(libs.androidx.room.runtime)

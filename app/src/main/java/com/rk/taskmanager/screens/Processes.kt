@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -152,7 +153,6 @@ fun Processes(
                     "(¬_¬ )",
                     "(╯°□°）╯︵ ┻━┻",
                     "(>_<)",
-                    "Bruh, check the filter",
                     "(ಠ_ಠ)",
                     "(•_•) <(no data)",
                     "(o_O)"
@@ -160,6 +160,11 @@ fun Processes(
 
                 val message = rememberSaveable { messages.random() }
                 Text(message)
+                Button(onClick = {
+                    viewModel.refreshProcessesManual()
+                }) {
+                    Text("Refresh")
+                }
             }
 
         }

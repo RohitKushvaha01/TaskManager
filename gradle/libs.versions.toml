@@ -22,8 +22,12 @@ roomCompiler = "2.8.3"
 roomKtx = "2.8.3"
 userMessagingPlatform = "4.0.0"
 vico = "2.0.3"
+coilCompose = "2.7.0"
+coilSvg = "2.7.0"
 
 [libraries]
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coilSvg" }
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
 androidx-javascriptengine = { module = "androidx.javascriptengine:javascriptengine", version.ref = "javascriptengine" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }

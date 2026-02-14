@@ -289,9 +289,8 @@ suspend fun startDaemon(
 
 suspend fun isSuInPath(): Boolean = withContext(Dispatchers.IO) {
     return@withContext try {
-        val process = Runtime.getRuntime().exec(arrayOf("which", "su"))
-        val result = process.inputStream.bufferedReader().readLine()
-        result != null
+        val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
+        process.waitFor() == 0
     } catch (e: Exception) {
         false
     }

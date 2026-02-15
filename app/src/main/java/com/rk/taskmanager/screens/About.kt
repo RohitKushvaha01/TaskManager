@@ -50,7 +50,7 @@ fun About(modifier: Modifier = Modifier) {
         PreferenceGroup(heading = "Developer") {
             SettingsToggle(
                 label = "RohitKushvaha01",
-                description = "Vie github profile",
+                description = "View github profile",
                 default = false,
                 sideEffect = {
                     val url = "https://github.com/RohitKushvaha01"

@@ -59,6 +59,13 @@ object Settings {
     var supportDialogTimeStamp get() = Preference.getLong(key = "supportDialogTimeStamp", 0)
         set(value) = Preference.setLong(key = "supportDialogTimeStamp",value)
 
+    var pullToRefresh_procs
+        get() = Preference.getBoolean(
+            key = "pullToRefresh_procs",
+            default = true
+        )
+        set(value) = Preference.setBoolean(key = "pullToRefresh_procs",value)
+
 
 }
 

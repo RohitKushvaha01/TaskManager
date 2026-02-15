@@ -12,7 +12,6 @@ import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.taskmanager.getString
-import com.rk.taskmanager.screens.WorkingMode
 import com.rk.taskmanager.strings
 
 @Composable

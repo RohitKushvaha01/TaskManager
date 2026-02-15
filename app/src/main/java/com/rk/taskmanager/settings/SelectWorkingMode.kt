@@ -1,4 +1,4 @@
-package com.rk.taskmanager.screens
+package com.rk.taskmanager.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +28,6 @@ import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.isSuWorking
 import com.rk.startDaemon
 import com.rk.taskmanager.SettingsRoutes
-import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.shizuku.ShizukuShell
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.DelicateCoroutinesApi

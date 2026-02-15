@@ -4,12 +4,11 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.util.fastJoinToString
 import com.rk.DaemonServer.received_messages
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.getString
-import com.rk.taskmanager.screens.WorkingMode
+import com.rk.taskmanager.settings.WorkingMode
 import com.rk.taskmanager.shizuku.ShizukuShell
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.CoroutineScope
@@ -232,10 +231,6 @@ suspend fun startDaemon(
                         return@withContext DaemonResult.SHIZUKU_PERMISSION_DENIED
                     }
 
-                    val loading = LoadingPopup(ctx = context)
-                    loading.setMessage(strings.starting_daemon.getString())
-                    loading.show()
-
                     val processResult = ShizukuShell.newProcess(
                         cmd = arrayOf(daemonFile.absolutePath, "-p", port.toString(), "-D"),
                         env = arrayOf(),
@@ -250,7 +245,8 @@ suspend fun startDaemon(
                         }
                     }
 
-                    loading.hide()
+
+
                     result
 
                 }

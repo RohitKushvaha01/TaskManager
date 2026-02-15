@@ -1,4 +1,4 @@
-package com.rk.taskmanager.screens
+package com.rk.taskmanager.settings
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -6,9 +6,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Android
 import androidx.compose.material.icons.outlined.ColorLens
-import androidx.compose.material.icons.outlined.HeartBroken
+import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,8 +37,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.unit.dp
-
 
 
 @OptIn(
@@ -71,6 +70,18 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             },
             onNavigate = {
                 navController.navigate(SettingsRoutes.Graphs.route)
+            },
+        )
+
+
+        PreferenceCategory(
+            label = "Processes",
+            description = "settings for processes screen",
+            startWidget = {
+                Icon(imageVector = Icons.AutoMirrored.Outlined.FormatListBulleted,null)
+            },
+            onNavigate = {
+                navController.navigate(SettingsRoutes.Procs.route)
             },
         )
 

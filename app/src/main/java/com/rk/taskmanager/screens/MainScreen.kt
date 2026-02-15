@@ -1,6 +1,5 @@
 package com.rk.taskmanager.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +43,7 @@ import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.components.ProcessSearchBar
 import com.rk.taskmanager.settings.Settings
+import com.rk.taskmanager.settings.SupportDialog
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

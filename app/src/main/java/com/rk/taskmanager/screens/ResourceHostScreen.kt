@@ -40,7 +40,7 @@ fun ResourceHostScreen(modifier: Modifier = Modifier,viewModel: ProcessViewModel
             NavigationRailItem(selected = currentResource == 1, onClick = {
                 currentResource = 1
             }, icon = {
-                Icon(painter = painterResource(R.drawable.cpu_24px),contentDescription = null)
+                Icon(painter = painterResource(R.drawable.memory_alt_24px),contentDescription = null)
             }, label = {
                 Text("RAM")
             })

@@ -3,12 +3,17 @@ package com.rk.taskmanager.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -21,12 +26,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,14 +53,20 @@ import com.rk.components.SettingsToggle
 import com.rk.components.XedDialog
 import com.rk.components.compose.preferences.base.DividerColumn
 import com.rk.components.compose.preferences.base.PreferenceTemplate
+import com.rk.daemon_messages
+import com.rk.send_daemon_messages
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.settings.Settings
+import com.rk.taskmanager.settings.pullToRefresh_procs
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.Locale
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 
@@ -127,9 +141,8 @@ fun Processes(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        PullToRefreshBox(isRefreshing = viewModel.isLoading.value, onRefresh = {
-            viewModel.refreshProcessesManual()
-        }) {
+
+        val content = @Composable {
             val listState = rememberLazyListState()
 
             val filteredProcesses by viewModel.filteredProcesses.collectAsState()
@@ -148,25 +161,40 @@ fun Processes(
                     }
                 }
             } else {
-                val messages = listOf(
-                    "¯\\_(ツ)_/¯",
-                    "(¬_¬ )",
-                    "(╯°□°）╯︵ ┻━┻",
-                    "(>_<)",
-                    "(ಠ_ಠ)",
-                    "(•_•) <(no data)",
-                    "(o_O)"
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val messages = listOf(
+                        "¯\\_(ツ)_/¯",
+                        "(¬_¬ )",
+                        "(╯°□°）╯︵ ┻━┻",
+                        "(>_<)",
+                        "(ಠ_ಠ)",
+                        "(•_•) <(no data)",
+                        "(o_O)"
+                    )
 
-                val message = rememberSaveable { messages.random() }
-                Text(message)
-                Button(onClick = {
-                    viewModel.refreshProcessesManual()
-                }) {
-                    Text("Refresh")
+                    val message = rememberSaveable { messages.random() }
+                    Text(message)
+
+                    Spacer(modifier = Modifier.padding(vertical = 16.dp))
+
+                    Button(onClick = {
+                        viewModel.refreshProcessesManual()
+                    }) {
+                        Text("Refresh")
+                    }
                 }
-            }
 
+            }
+        }
+
+        if (pullToRefresh_procs){
+            PullToRefreshBox(isRefreshing = viewModel.isLoading.value, onRefresh = {
+                viewModel.refreshProcessesManual()
+            }) {
+                content()
+            }
+        }else{
+            content()
         }
     }
 }
@@ -207,7 +235,55 @@ fun ProcessItem(
             )
         },
         description = {
-            Text(uiProc.proc.cmdLine.removePrefix("/system/bin/").take(textLimit))
+            //Text(uiProc.proc.cmdLine.removePrefix("/system/bin/").take(textLimit))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                // RAM Section
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.memory_alt_24px),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(2.dp))
+
+                    Text(
+                        text = "${uiProc.proc.memoryUsageKb / 1024} MB",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                // CPU Section
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.cpu_24px),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(2.dp))
+
+                    Text(
+                        text = "${
+                            String.format(Locale.ENGLISH, "%.1f", uiProc.proc.cpuUsage)
+                        }%",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
         },
         applyPaddings = false,
         startWidget = {

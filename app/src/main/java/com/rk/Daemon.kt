@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.util.fastJoinToString
 import com.rk.DaemonServer.received_messages
 import com.rk.taskmanager.TaskManager
@@ -187,7 +188,7 @@ enum class DaemonResult(var message: String?) {
     OK(null),
     SHIZUKU_PERMISSION_DENIED(strings.shizuku_permission_denied.getString()),
     SHIZUKU_NOT_RUNNING(if (ShizukuShell.isShizukuInstalled()) strings.shizuku_not_running.getString() else strings.shizuku_not_installed.getString()),
-    SU_NOT_IN_PATH(strings.su_not_in_path.getString()),
+    SU_FAILED(strings.su_not_in_path.getString()),
     UNKNOWN_ERROR(null),
     DAEMON_REFUSED(strings.daemon_not_started.getString()),
     DAEMON_ALREADY_BEING_STARTED(null)
@@ -255,8 +256,10 @@ suspend fun startDaemon(
                 }
 
                 WorkingMode.ROOT.id -> {
-                    if (!isSuInPath()) {
-                        return@withContext DaemonResult.SU_NOT_IN_PATH
+                    val suCheck = isSuWorking()
+
+                    if (!suCheck.first){
+                        return@withContext DaemonResult.SU_FAILED.also { it.message = suCheck.second?.message ?: "unknown error" }
                     }
 
                     //val cmd = arrayOf("su", "-c", daemonFile.absolutePath, "-p", port.toString(), "-D")
@@ -287,15 +290,18 @@ suspend fun startDaemon(
     return result
 }
 
-suspend fun isSuInPath(): Boolean = withContext(Dispatchers.IO) {
-    return@withContext try {
-        val process = Runtime.getRuntime().exec(arrayOf("which", "su"))
-        val result = process.inputStream.bufferedReader().readLine()
-        result != null
+suspend fun isSuWorking(): Pair<Boolean, Exception?> = withContext(Dispatchers.IO) {
+    try {
+        val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id -u"))
+        val output = process.inputStream.bufferedReader().readLine()
+        process.waitFor()
+        Pair(output == "0",null)
     } catch (e: Exception) {
-        false
+        e.printStackTrace()
+        Pair(false,e)
     }
 }
+
 
 private suspend fun newProcess(
     cmd: Array<String>,

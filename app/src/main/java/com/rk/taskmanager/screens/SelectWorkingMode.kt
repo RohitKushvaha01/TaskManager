@@ -25,7 +25,7 @@ import com.rk.components.InfoBlock
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
-import com.rk.isSuInPath
+import com.rk.isSuWorking
 import com.rk.startDaemon
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.settings.Settings
@@ -51,7 +51,7 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
     var isNoob by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        isNoob = isSuInPath().not() && ShizukuShell.isShizukuInstalled().not()
+        isNoob = isSuWorking().first.not() && ShizukuShell.isShizukuInstalled().not()
     }
 
     PreferenceLayout(

@@ -5,7 +5,7 @@
     <string name="shizuku_permission_denied">Shizuku permission denied, grant permission manually</string>
     <string name="shizuku_not_running">Shizuku not running</string>
     <string name="shizuku_not_installed">Shizuku not installed</string>
-    <string name="su_not_in_path">su not available in \$PATH</string>
+    <string name="su_not_in_path">\'su\' does not exists or not working properly</string>
     <string name="daemon_not_started">Daemon failed to start</string>
     <string name="port_busy">"Unable to get a open port : got %port"</string>
     <string name="starting_daemon">Starting daemon…</string>

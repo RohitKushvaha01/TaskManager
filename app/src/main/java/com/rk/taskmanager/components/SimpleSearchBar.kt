@@ -17,13 +17,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,7 +40,9 @@ import androidx.navigation.NavController
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.screens.Filter
 import com.rk.taskmanager.screens.ProcessItem
+import com.rk.taskmanager.screens.Sort
 import com.rk.taskmanager.screens.showFilter
+import com.rk.taskmanager.screens.showSort
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -71,12 +77,39 @@ fun ProcessSearchBar(
                     onExpandedChange = { expanded = it },
                     placeholder = { Text("Search") },
                     trailingIcon = {
+                        var showMoreMenu by remember { mutableStateOf(false) }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = {
-                                showFilter.value = true
+                                //showFilter.value = true
+                                showMoreMenu = true
                             }) {
-                                Icon(imageVector = Filter, null)
+                                Icon(imageVector = Icons.Outlined.MoreVert, null)
                             }
+                        }
+
+                        DropdownMenu(expanded = showMoreMenu, onDismissRequest = {
+                            showMoreMenu = false
+                        }) {
+                            DropdownMenuItem(text = {
+                                Text("Filters")
+                            }, onClick = {
+                                showMoreMenu = false
+                                showFilter.value = true
+                            }, leadingIcon = {
+                                Icon(imageVector = Filter, null)
+                            })
+
+                            DropdownMenuItem(text = {
+                                Text("Sort")
+                            }, onClick = {
+                                showMoreMenu = false
+                                showSort.value = true
+                            }, leadingIcon = {
+                                Icon(imageVector = Sort, null)
+                            })
+
+
+
                         }
                     },
                     leadingIcon = {

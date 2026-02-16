@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
+import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.TaskManager
 
 object Settings {
@@ -17,8 +18,13 @@ object Settings {
         get() = Preference.getInt(key = "theme",0)
         set(value) { Preference.setInt(key = "theme",value) }
 
+
+
+    var sortby
+        get() = Preference.getInt(key = "sortby", ProcessViewModel.Sortby.Ram.id)
+        set(value) { Preference.setInt(key = "sortby",value) }
+
     var updateFrequency
-        //0 is the id of the theme in the themes hashmap
         get() = Preference.getInt(key = "updateFrequency",800)
         set(value) = Preference.setInt(key = "updateFrequency",value)
 

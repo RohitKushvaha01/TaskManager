@@ -49,9 +49,16 @@ class ProcessViewModel : ViewModel() {
     private val _showSystemApps = MutableStateFlow(Settings.showSystemApps)
     private val _showLinuxProcess = MutableStateFlow(Settings.showLinuxProcess)
 
+
+    enum class Sortby(val id: Int){
+        Ram(0),Cpu(1),A_z(2)
+    }
+    private val _sortBy = MutableStateFlow(Settings.sortby)
+
     val showUserApps = _showUserApps.asStateFlow()
     val showSystemApps = _showSystemApps.asStateFlow()
     val showLinuxProcess = _showLinuxProcess.asStateFlow()
+    val sortBy = _sortBy.asStateFlow()
     private val _threadCount = MutableStateFlow(0)
     val threadCount = _threadCount.asStateFlow()
 
@@ -62,21 +69,31 @@ class ProcessViewModel : ViewModel() {
         _uiProcesses,
         _showUserApps,
         _showSystemApps,
-        _showLinuxProcess
-    ) { processes, showUser, showSystem, showLinux ->
-        processes.filter { process ->
+        _showLinuxProcess,
+        _sortBy
+    ) { processes, showUser, showSystem, showLinux, sortBy ->
+
+        val filtered = processes.filter { process ->
             when {
                 process.isApp && process.isUserApp && showUser -> true
                 process.isApp && process.isSystemApp && showSystem -> true
-                process.isApp.not() && showLinux -> true
+                !process.isApp && showLinux -> true
                 else -> false
             }
+        }
+
+        when (sortBy) {
+            Sortby.Ram.id -> filtered.sortedByDescending { it.proc.memoryUsageKb }
+            Sortby.Cpu.id -> filtered.sortedByDescending { it.proc.cpuUsage }
+            Sortby.A_z.id -> filtered.sortedBy { it.name.lowercase() }
+            else -> filtered
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
 
     // Use StateFlow for search query with debouncing
     private val _searchQuery = MutableStateFlow("")
@@ -109,6 +126,11 @@ class ProcessViewModel : ViewModel() {
 
     fun setShowSystemApps(value: Boolean) {
         _showSystemApps.value = value
+    }
+
+    fun setSortBy(sortby: Sortby){
+        Settings.sortby = sortby.id
+        _sortBy.value = sortby.id
     }
 
     fun setShowLinuxProcess(value: Boolean) {

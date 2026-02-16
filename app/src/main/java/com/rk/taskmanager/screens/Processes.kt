@@ -28,17 +28,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -54,8 +55,6 @@ import com.rk.components.SettingsToggle
 import com.rk.components.XedDialog
 import com.rk.components.compose.preferences.base.DividerColumn
 import com.rk.components.compose.preferences.base.PreferenceTemplate
-import com.rk.daemon_messages
-import com.rk.send_daemon_messages
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
@@ -64,11 +63,8 @@ import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.settings.pullToRefresh_procs
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Locale
-import kotlin.math.roundToInt
-import kotlin.random.Random
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -188,10 +184,12 @@ fun Processes(
             val filteredProcesses by viewModel.filteredProcesses.collectAsState()
 
             if (filteredProcesses.isNotEmpty()) {
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     state = listState
                 ) {
+
                     items(filteredProcesses, key = { it.proc.pid }) { uiProc ->
                         ProcessItem(modifier, uiProc, navController = navController, viewModel)
                     }

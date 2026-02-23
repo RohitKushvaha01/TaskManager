@@ -426,14 +426,19 @@ fun ProcessItem(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     TextButton(onClick = {
-                        showKillDialog = null
+
+
+                        val dialog = showKillDialog
 
                         viewModel.viewModelScope.launch {
-                            showKillDialog?.killing?.value = true
-                            showKillDialog?.killed?.value = killProc(showKillDialog?.proc!!)
+                            dialog?.killing?.value = true
+                            dialog?.killed?.value = killProc(dialog?.proc!!)
                             delay(300)
-                            showKillDialog?.killing?.value = false
+                            dialog?.killing?.value = false
                         }
+
+                        showKillDialog = null
+
 
                     }) {
                         Text(

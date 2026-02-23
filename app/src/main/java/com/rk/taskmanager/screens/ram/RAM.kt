@@ -3,8 +3,10 @@ package com.rk.taskmanager.screens.ram
 import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Typeface
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -194,11 +196,18 @@ fun RAM(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
 
         Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            HorizontalDivider()
+
+            //ram info goes here
+        }
 
 
-        HorizontalDivider()
-
-        //ram info goes here
 
 
 

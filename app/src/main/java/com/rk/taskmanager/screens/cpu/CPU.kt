@@ -188,7 +188,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
 
         SettingsToggle(
             description = "CPU - ${
-                if (cpuUsage <= 0) {
+                if (cpuUsage < 0) {
                     "No Data"
                 } else {
                     "$cpuUsage%"

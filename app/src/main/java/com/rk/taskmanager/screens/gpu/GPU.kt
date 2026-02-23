@@ -52,6 +52,8 @@ import com.rk.taskmanager.screens.cpu.StartAxisValueFormatter
 import com.rk.taskmanager.screens.cpu.xValues
 import com.rk.taskmanager.screens.selectedscreen
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 private val gpuYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GRAPH_POINTS) { add(0) } }
@@ -59,21 +61,25 @@ private val gpuYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GR
 private val GpuModelProducer = CartesianChartModelProducer()
 
 private var gpuUsage by mutableIntStateOf(-1)
+private val mutex = Mutex()
 
 suspend fun updateGpuGraph(usage: Int) {
-    withContext(Dispatchers.Main){
-        gpuUsage = usage
-    }
-    gpuYValues.removeFirst()
-    gpuYValues.addLast(gpuUsage)
+    mutex.withLock {
+        withContext(Dispatchers.Main){
+            gpuUsage = usage
+        }
+        gpuYValues.removeFirst()
+        gpuYValues.addLast(gpuUsage)
 
-    if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
-        GpuModelProducer.runTransaction {
-            lineSeries {
-                series(x = xValues, y = gpuYValues)
+        if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+            GpuModelProducer.runTransaction {
+                lineSeries {
+                    series(x = xValues, y = gpuYValues)
+                }
             }
         }
     }
+
 }
 
 
@@ -85,9 +91,11 @@ fun GPU(modifier: Modifier = Modifier,viewModel: GpuViewModel) {
     val gpuInfo by viewModel.gpuInfo.collectAsState()
 
     LaunchedEffect(Unit) {
-        GpuModelProducer.runTransaction {
-            lineSeries {
-                series(x = xValues, y = gpuYValues)
+        mutex.withLock {
+            GpuModelProducer.runTransaction {
+                lineSeries {
+                    series(x = xValues, y = gpuYValues)
+                }
             }
         }
     }

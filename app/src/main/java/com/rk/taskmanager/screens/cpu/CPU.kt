@@ -65,6 +65,8 @@ import com.rk.daemon_messages
 import com.rk.send_daemon_messages
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 //global stuff
@@ -84,21 +86,25 @@ private val cpuYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GR
 private val CpuModelProducer = CartesianChartModelProducer()
 
 private var cpuUsage by mutableIntStateOf(0)
+private val mutex = Mutex()
 
 suspend fun updateCpuGraph(usage: Int) {
-    withContext(Dispatchers.Main){
-        cpuUsage = usage
-    }
-    cpuYValues.removeFirst()
-    cpuYValues.addLast(cpuUsage)
+    mutex.withLock {
+        withContext(Dispatchers.Main){
+            cpuUsage = usage
+        }
+        cpuYValues.removeFirst()
+        cpuYValues.addLast(cpuUsage)
 
-    if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
-        CpuModelProducer.runTransaction {
-            lineSeries {
-                series(x = xValues, y = cpuYValues)
+        if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+            CpuModelProducer.runTransaction {
+                lineSeries {
+                    series(x = xValues, y = cpuYValues)
+                }
             }
         }
     }
+
 }
 
 @Composable
@@ -106,9 +112,11 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
     val lineColor = MaterialTheme.colorScheme.primary
 
     LaunchedEffect(Unit) {
-        CpuModelProducer.runTransaction {
-            lineSeries {
-                series(x = xValues, y = cpuYValues)
+        mutex.withLock {
+            CpuModelProducer.runTransaction {
+                lineSeries {
+                    series(x = xValues, y = cpuYValues)
+                }
             }
         }
     }

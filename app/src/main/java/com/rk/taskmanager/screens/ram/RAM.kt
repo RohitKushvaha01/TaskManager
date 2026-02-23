@@ -47,6 +47,8 @@ import com.rk.taskmanager.screens.cpu.StartAxisValueFormatter
 import com.rk.taskmanager.screens.cpu.xValues
 import com.rk.taskmanager.screens.selectedscreen
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
@@ -85,47 +87,53 @@ fun formatRamMB(bytes: Long): String = "${bytes / (1024 * 1024)} MB"
 fun formatRamGB(bytes: Long): String =
     String.format(Locale.ENGLISH, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
 
-
+private val mutex = Mutex()
 suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalBytes: Long) {
-    val ramUsage = getSystemRamUsage(TaskManager.requireContext())
+    mutex.withLock {
+        val ramUsage = getSystemRamUsage(TaskManager.requireContext())
 
-    // Update values
-    RamUsage = ramUsage
-    usedRam = totalRam - (totalRam * (100 - ramUsage) / 100)
-    usedSwap = usageBytes
-    totalSwap = totalBytes
-    SwapUsage = usagePercent
+        // Update values
+        RamUsage = ramUsage
+        usedRam = totalRam - (totalRam * (100 - ramUsage) / 100)
+        usedSwap = usageBytes
+        totalSwap = totalBytes
+        SwapUsage = usagePercent
 
-    // Push new values into history
+        // Push new values into history
 
-    ramYValues.removeFirst()
-    ramYValues.addLast(ramUsage)
+        ramYValues.removeFirst()
+        ramYValues.addLast(ramUsage)
 
-    swapYValues.removeFirst()
-    swapYValues.addLast(usagePercent)
+        swapYValues.removeFirst()
+        swapYValues.addLast(usagePercent)
 
 
-    // Update chart model with both lines
-    if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
-        RamModelProducer.runTransaction {
-            lineSeries {
-                series(x = xValues, y = ramYValues) // RAM line
-                series(x = xValues, y = swapYValues) // SWAP line
+        // Update chart model with both lines
+        if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+            RamModelProducer.runTransaction {
+                lineSeries {
+                    series(x = xValues, y = ramYValues) // RAM line
+                    series(x = xValues, y = swapYValues) // SWAP line
+                }
             }
         }
     }
+
 }
 
 
 @Composable
 fun RAM(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
     LaunchedEffect(Unit) {
-        RamModelProducer.runTransaction {
-            lineSeries {
-                series(x = xValues, y = ramYValues) // RAM line
-                series(x = xValues, y = swapYValues) // SWAP line
+        mutex.withLock {
+            RamModelProducer.runTransaction {
+                lineSeries {
+                    series(x = xValues, y = ramYValues) // RAM line
+                    series(x = xValues, y = swapYValues) // SWAP line
+                }
             }
         }
+
     }
     Column {
         val ramColor = MaterialTheme.colorScheme.primary

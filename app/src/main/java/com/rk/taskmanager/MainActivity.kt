@@ -1,6 +1,8 @@
 package com.rk.taskmanager
 
+import android.opengl.GLES20
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -30,7 +32,9 @@ import com.rk.taskmanager.settings.Themes
 import com.rk.taskmanager.screens.procByPid
 import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.screens.cpu.updateCpuGraph
-import com.rk.taskmanager.screens.updateRamAndSwapGraph
+import com.rk.taskmanager.screens.gpu.GpuViewModel
+import com.rk.taskmanager.screens.gpu.updateGpuGraph
+import com.rk.taskmanager.screens.ram.updateRamAndSwapGraph
 import com.rk.taskmanager.settings.DaemonSettings
 import com.rk.taskmanager.settings.GraphSettings
 import com.rk.taskmanager.settings.ProcSettings
@@ -39,6 +43,7 @@ import com.rk.taskmanager.ui.theme.TaskManagerTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -49,6 +54,7 @@ import java.lang.ref.WeakReference
 class MainActivity : ComponentActivity() {
 
     val viewModel: ProcessViewModel by viewModels()
+    val gpuViewModel: GpuViewModel by viewModels()
 
     companion object {
 
@@ -82,6 +88,11 @@ class MainActivity : ComponentActivity() {
                         delay(32)
                     }
 
+                    if (message.startsWith("GPU:")){
+                        updateGpuGraph(message.removePrefix("GPU:").toInt())
+                        delay(32)
+                    }
+
                     if (message.startsWith("SWAP:")) {
                         val parts = message.removePrefix("SWAP:").split(":")
                         if (parts.size == 2) {
@@ -102,16 +113,36 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
+
         lifecycleScope.launch(Dispatchers.IO) {
+
+            var hasSupportedGPU = run {
+                val renderer = gpuViewModel.gpuInfo.value?.renderer
+                renderer?.contains("mali", true) == true ||
+                        renderer?.contains("adreno", true) == true
+            }
+
             while (isActive) {
                 graphMutex.withLock {
                     if (isConnected) {
                         send_daemon_messages.emit("CPU_PING")
                         delay(16)
                         send_daemon_messages.emit("SWAP_PING")
+
+                        if (hasSupportedGPU){
+                            delay(15)
+                            send_daemon_messages.emit("GPU_PING")
+                        }else{
+                            hasSupportedGPU = run {
+                                val renderer = gpuViewModel.gpuInfo.value?.renderer
+                                renderer?.contains("mali", true) == true ||
+                                        renderer?.contains("adreno", true) == true
+                            }
+                        }
                     }
                 }
-                val delayMs = if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+                val delayMs = if (selectedscreen.intValue == 0 && instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
                     Settings.updateFrequency.toLong()
                 } else {
                     Settings.updateFrequency.toLong() * 2
@@ -138,7 +169,7 @@ class MainActivity : ComponentActivity() {
                         popExitTransition = { NavigationAnimationTransitions.popExitTransition },
                     ) {
                         composable(SettingsRoutes.Home.route) {
-                            MainScreen(navController = navController, viewModel = viewModel)
+                            MainScreen(navController = navController, viewModel = viewModel, gpuViewModel = gpuViewModel)
                         }
 
                         composable(SettingsRoutes.SelectWorkingMode.route) {

@@ -1,4 +1,4 @@
-package com.rk.taskmanager.screens
+package com.rk.taskmanager.screens.ram
 
 import android.app.ActivityManager
 import android.content.Context
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -42,6 +43,7 @@ import com.rk.taskmanager.screens.cpu.MarkerValueFormatter
 import com.rk.taskmanager.screens.cpu.RangeProvider
 import com.rk.taskmanager.screens.cpu.StartAxisValueFormatter
 import com.rk.taskmanager.screens.cpu.xValues
+import com.rk.taskmanager.screens.selectedscreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -56,8 +58,6 @@ var RamUsage by mutableIntStateOf(0)
 var usedRam by mutableLongStateOf(0L)
 var totalRam by mutableLongStateOf(0L)
 
-val SwapModelProducer = CartesianChartModelProducer()
-//val swapYValues = mutableStateListOf<Number>().apply { repeat(MAX_POINTS) { add(0) } }
 var SwapUsage by mutableIntStateOf(0)
 
 var usedSwap by mutableLongStateOf(0L)
@@ -117,6 +117,14 @@ suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalByte
 
 @Composable
 fun RAM(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
+    LaunchedEffect(Unit) {
+        RamModelProducer.runTransaction {
+            lineSeries {
+                series(x = xValues, y = ramYValues) // RAM line
+                series(x = xValues, y = swapYValues) // SWAP line
+            }
+        }
+    }
     Column {
         val ramColor = MaterialTheme.colorScheme.primary
         val swapColor = MaterialTheme.colorScheme.tertiary

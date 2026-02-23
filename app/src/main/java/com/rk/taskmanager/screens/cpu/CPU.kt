@@ -73,12 +73,14 @@ val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default(YDecima
 
 val xValues = List(MAX_GRAPH_POINTS) { it.toDouble() }
 
-//CPU
-val cpuYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GRAPH_POINTS) { add(0) } }
 
-val CpuModelProducer = CartesianChartModelProducer()
-private val cpuUsageAtomic = java.util.concurrent.atomic.AtomicInteger(0)
-var cpuUsage by mutableIntStateOf(0)
+
+//CPU
+private val cpuYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GRAPH_POINTS) { add(0) } }
+
+private val CpuModelProducer = CartesianChartModelProducer()
+
+private var cpuUsage by mutableIntStateOf(0)
 
 suspend fun updateCpuGraph(usage: Int) {
     withContext(Dispatchers.Main){
@@ -100,6 +102,14 @@ suspend fun updateCpuGraph(usage: Int) {
 fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
     val lineColor = MaterialTheme.colorScheme.primary
 
+    LaunchedEffect(Unit) {
+        CpuModelProducer.runTransaction {
+            lineSeries {
+                series(x = xValues, y = cpuYValues)
+            }
+        }
+    }
+
     // Real-time data that updates periodically
     var temperature by remember { mutableStateOf<String?>(null) }
     var uptime by remember { mutableStateOf("") }
@@ -115,6 +125,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
             delay(2000)
         }
     }
+
 
     Column(modifier.verticalScroll(rememberScrollState())) {
 
@@ -382,17 +393,13 @@ fun InfoItem(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             letterSpacing = 0.5.sp
         )
         Text(
             text = value,
-            style = if (highlighted) {
-                MaterialTheme.typography.titleMedium
-            } else {
-                MaterialTheme.typography.bodyLarge
-            },
+            style = MaterialTheme.typography.bodySmall,
             fontWeight = if (highlighted) FontWeight.SemiBold else FontWeight.Medium,
             color = if (highlighted) {
                 MaterialTheme.colorScheme.primary

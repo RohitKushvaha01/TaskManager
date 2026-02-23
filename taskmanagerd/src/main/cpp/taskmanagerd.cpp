@@ -45,7 +45,7 @@ std::vector<int> listPids() {
                 }
             }
         } catch (...) {
-        
+
         }
     }
     return pids;
@@ -126,7 +126,7 @@ CpuStat readCpuStat() {
 
 int calculateCpuUsage() {
     CpuStat prev = readCpuStat();
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     CpuStat curr = readCpuStat();
 
     uint64_t totalDiff = curr.total() - prev.total();
@@ -138,6 +138,30 @@ int calculateCpuUsage() {
     if (usage < 0) usage = 0;
     if (usage > 100) usage = 100;
     return (int)usage;
+}
+
+int readInt(const char* path) {
+    std::ifstream file(path);
+    int value = -1;
+    if (file.is_open()) {
+        file >> value;
+        file.close();
+    }
+    return value;
+}
+
+int calculateGpuUsage() {
+    // Try Adreno
+    int usage = readInt("/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage");
+    if (usage > 0)
+        return usage;
+
+    // Try Mali
+    usage = readInt("/sys/class/misc/mali0/device/utilization");
+    if (usage > 0)
+        return usage;
+
+    return -1;
 }
 
 bool killProcess(int pid) {
@@ -533,6 +557,11 @@ void processCommand(int sock, const std::string &received) {
         std::string cpuUsage = getSwapUsageBytes();
         log_line(cpuUsage);
         send_msg(sock, cpuUsage);
+    }if (cmd == "GPU_PING"){
+        int usage = calculateGpuUsage();
+        std::string gpuUsage = "GPU:" + std::to_string(usage);
+        log_line(gpuUsage);
+        send_msg(sock, gpuUsage);
     }  else if (cmd == "PING_PID_CPU") {
         int arg = -1;
         if (colonPos != std::string::npos) {

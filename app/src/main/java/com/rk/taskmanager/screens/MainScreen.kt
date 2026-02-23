@@ -41,6 +41,7 @@ import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.components.ProcessSearchBar
+import com.rk.taskmanager.screens.gpu.GpuViewModel
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.settings.SupportDialog
 import com.rk.taskmanager.strings
@@ -54,7 +55,7 @@ var showSort = mutableStateOf(false)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, navController: NavController, viewModel: ProcessViewModel) {
+fun MainScreen(modifier: Modifier = Modifier, navController: NavController, viewModel: ProcessViewModel,gpuViewModel: GpuViewModel) {
     if (isConnected) {
         Scaffold(
             modifier = modifier.fillMaxSize(),
@@ -141,7 +142,7 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
 
                 when (selectedscreen.intValue) {
                     0 -> {
-                        ResourceHostScreen(viewModel = viewModel,modifier = Modifier.fillMaxSize())
+                        ResourceHostScreen(viewModel = viewModel,modifier = Modifier.fillMaxSize(), gpuViewModel = gpuViewModel)
                     }
 
                     1 -> {

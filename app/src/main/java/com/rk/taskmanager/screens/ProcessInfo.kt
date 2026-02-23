@@ -79,8 +79,16 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
+import androidx.lifecycle.viewModelScope
+import com.rk.components.XedDialog
 import kotlinx.coroutines.flow.toList
 import java.lang.ref.WeakReference
 import java.util.WeakHashMap
@@ -229,6 +237,7 @@ fun ProcessInfo(
     viewModel: ProcessViewModel,
     proc: ProcessUiModel
 ) {
+    var showKillDialog by remember { mutableStateOf<ProcessUiModel?>(null) }
 
     val username = remember { mutableStateOf("Unknown") }
     val scope = rememberCoroutineScope()
@@ -265,12 +274,13 @@ fun ProcessInfo(
                                 indication = ripple(),
                                 interactionSource = interactionSource,
                                 onClick = {
-                                    scope.launch {
-                                        proc!!.killing.value = true
-                                        proc!!.killed.value = killProc(proc!!.proc)
-                                        delay(300)
-                                        proc!!.killing.value = false
-                                    }
+//                                    scope.launch {
+//                                        proc!!.killing.value = true
+//                                        proc!!.killed.value = killProc(proc!!.proc)
+//                                        delay(300)
+//                                        proc!!.killing.value = false
+//                                    }
+                                    showKillDialog = proc
                                 }
                             ),
                         contentModifier = Modifier
@@ -574,6 +584,59 @@ fun ProcessInfo(
             }
         }
 
+    }
+
+    if (showKillDialog != null) {
+        XedDialog(
+            onDismissRequest = { showKillDialog = null }
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+
+                Text(
+                    text = "Terminate?",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+                Text(
+                    text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
+                )
+
+                Spacer(modifier = Modifier.padding(vertical = 16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    TextButton(onClick = {
+                        showKillDialog = null
+                    }) {
+                        Text("Cancel")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    TextButton(onClick = {
+                        showKillDialog = null
+
+                        viewModel.viewModelScope.launch {
+                            showKillDialog?.killing?.value = true
+                            showKillDialog?.killed?.value = killProc(showKillDialog?.proc!!)
+                            delay(300)
+                            showKillDialog?.killing?.value = false
+                        }
+
+                    }) {
+                        Text(
+                            text = "Kill",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

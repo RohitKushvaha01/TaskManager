@@ -30,12 +30,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -246,6 +248,7 @@ fun ProcessItem(
     navController: NavController,
     viewModel: ProcessViewModel
 ) {
+    var showKillDialog by remember { mutableStateOf<ProcessUiModel?>(null) }
 
     PreferenceTemplate(
         modifier = modifier
@@ -366,12 +369,15 @@ fun ProcessItem(
                         modifier = Modifier.padding(end = 7.dp),
                         enabled = !uiProc.killed.value,
                         onClick = {
-                            viewModel.viewModelScope.launch {
-                                uiProc.killing.value = true
-                                uiProc.killed.value = killProc(uiProc.proc)
-                                delay(300)
-                                uiProc.killing.value = false
-                            }
+//                            viewModel.viewModelScope.launch {
+//                                uiProc.killing.value = true
+//                                uiProc.killed.value = killProc(uiProc.proc)
+//                                delay(300)
+//                                uiProc.killing.value = false
+//                            }
+
+
+                            showKillDialog = uiProc
                         }) {
                         if (uiProc.killed.value) {
                             Icon(imageVector = Icons.Outlined.Check, null)
@@ -386,5 +392,58 @@ fun ProcessItem(
         }
 
     )
+
+    if (showKillDialog != null) {
+        XedDialog(
+            onDismissRequest = { showKillDialog = null }
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+
+                Text(
+                    text = "Terminate?",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+                Text(
+                    text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
+                )
+
+                Spacer(modifier = Modifier.padding(vertical = 16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    TextButton(onClick = {
+                        showKillDialog = null
+                    }) {
+                        Text("Cancel")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    TextButton(onClick = {
+                        showKillDialog = null
+
+                        viewModel.viewModelScope.launch {
+                            showKillDialog?.killing?.value = true
+                            showKillDialog?.killed?.value = killProc(showKillDialog?.proc!!)
+                            delay(300)
+                            showKillDialog?.killing?.value = false
+                        }
+
+                    }) {
+                        Text(
+                            text = "Kill",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        }
+    }
 
 }

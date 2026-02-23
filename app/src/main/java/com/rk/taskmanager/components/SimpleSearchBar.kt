@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,6 +14,7 @@ import androidx.compose.animation.with
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,7 +56,10 @@ fun ProcessSearchBar(
     navController: NavController,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-
+    val animatedPadding by animateDpAsState(
+        targetValue = if (expanded) 0.dp else 8.dp,
+        label = "searchBarPadding"
+    )
     Box(
         modifier.fillMaxWidth().semantics { isTraversalGroup = true }
     ) {
@@ -64,7 +69,7 @@ fun ProcessSearchBar(
         val searchResults by viewModel.searchResults.collectAsState()
 
         SearchBar(
-            modifier = Modifier
+            modifier = Modifier.padding(animatedPadding)
                 .align(Alignment.TopCenter)
                 .semantics { traversalIndex = 0f },
             inputField = {

@@ -61,7 +61,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.text.DecimalFormat
 import androidx.compose.runtime.collectAsState
+import com.rk.daemon_messages
+import com.rk.send_daemon_messages
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 //global stuff
@@ -111,18 +114,31 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
     }
 
     // Real-time data that updates periodically
-    var temperature by remember { mutableStateOf<String?>(null) }
+    var temperature by remember { mutableStateOf<String>("N/A") }
     var uptime by remember { mutableStateOf("") }
 
-    // Static CPU info
-    val cpuInfo = remember { CpuInfoReader.read() }
+    var cpuInfo by remember { mutableStateOf<CpuInfoReader.CpuInfo?>(null) }
 
     // Update real-time data every 2 seconds
     LaunchedEffect(Unit) {
         while (isActive) {
-            temperature = CpuInfoReader.getCpuTemperatureCelsius()
+            send_daemon_messages.emit("CTEMP_PING")
             uptime = CpuInfoReader.getUptimeFormatted()
+            cpuInfo = CpuInfoReader.read()
             delay(2000)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        launch(Dispatchers.IO) {
+            daemon_messages.collect { message ->
+                if (message.startsWith("CTEMP:")){
+                    val temp = message.removePrefix("CTEMP:").toInt()
+                     if (temp > 0){
+                         temperature = temp.toString()
+                     }
+                }
+            }
         }
     }
 
@@ -200,19 +216,20 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
 
                     InfoItem(
                         label = "SoC",
-                        value = cpuInfo.soc,
+                        value = cpuInfo?.soc ?: "N/A",
                         highlighted = true
                     )
 
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Architecture", cpuInfo.arch)
+                            InfoItem("Architecture", cpuInfo?.arch ?: "N/A")
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("ABI", cpuInfo.abi)
+                            InfoItem("ABI", cpuInfo?.abi ?: "N/A")
                         }
                     }
 
@@ -221,10 +238,10 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Cores", cpuInfo.cores.toString())
+                            InfoItem("Cores", cpuInfo?.cores.toString())
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Governor", cpuInfo.governor ?: "N/A")
+                            InfoItem("Governor", cpuInfo?.governor ?: "N/A")
                         }
                     }
 
@@ -233,7 +250,11 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Temperature", "$temperature°C")
+                            InfoItem("Temperature", if (temperature.toIntOrNull() != null){
+                                "$temperature°C (estimated)"
+                            }else{
+                                temperature
+                            })
                         }
                     }
                 }
@@ -274,9 +295,9 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
             HorizontalDivider()
 
             // Clusters Section
-            if (cpuInfo.clusters.isNotEmpty()) {
+            if (cpuInfo?.clusters?.isNotEmpty() == true) {
 
-                cpuInfo.clusters.forEach { cluster ->
+                cpuInfo?.clusters?.forEach { cluster ->
                     ClusterCard(cluster)
                 }
             }

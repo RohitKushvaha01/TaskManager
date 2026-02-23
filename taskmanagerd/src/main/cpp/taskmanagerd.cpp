@@ -6,28 +6,108 @@
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
-#include <iostream>
-#include <memory>
+#include <limits.h>
 #include <pwd.h>
-#include <string>
+#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
+
+#include <algorithm>
 #include <chrono>
-#include <thread>
-#include "json.hpp"
+#include <cctype>
 #include <filesystem>
-#include <vector>
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <memory>
 #include <regex>
-#include <sys/epoll.h>
-#include <limits.h>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include <dirent.h>
+
+#include "json.hpp"
 
 namespace fs = std::filesystem;
+
+static std::string toLower(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+    return s;
+}
+
+static bool isCpuThermalType(const std::string& type) {
+    std::string t = toLower(type);
+
+    // Match common CPU-related thermal types
+    return (t.find("cpu") != std::string::npos) ||
+           (t.find("soc") != std::string::npos) ||
+           (t.find("ap")  != std::string::npos) ||
+           (t.find("cluster") != std::string::npos);
+}
+
+int getCpuTemperatureCelsius() {
+    const std::string basePath = "/sys/class/thermal/";
+    DIR* dir = opendir(basePath.c_str());
+    if (!dir)
+        return -1;
+
+    struct dirent* entry;
+    int maxTemp = -1;
+
+    while ((entry = readdir(dir)) != nullptr) {
+        std::string name = entry->d_name;
+
+        if (name.find("thermal_zone") == std::string::npos)
+            continue;
+
+        std::string zonePath = basePath + name;
+
+        // Read thermal type
+        std::ifstream typeFile(zonePath + "/type");
+        if (!typeFile.is_open())
+            continue;
+
+        std::string type;
+        std::getline(typeFile, type);
+        typeFile.close();
+
+        if (!isCpuThermalType(type))
+            continue;
+
+        // Read temperature
+        std::ifstream tempFile(zonePath + "/temp");
+        if (!tempFile.is_open())
+            continue;
+
+        long raw = 0;
+        tempFile >> raw;
+        tempFile.close();
+
+        if (raw <= 0)
+            continue;
+
+        int tempC;
+
+        // Handle millidegree format (most Android devices)
+        if (raw > 1000)
+            tempC = static_cast<int>(raw / 1000);
+        else
+            tempC = static_cast<int>(raw);
+
+        // Filter realistic range
+        if (tempC >= 5 && tempC <= 100) {
+            maxTemp = std::max(maxTemp, tempC);
+        }
+    }
+
+    closedir(dir);
+    return maxTemp; // -1 if not found
+}
 
 static std::regex pid_regex("\\d+");
 
@@ -560,6 +640,11 @@ void processCommand(int sock, const std::string &received) {
     }if (cmd == "GPU_PING"){
         int usage = calculateGpuUsage();
         std::string gpuUsage = "GPU:" + std::to_string(usage);
+        log_line(gpuUsage);
+        send_msg(sock, gpuUsage);
+    }else if (cmd == "CTEMP_PING"){
+        int usage = getCpuTemperatureCelsius();
+        std::string gpuUsage = "CTEMP:" + std::to_string(usage);
         log_line(gpuUsage);
         send_msg(sock, gpuUsage);
     }  else if (cmd == "PING_PID_CPU") {

@@ -48,6 +48,8 @@ object CpuInfoReader {
             )
         }
 
+
+
         return CpuInfo(
             soc = Build.HARDWARE ?: "Unknown",
             abi = Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown",
@@ -57,49 +59,6 @@ object CpuInfoReader {
             governor = readFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
         )
     }
-
-    fun getCpuTemperatureCelsius(): String {
-        val sensorPaths = arrayOf(
-            "/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
-            "/sys/devices/system/cpu/cpu0/cpufreq/FakeShmoo_cpu_temp",
-            "/sys/class/thermal/thermal_zone0/temp",
-            "/sys/class/thermal/thermal_zone1/temp",
-            "/sys/devices/virtual/thermal/thermal_zone0/temp",
-            "/sys/devices/virtual/thermal/thermal_zone1/temp",
-            "/sys/class/hwmon/hwmon0/device/temp1_input",
-            "/sys/devices/platform/omap/omap_temp_sensor.0/temperature",
-            "/sys/devices/platform/s5p-tmu/temperature",
-            "/sys/devices/platform/s5p-tmu/curr_temp"
-        )
-
-        var maxTemp: Int? = null
-
-        for (path in sensorPaths) {
-            try {
-                val file = File(path)
-                if (!file.exists()) continue
-
-                val raw = file.readText().trim().toInt()
-
-                // Convert millidegrees to degrees if needed
-                val tempC = when {
-                    raw > 100_000 -> raw / 1000       // safety for weird sensors
-                    raw > 1_000   -> raw / 1000
-                    else          -> raw
-                }
-
-                // Filter out obviously broken values
-                if (tempC in 5..130) {
-                    maxTemp = if (maxTemp == null) tempC else maxOf(maxTemp!!, tempC)
-                }
-            } catch (_: Exception) {
-                // Ignore and continue
-            }
-        }
-
-        return maxTemp?.toString() ?: "N/A"
-    }
-
 
     fun getUptimeFormatted(): String {
         // SystemClock.elapsedRealtime() returns milliseconds since boot

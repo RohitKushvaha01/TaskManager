@@ -11,18 +11,23 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.SystemClock
+import android.provider.Settings
 import android.system.Os
 import android.system.OsConstants
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -34,28 +39,41 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ripple
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
+import androidx.core.net.toUri
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.rk.components.SettingsToggle
 import com.rk.components.TextCard
+import com.rk.components.XedDialog
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.daemon_messages
 import com.rk.send_daemon_messages
-import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.SettingsRoutes
@@ -73,25 +91,11 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.ref.WeakReference
 import java.text.DateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
-import android.net.Uri
-import android.provider.Settings
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
-import androidx.lifecycle.viewModelScope
-import com.rk.components.XedDialog
-import kotlinx.coroutines.flow.toList
-import java.lang.ref.WeakReference
-import java.util.WeakHashMap
 
 fun elapsedFromStartTime(startTimeTicks: Long): String {
     val processStartMillis = startTimeToMillis(startTimeTicks)
@@ -110,15 +114,6 @@ fun startTimeToMillis(startTimeTicks: Long): Long {
     val bootTimeMillis = System.currentTimeMillis() - SystemClock.elapsedRealtime()
     val processStartMillis = bootTimeMillis + (startTimeTicks * 1000 / ticksPerSecond)
     return processStartMillis
-}
-
-fun elapsedTimeToString(elapsedTicks: Long): String {
-    val ticksPerSecond = sysconf()
-    val seconds = elapsedTicks / ticksPerSecond
-    val h = TimeUnit.SECONDS.toHours(seconds)
-    val m = TimeUnit.SECONDS.toMinutes(seconds) % 60
-    val s = seconds % 60
-    return String.format(java.util.Locale.ENGLISH, "%02d:%02d:%02d", h, m, s)
 }
 
 fun sysconf(): Long {
@@ -587,58 +582,78 @@ fun ProcessInfo(
     }
 
     if (showKillDialog != null) {
-        XedDialog(
-            onDismissRequest = { showKillDialog = null }
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+        if (com.rk.taskmanager.settings.Settings.confirmkill){
+            XedDialog(
+                onDismissRequest = { showKillDialog = null }
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
 
-                Text(
-                    text = "Terminate?",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                    Text(
+                        text = "Terminate?",
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-                Text(
-                    text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
-                )
+                    Text(
+                        text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
+                    )
 
-                Spacer(modifier = Modifier.padding(vertical = 16.dp))
+                    Spacer(modifier = Modifier.padding(vertical = 16.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
 
-                    TextButton(onClick = {
-                        showKillDialog = null
-                    }) {
-                        Text("Cancel")
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    TextButton(onClick = {
-                        val dialog = showKillDialog
-
-                        viewModel.viewModelScope.launch {
-                            dialog?.killing?.value = true
-                            dialog?.killed?.value = killProc(dialog?.proc!!)
-                            delay(300)
-                            dialog?.killing?.value = false
+                        TextButton(onClick = {
+                            showKillDialog = null
+                        }) {
+                            Text("Cancel")
                         }
 
-                        showKillDialog = null
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                    }) {
-                        Text(
-                            text = "Kill",
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        TextButton(onClick = {
+
+
+                            val dialog = showKillDialog
+
+                            viewModel.viewModelScope.launch {
+                                dialog?.killing?.value = true
+                                dialog?.killed?.value = killProc(dialog?.proc!!)
+                                delay(300)
+                                dialog?.killing?.value = false
+                            }
+
+                            showKillDialog = null
+
+
+                        }) {
+                            Text(
+                                text = "Kill",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
         }
+
+        LaunchedEffect(showKillDialog) {
+            if (showKillDialog != null && com.rk.taskmanager.settings.Settings.confirmkill.not()){
+                val dialog = showKillDialog
+                viewModel.viewModelScope.launch {
+                    dialog?.killing?.value = true
+                    dialog?.killed?.value = killProc(dialog?.proc!!)
+                    delay(300)
+                    dialog?.killing?.value = false
+                }
+
+                showKillDialog = null
+            }
+        }
+
     }
 }
 

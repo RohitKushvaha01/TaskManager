@@ -17,6 +17,9 @@ fun ProcSettings(modifier: Modifier = Modifier) {
                 Settings.pullToRefresh_procs = it
                 pullToRefresh_procs = it
             })
+            SettingsToggle(label = "Confirm stop", description = "Confirm before killing a process", default = Settings.confirmkill, showSwitch = true, sideEffect = {
+                Settings.confirmkill = it
+            })
         }
     }
 }

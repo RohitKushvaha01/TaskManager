@@ -73,6 +73,14 @@ object Settings {
         set(value) = Preference.setBoolean(key = "pullToRefresh_procs",value)
 
 
+    var confirmkill
+        get() = Preference.getBoolean(
+            key = "confirmkill",
+            default = true
+        )
+        set(value) = Preference.setBoolean(key = "confirmkill",value)
+
+
 }
 
 object Preference {

@@ -34,6 +34,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -394,61 +395,78 @@ fun ProcessItem(
     )
 
     if (showKillDialog != null) {
-        XedDialog(
-            onDismissRequest = { showKillDialog = null }
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+        if (Settings.confirmkill){
+            XedDialog(
+                onDismissRequest = { showKillDialog = null }
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
 
-                Text(
-                    text = "Terminate?",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                    Text(
+                        text = "Terminate?",
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-                Text(
-                    text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
-                )
+                    Text(
+                        text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
+                    )
 
-                Spacer(modifier = Modifier.padding(vertical = 16.dp))
+                    Spacer(modifier = Modifier.padding(vertical = 16.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
 
-                    TextButton(onClick = {
-                        showKillDialog = null
-                    }) {
-                        Text("Cancel")
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    TextButton(onClick = {
-
-
-                        val dialog = showKillDialog
-
-                        viewModel.viewModelScope.launch {
-                            dialog?.killing?.value = true
-                            dialog?.killed?.value = killProc(dialog?.proc!!)
-                            delay(300)
-                            dialog?.killing?.value = false
+                        TextButton(onClick = {
+                            showKillDialog = null
+                        }) {
+                            Text("Cancel")
                         }
 
-                        showKillDialog = null
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        TextButton(onClick = {
 
 
-                    }) {
-                        Text(
-                            text = "Kill",
-                            color = MaterialTheme.colorScheme.error
-                        )
+                            val dialog = showKillDialog
+
+                            viewModel.viewModelScope.launch {
+                                dialog?.killing?.value = true
+                                dialog?.killed?.value = killProc(dialog?.proc!!)
+                                delay(300)
+                                dialog?.killing?.value = false
+                            }
+
+                            showKillDialog = null
+
+
+                        }) {
+                            Text(
+                                text = "Kill",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
         }
+
+        LaunchedEffect(showKillDialog) {
+            if (showKillDialog != null && Settings.confirmkill.not()){
+                val dialog = showKillDialog
+                viewModel.viewModelScope.launch {
+                    dialog?.killing?.value = true
+                    dialog?.killed?.value = killProc(dialog?.proc!!)
+                    delay(300)
+                    dialog?.killing?.value = false
+                }
+
+                showKillDialog = null
+            }
+        }
+
     }
 
 }

@@ -451,10 +451,8 @@ fun ProcessItem(
                     }
                 }
             }
-        }
-
-        LaunchedEffect(showKillDialog) {
-            if (showKillDialog != null && Settings.confirmkill.not()){
+        }else{
+            LaunchedEffect(Unit) {
                 val dialog = showKillDialog
                 viewModel.viewModelScope.launch {
                     dialog?.killing?.value = true

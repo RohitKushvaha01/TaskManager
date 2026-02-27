@@ -638,10 +638,8 @@ fun ProcessInfo(
                     }
                 }
             }
-        }
-
-        LaunchedEffect(showKillDialog) {
-            if (showKillDialog != null && com.rk.taskmanager.settings.Settings.confirmkill.not()){
+        }else{
+            LaunchedEffect(Unit) {
                 val dialog = showKillDialog
                 viewModel.viewModelScope.launch {
                     dialog?.killing?.value = true

@@ -45,7 +45,7 @@ android {
                 keyAlias = properties["keyAlias"] as String?
                 keyPassword = properties["keyPassword"] as String?
                 storeFile = if (isGITHUB_ACTION) {
-                    File("/tmp/xed.keystore")
+                    File("/tmp/taskmgr.keystore")
                 } else {
                     (properties["storeFile"] as String?)?.let { File(it) }
                 }

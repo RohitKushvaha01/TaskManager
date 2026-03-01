@@ -36,12 +36,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rk.taskmanager.ProcessViewModel
+import com.rk.taskmanager.R
 import com.rk.taskmanager.screens.Filter
 import com.rk.taskmanager.screens.ProcessItem
 import com.rk.taskmanager.screens.Sort
@@ -61,7 +63,9 @@ fun ProcessSearchBar(
         label = "searchBarPadding"
     )
     Box(
-        modifier.fillMaxWidth().semantics { isTraversalGroup = true }
+        modifier
+            .fillMaxWidth()
+            .semantics { isTraversalGroup = true }
     ) {
         var query by rememberSaveable { mutableStateOf("") }
 
@@ -69,7 +73,8 @@ fun ProcessSearchBar(
         val searchResults by viewModel.searchResults.collectAsState()
 
         SearchBar(
-            modifier = Modifier.padding(animatedPadding)
+            modifier = Modifier
+                .padding(animatedPadding)
                 .align(Alignment.TopCenter)
                 .semantics { traversalIndex = 0f },
             inputField = {
@@ -82,7 +87,7 @@ fun ProcessSearchBar(
                     onSearch = {},
                     expanded = expanded,
                     onExpandedChange = { expanded = it },
-                    placeholder = { Text("Search") },
+                    placeholder = { Text(stringResource(R.string.search)) },
                     trailingIcon = {
                         var showMoreMenu by remember { mutableStateOf(false) }
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -98,7 +103,7 @@ fun ProcessSearchBar(
                             showMoreMenu = false
                         }) {
                             DropdownMenuItem(text = {
-                                Text("Filters")
+                                Text(stringResource(R.string.filters))
                             }, onClick = {
                                 showMoreMenu = false
                                 showFilter.value = true
@@ -107,7 +112,7 @@ fun ProcessSearchBar(
                             })
 
                             DropdownMenuItem(text = {
-                                Text("Sort")
+                                Text(stringResource(R.string.sort))
                             }, onClick = {
                                 showMoreMenu = false
                                 showSort.value = true

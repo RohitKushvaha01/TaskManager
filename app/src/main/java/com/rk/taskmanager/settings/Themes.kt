@@ -8,6 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.taskmanager.MainActivity
+import com.rk.taskmanager.R
 import com.rk.taskmanager.strings
 import com.rk.taskmanager.ui.theme.currentTheme
 import com.rk.taskmanager.ui.theme.dynamicTheme
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun Themes(modifier: Modifier = Modifier) {
-    PreferenceLayout(label = "Themes") {
+    PreferenceLayout(label = stringResource(R.string.theme)) {
         PreferenceGroup(heading = stringResource(strings.theme)) {
             SelectableCard(
                 selected = dynamicTheme.value,

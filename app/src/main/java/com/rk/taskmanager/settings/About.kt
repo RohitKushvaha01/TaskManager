@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
 import coil.compose.AsyncImage
@@ -29,6 +30,7 @@ import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.BuildConfig
+import com.rk.taskmanager.R
 
 @Composable
 fun About(modifier: Modifier = Modifier) {
@@ -37,11 +39,11 @@ fun About(modifier: Modifier = Modifier) {
     val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
     val context = LocalContext.current
 
-    PreferenceLayout(label = "About", backArrowVisible = true) {
-        PreferenceGroup(heading = "Developer") {
+    PreferenceLayout(label = stringResource(R.string.about), backArrowVisible = true) {
+        PreferenceGroup(heading = stringResource(R.string.developer)) {
             SettingsToggle(
                 label = "RohitKushvaha01",
-                description = "View github profile",
+                description = stringResource(R.string.view_github_profile),
                 default = false,
                 sideEffect = {
                     val url = "https://github.com/RohitKushvaha01"
@@ -59,7 +61,10 @@ fun About(modifier: Modifier = Modifier) {
                                 .memoryCachePolicy(CachePolicy.ENABLED)
                                 .build(),
                         contentDescription = "GitHub Avatar",
-                        modifier = Modifier.padding(start = 16.dp).size(26.dp).clip(CircleShape),
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                            .size(26.dp)
+                            .clip(CircleShape),
                     )
                 },
                 endWidget = {
@@ -72,7 +77,7 @@ fun About(modifier: Modifier = Modifier) {
             )
         }
 
-        PreferenceGroup(heading = "Build Info") {
+        PreferenceGroup(heading = stringResource(R.string.build_info)) {
             PreferenceTemplate(
                 modifier =
                     Modifier.combinedClickable(
@@ -81,7 +86,7 @@ fun About(modifier: Modifier = Modifier) {
                         onLongClick = { copyToClipboard(context,versionName.toString()) },
                     ),
                 title = {
-                    Text(text = "Version", style = MaterialTheme.typography.titleMedium)
+                    Text(text = stringResource(R.string.version), style = MaterialTheme.typography.titleMedium)
                 },
                 description = { Text(text = versionName.toString(), style = MaterialTheme.typography.titleSmall) },
             )
@@ -94,7 +99,7 @@ fun About(modifier: Modifier = Modifier) {
                         onLongClick = { copyToClipboard(context,versionCode.toString()) },
                     ),
                 title = {
-                    Text(text = "Version Code", style = MaterialTheme.typography.titleMedium)
+                    Text(text = stringResource(R.string.version_code), style = MaterialTheme.typography.titleMedium)
                 },
                 description = { Text(text = versionCode.toString(), style = MaterialTheme.typography.titleSmall) },
             )
@@ -107,7 +112,7 @@ fun About(modifier: Modifier = Modifier) {
                         onLongClick = { copyToClipboard(context,BuildConfig.GIT_SHORT_COMMIT_HASH) },
                     ),
                 title = {
-                    Text(text = "Git Commit hash", style = MaterialTheme.typography.titleMedium)
+                    Text(text = stringResource(R.string.git_commit_hash), style = MaterialTheme.typography.titleMedium)
                 },
                 description = {
                     Text(text = BuildConfig.GIT_SHORT_COMMIT_HASH, style = MaterialTheme.typography.titleSmall)

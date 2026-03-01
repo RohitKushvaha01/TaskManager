@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -42,6 +43,7 @@ import com.rk.components.SettingsToggle
 import com.rk.components.rememberMarker
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
+import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.screens.cpu.InfoCard
 import com.rk.taskmanager.screens.cpu.InfoItem
@@ -146,7 +148,7 @@ fun GPU(modifier: Modifier = Modifier,viewModel: GpuViewModel) {
         SettingsToggle(
             description = "GPU - ${
                 if (gpuUsage < 0) {
-                    "No Data"
+                    stringResource(R.string.no_data)
                 } else {
                     "$gpuUsage%"
                 }
@@ -170,13 +172,13 @@ fun GPU(modifier: Modifier = Modifier,viewModel: GpuViewModel) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
                     InfoItem(
-                        label = "Vendor",
+                        label = stringResource(R.string.vendor),
                         value = gpuInfo?.vendor ?: "N/A",
                         highlighted = true
                     )
 
                     InfoItem(
-                        label = "GPU Model",
+                        label = stringResource(R.string.gpu_model),
                         value = gpuInfo?.renderer ?: "N/A",
                         highlighted = false
                     )
@@ -190,9 +192,9 @@ fun GPU(modifier: Modifier = Modifier,viewModel: GpuViewModel) {
                     InfoItem(
                         label = "Vulkan",
                         value = if (gpuInfo?.vulkanSupported == true){
-                            "Supported"
+                            stringResource(R.string.supported)
                         }else{
-                            "Not Supported"
+                            stringResource(R.string.not_supported)
                         },
                         highlighted = false
                     )

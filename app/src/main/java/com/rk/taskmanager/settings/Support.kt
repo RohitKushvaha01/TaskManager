@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.rk.components.SettingsToggle
@@ -37,25 +38,23 @@ fun SupportDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Enjoying the App? ❤️",
+                text = stringResource(R.string.enjoying_the_app),
                 style = MaterialTheme.typography.titleLarge
             )
         },
         text = {
             Text(
-                text = "You've stopped ${Settings.kills} apps using this tool.\n\n" +
-                        "It's free, open-source, and ad-free. " +
-                        "If it’s been helpful, consider supporting its development."
+                text = stringResource(R.string.support_the_development, Settings.kills)
             )
         },
         confirmButton = {
             TextButton(onClick = onSupportClick) {
-                Text("Support")
+                Text(stringResource(R.string.support))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Not Now")
+                Text(stringResource(R.string.not_now))
             }
         }
     )
@@ -63,12 +62,12 @@ fun SupportDialog(
 
 @Composable
 fun SupportSettingsScreen(modifier: Modifier = Modifier) {
-    PreferenceLayout(label = "Support", backArrowVisible = true) {
+    PreferenceLayout(label = stringResource(R.string.support), backArrowVisible = true) {
         val context = LocalContext.current
 
         PreferenceGroup {
             SettingsToggle(
-                label = "GitHub Sponsors",
+                label = stringResource(R.string.github_sponsors),
                 isEnabled = true,
                 showSwitch = false,
                 default = false,
@@ -93,7 +92,7 @@ fun SupportSettingsScreen(modifier: Modifier = Modifier) {
                 },
             )
             SettingsToggle(
-                label = "Buy Me a Coffee",
+                label = stringResource(R.string.buy_me_a_coffee),
                 isEnabled = true,
                 showSwitch = false,
                 default = false,

@@ -209,7 +209,7 @@ fun Processes(
                         "(╯°□°）╯︵ ┻━┻",
                         "(>_<)",
                         "(ಠ_ಠ)",
-                        "(•_•) <(no data)",
+                        stringResource(R.string.emoji_no_data),
                         "(o_O)"
                     )
 
@@ -221,7 +221,7 @@ fun Processes(
                     Button(onClick = {
                         viewModel.refreshProcessesManual()
                     }) {
-                        Text("Refresh")
+                        Text(stringResource(R.string.refresh))
                     }
                 }
 
@@ -402,15 +402,20 @@ fun ProcessItem(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = "Terminate?",
+                        text = stringResource(R.string.terminate),
                         style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-                    Text(
-                        text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
-                    )
+                    showKillDialog?.name?.let {
+                        Text(
+                            text = stringResource(
+                                R.string.terminate_process_prompt,
+                                it
+                            )
+                        )
+                    }
 
                     Spacer(modifier = Modifier.padding(vertical = 16.dp))
 
@@ -422,7 +427,7 @@ fun ProcessItem(
                         TextButton(onClick = {
                             showKillDialog = null
                         }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.cancel))
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -444,7 +449,7 @@ fun ProcessItem(
 
                         }) {
                             Text(
-                                text = "Kill",
+                                text = stringResource(R.string.kill),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }

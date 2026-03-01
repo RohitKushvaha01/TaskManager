@@ -1,6 +1,3 @@
-// ============================================
-// FILE 1: CPU.kt
-// ============================================
 package com.rk.taskmanager.screens.cpu
 
 import android.graphics.Typeface
@@ -61,8 +58,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.text.DecimalFormat
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.res.stringResource
 import com.rk.daemon_messages
 import com.rk.send_daemon_messages
+import com.rk.taskmanager.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -220,7 +219,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
             // Main CPU Info Card
             InfoCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SectionHeader("Processor Information")
+                    SectionHeader(stringResource(R.string.processor_information))
 
                     InfoItem(
                         label = "SoC",
@@ -234,7 +233,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Architecture", cpuInfo?.arch ?: "N/A")
+                            InfoItem(stringResource(R.string.architecture), cpuInfo?.arch ?: "N/A")
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             InfoItem("ABI", cpuInfo?.abi ?: "N/A")
@@ -246,10 +245,10 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Cores", cpuInfo?.cores.toString())
+                            InfoItem(stringResource(R.string.core_number), cpuInfo?.cores.toString())
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Governor", cpuInfo?.governor ?: "N/A")
+                            InfoItem(stringResource(R.string.governor), cpuInfo?.governor ?: "N/A")
                         }
                     }
 
@@ -258,8 +257,9 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Temperature", if (temperature.toIntOrNull() != null){
-                                "$temperature°C (estimated)"
+                            InfoItem(
+                                stringResource(R.string.temperature), if (temperature.toIntOrNull() != null){
+                                stringResource(R.string.temp_display, temperature)
                             }else{
                                 temperature
                             })
@@ -273,17 +273,17 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
             // System Stats Card
             InfoCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SectionHeader("System Statistics")
+                    SectionHeader(stringResource(R.string.system_statistics))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Processes", viewModel.procCount.collectAsState().value.toString())
+                            InfoItem(stringResource(R.string.processes), viewModel.procCount.collectAsState().value.toString())
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Threads", viewModel.threadCount.collectAsState().value.toString())
+                            InfoItem(stringResource(R.string.threads), viewModel.threadCount.collectAsState().value.toString())
                         }
 
                     }
@@ -293,7 +293,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Uptime", uptime)
+                            InfoItem(stringResource(R.string.uptime), uptime)
                         }
                     }
 
@@ -331,14 +331,14 @@ fun ClusterCard(cluster: CpuInfoReader.CpuCluster) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = cluster.name,
+                text = cluster.name.replace("Cluster", stringResource(R.string.cluster_prefix)),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary
             )
 
             Text(
-                text = "${cluster.cores} cores",
+                text = stringResource(R.string.cores, cluster.cores),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -360,19 +360,19 @@ fun ClusterCard(cluster: CpuInfoReader.CpuCluster) {
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             FrequencyInfo(
-                label = "Min",
+                label = stringResource(R.string.min),
                 value = cluster.minFreq ?: "—",
                 modifier = Modifier.weight(1f)
             )
             cluster.currentFreq?.let { freq ->
                 FrequencyInfo(
-                    label = "Current",
+                    label = stringResource(R.string.current),
                     value = freq,
                     modifier = Modifier.weight(1f)
                 )
             }
             FrequencyInfo(
-                label = "Max",
+                label = stringResource(R.string.max),
                 value = cluster.maxFreq ?: "—",
                 modifier = Modifier.weight(1f)
             )

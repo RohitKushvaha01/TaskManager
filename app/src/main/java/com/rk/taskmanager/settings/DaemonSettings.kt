@@ -11,12 +11,13 @@ import androidx.compose.ui.res.stringResource
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
+import com.rk.taskmanager.R
 import com.rk.taskmanager.getString
 import com.rk.taskmanager.strings
 
 @Composable
 fun DaemonSettings(modifier: Modifier = Modifier) {
-    PreferenceLayout(label = "Daemon") {
+    PreferenceLayout(label = stringResource(R.string.working_mode)) {
         val context = LocalContext.current
         val selectedMode = remember { mutableIntStateOf(Settings.workingMode) }
 

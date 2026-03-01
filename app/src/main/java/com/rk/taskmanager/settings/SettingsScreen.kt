@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Android
 import androidx.compose.material.icons.outlined.ColorLens
-import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +36,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import com.rk.taskmanager.R
 
 
 @OptIn(
@@ -53,8 +53,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
 
 
         PreferenceCategory(
-            label = "Daemon",
-            description = "TaskManagerD settings",
+            label = stringResource(R.string.working_mode),
+            description = stringResource(R.string.taskmanagerd_settings),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.Android,null)
             },
@@ -63,8 +63,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                          },
         )
         PreferenceCategory(
-            label = "Graph",
-            description = "cpu,ram,swap graph settings",
+            label = stringResource(R.string.graph),
+            description = stringResource(R.string.cpu_ram_swap_graph_settings),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.MonitorHeart,null)
             },
@@ -75,8 +75,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
 
 
         PreferenceCategory(
-            label = "Processes",
-            description = "settings for processes screen",
+            label = stringResource(R.string.processes),
+            description = stringResource(R.string.settings_for_processes_screen),
             startWidget = {
                 Icon(imageVector = Icons.AutoMirrored.Outlined.FormatListBulleted,null)
             },
@@ -86,8 +86,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
         )
 
         PreferenceCategory(
-            label = "Themes",
-            description = "look and feel",
+            label = stringResource(R.string.theme),
+            description = stringResource(R.string.look_and_feel),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.ColorLens,null)
             },
@@ -97,8 +97,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
         )
 
         PreferenceCategory(
-            label = "Support",
-            description = "support development",
+            label = stringResource(R.string.support),
+            description = stringResource(R.string.support_development),
             startWidget = {
                 Icon(imageVector = FeatherHeart,null)
             },
@@ -108,8 +108,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
         )
 
         PreferenceCategory(
-            label = "About",
-            description = "Application info",
+            label = stringResource(R.string.about),
+            description = stringResource(R.string.application_info),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.Info,null)
             },

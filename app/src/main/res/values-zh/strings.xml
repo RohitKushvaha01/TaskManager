@@ -5,7 +5,7 @@
     <string name="shizuku_permission_denied">Shizuku 权限被拒绝，请手动授予权限</string>
     <string name="shizuku_not_running">Shizuku 未运行</string>
     <string name="shizuku_not_installed">Shizuku 未安装</string>
-    <string name="su_not_in_path">'su' 不存在或工作不正常</string>
+    <string name="su_not_in_path">su 不存在或工作不正常</string>
     <string name="daemon_not_started">守护进程启动失败</string>
     <string name="port_busy">无法获取空闲端口：得到 %port</string>
     <string name="starting_daemon">正在启动守护进程…</string>

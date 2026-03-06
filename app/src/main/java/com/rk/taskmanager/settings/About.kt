@@ -75,6 +75,74 @@ fun About(modifier: Modifier = Modifier) {
                     )
                 },
             )
+            SettingsToggle(
+                label = "Xieansecn",
+                description = "${stringResource(R.string.view_github_profile)}\n${stringResource(R.string.themes_github_profile)}",
+                default = false,
+                sideEffect = {
+                    val url = "https://github.com/Xieansecn"
+                    val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(url) }
+                    context.startActivity(intent)
+                },
+                showSwitch = false,
+                startWidget = {
+                    AsyncImage(
+                        model =
+                            ImageRequest.Builder(LocalContext.current)
+                                .data("https://github.com/Xieansecn.png")
+                                .crossfade(true)
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                .build(),
+                        contentDescription = "GitHub Avatar",
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                            .size(26.dp)
+                            .clip(CircleShape),
+                    )
+                },
+                endWidget = {
+                    Icon(
+                        modifier = Modifier.padding(16.dp),
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null,
+                    )
+                },
+            )
+            SettingsToggle(
+                label = "Webpage",
+                description = "${stringResource(R.string.view_github_profile)}\n${stringResource(R.string.translator_github_profile)}",
+                default = false,
+                sideEffect = {
+                    val url = "https://github.com/Webpage-gh"
+                    val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(url) }
+                    context.startActivity(intent)
+                },
+                showSwitch = false,
+                startWidget = {
+                    AsyncImage(
+                        model =
+                            ImageRequest.Builder(LocalContext.current)
+                                .data("https://github.com/Webpage-gh.png")
+                                .crossfade(true)
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                .build(),
+                        contentDescription = "GitHub Avatar",
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                            .size(26.dp)
+                            .clip(CircleShape),
+                    )
+                },
+                endWidget = {
+                    Icon(
+                        modifier = Modifier.padding(16.dp),
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null,
+                    )
+                },
+            )
         }
 
         PreferenceGroup(heading = stringResource(R.string.build_info)) {

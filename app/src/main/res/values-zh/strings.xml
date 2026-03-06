@@ -97,6 +97,8 @@
     <string name="buy_me_a_coffee">请我喝杯咖啡</string>
     <string name="developer">开发者</string>
     <string name="view_github_profile">查看 GitHub 主页</string>
+    <string name="translator_github_profile">中文翻译提供者</string>
+    <string name="themes_github_profile">界面更新提供者</string>
     <string name="build_info">构建信息</string>
     <string name="version">版本名称</string>
     <string name="version_code">版本号</string>

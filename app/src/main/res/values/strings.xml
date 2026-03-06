@@ -96,6 +96,8 @@
     <string name="buy_me_a_coffee">Buy Me a Coffee</string>
     <string name="developer">Developer</string>
     <string name="view_github_profile">View github profile</string>
+    <string name="translator_github_profile">Translation developer</string>
+    <string name="themes_github_profile">Interface update developer</string>
     <string name="build_info">Build Info</string>
     <string name="version">Version</string>
     <string name="version_code">Version Code</string>

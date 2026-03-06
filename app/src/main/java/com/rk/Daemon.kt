@@ -62,7 +62,7 @@ private object DaemonServer {
         }
 
         return try {
-            server = ServerSocket(0, 1, InetAddress.getByName("0.0.0.0"))
+            server = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))
             log("Server started on port: ${server!!.localPort}")
             startAccepting()
             Pair(server!!.localPort, null)

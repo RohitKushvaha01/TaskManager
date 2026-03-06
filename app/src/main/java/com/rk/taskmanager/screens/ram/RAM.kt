@@ -89,9 +89,10 @@ fun formatRamGB(bytes: Long): String =
 
 private val mutex = Mutex()
 suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalBytes: Long) {
+
+
     mutex.withLock {
         val ramUsage = getSystemRamUsage(TaskManager.requireContext())
-
         // Update values
         RamUsage = ramUsage
         usedRam = totalRam - (totalRam * (100 - ramUsage) / 100)
@@ -112,8 +113,8 @@ suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalByte
         if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
             RamModelProducer.runTransaction {
                 lineSeries {
-                    series(x = xValues, y = ramYValues) // RAM line
-                    series(x = xValues, y = swapYValues) // SWAP line
+                    series(x = xValues, y = ramYValues.toList())
+                    series(x = xValues, y = swapYValues.toList())
                 }
             }
         }

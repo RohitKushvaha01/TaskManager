@@ -98,7 +98,7 @@ suspend fun updateCpuGraph(usage: Int) {
         if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
             CpuModelProducer.runTransaction {
                 lineSeries {
-                    series(x = xValues, y = cpuYValues)
+                    series(x = xValues, y = cpuYValues.toList())
                 }
             }
         }
@@ -114,7 +114,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
         mutex.withLock {
             CpuModelProducer.runTransaction {
                 lineSeries {
-                    series(x = xValues, y = cpuYValues)
+                    series(x = xValues, y = cpuYValues.toList())
                 }
             }
         }
@@ -128,11 +128,19 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
 
     // Update real-time data every 2 seconds
     LaunchedEffect(Unit) {
-        while (isActive) {
-            send_daemon_messages.emit("CTEMP_PING")
-            uptime = CpuInfoReader.getUptimeFormatted()
-            cpuInfo = CpuInfoReader.read()
-            delay(2000)
+        // 【关键修复】：将无限循环放入 IO 线程池，彻底解放主线程
+        withContext(Dispatchers.IO) {
+            while (isActive) {
+                send_daemon_messages.emit("CTEMP_PING")
+                val newUptime = CpuInfoReader.getUptimeFormatted()
+                val newCpuInfo = CpuInfoReader.read() // 耗时文件读取在后台完成
+
+                withContext(Dispatchers.Main) { // 带着结果切回主线程更新 UI
+                    uptime = newUptime
+                    cpuInfo = newCpuInfo
+                }
+                delay(2000)
+            }
         }
     }
 
@@ -150,7 +158,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
     }
 
 
-    Column(modifier.verticalScroll(rememberScrollState())) {
+    Column(modifier) {
 
         CartesianChartHost(
             rememberCartesianChart(

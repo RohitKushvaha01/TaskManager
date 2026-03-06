@@ -102,7 +102,7 @@ fun GPU(modifier: Modifier = Modifier,viewModel: GpuViewModel) {
         }
     }
 
-    Column(modifier.verticalScroll(rememberScrollState())) {
+    Column(modifier) {
 
         CartesianChartHost(
             rememberCartesianChart(

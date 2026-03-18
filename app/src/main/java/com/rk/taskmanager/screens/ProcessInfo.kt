@@ -76,6 +76,7 @@ import com.rk.daemon_messages
 import com.rk.send_daemon_messages
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
+import com.rk.taskmanager.R
 import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.getString
@@ -524,8 +525,8 @@ fun ProcessInfo(
                     val context = LocalContext.current
                     if (proc.isApp){
                         SettingsToggle(
-                            label = "App info",
-                            description = "Application info settings",
+                            label = stringResource(R.string.app_info),
+                            description = stringResource(R.string.application_info_settings),
                             default = false,
                             showSwitch = false,
                             endWidget = {
@@ -563,11 +564,13 @@ fun ProcessInfo(
                         }
                     }
 
-                    PreferenceGroup(heading = "Debloater info") {
+                    PreferenceGroup(heading = stringResource(R.string.debloater_info)) {
                         when (descriptionState) {
                             is DescriptionState.Loading -> TextCard(text = stringResource(strings.loading), description = null, selection = true, copyDesOnLong = false)
                             is DescriptionState.Success -> TextCard(text = null, description = (descriptionState as DescriptionState.Success).text, selection = true,copyDesOnLong = false)
-                            is DescriptionState.Empty -> TextCard(text = null, description = "No info available for this process", selection = true,copyDesOnLong = false)
+                            is DescriptionState.Empty -> TextCard(text = null, description = stringResource(
+                                R.string.no_info_available_for_this_process
+                            ), selection = true,copyDesOnLong = false)
                         }
                     }
                 }
@@ -589,15 +592,20 @@ fun ProcessInfo(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = "Terminate?",
+                        text = stringResource(R.string.terminate),
                         style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-                    Text(
-                        text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
-                    )
+                    showKillDialog?.name?.let {
+                        Text(
+                            text = stringResource(
+                                R.string.terminate_process_prompt,
+                                it
+                            )
+                        )
+                    }
 
                     Spacer(modifier = Modifier.padding(vertical = 16.dp))
 
@@ -609,7 +617,7 @@ fun ProcessInfo(
                         TextButton(onClick = {
                             showKillDialog = null
                         }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.cancel))
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -631,7 +639,7 @@ fun ProcessInfo(
 
                         }) {
                             Text(
-                                text = "Kill",
+                                text = stringResource(R.string.kill),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }

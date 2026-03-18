@@ -115,4 +115,11 @@
     <string name="emoji_no_data"><![CDATA[(•_•) <(无数据)]]></string>
     <string name="terminate_process_prompt">您确定要终止\'%1$s\'进程吗？</string>
     <string name="terminate">终止？</string>
+    <string name="app_info">应用信息</string>
+    <string name="application_info_settings">应用信息设置</string>
+    <string name="debloater_info">Debloater 信息</string>
+    <string name="no_info_available_for_this_process">此进程无可用信息</string>
+    <string name="sort_by_ram">按内存排序</string>
+    <string name="sort_by_cpu">按 CPU 排序</string>
+    <string name="sort_by_name_a_z">按名称 (A-z) 排序</string>
 </resources>

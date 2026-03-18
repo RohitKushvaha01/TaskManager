@@ -113,4 +113,11 @@
     <string name="emoji_no_data"><![CDATA[(•_•) <()]]></string>
     <string name="terminate_process_prompt">\' %1$s\' işlemini sonlandırmak istediğinizden emin misiniz?</string>
     <string name="terminate">Bitsin mi?</string>
+    <string name="app_info">Uygulama bilgisi</string>
+    <string name="application_info_settings">Uygulama bilgi ayarları</string>
+    <string name="debloater_info">Debloater bilgisi</string>
+    <string name="no_info_available_for_this_process">Bu işlem için bilgi yok</string>
+    <string name="sort_by_ram">RAM\'e göre sırala</string>
+    <string name="sort_by_cpu">CPU\'ya göre sırala</string>
+    <string name="sort_by_name_a_z">İsime göre sırala (A-z)</string>
 </resources>

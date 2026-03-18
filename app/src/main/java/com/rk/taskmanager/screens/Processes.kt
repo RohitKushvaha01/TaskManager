@@ -149,7 +149,7 @@ fun Processes(
                     RadioButton(selected = sortBy == ProcessViewModel.Sortby.Ram.id, onClick = {
                         viewModel.setSortBy(ProcessViewModel.Sortby.Ram)
                     })
-                }, label = "Sort by RAM", sideEffect = {
+                }, label = stringResource(R.string.sort_by_ram), sideEffect = {
                     viewModel.setSortBy(ProcessViewModel.Sortby.Ram)
                 })
 
@@ -157,7 +157,7 @@ fun Processes(
                     RadioButton(selected = sortBy == ProcessViewModel.Sortby.Cpu.id, onClick = {
                         viewModel.setSortBy(ProcessViewModel.Sortby.Cpu)
                     })
-                }, label = "Sort by CPU", sideEffect = {
+                }, label = stringResource(R.string.sort_by_cpu), sideEffect = {
                     viewModel.setSortBy(ProcessViewModel.Sortby.Cpu)
                 })
 
@@ -165,7 +165,7 @@ fun Processes(
                     RadioButton(selected = sortBy == ProcessViewModel.Sortby.A_z.id, onClick = {
                         viewModel.setSortBy(ProcessViewModel.Sortby.A_z)
                     })
-                }, label = "Sort by Name (A-z)", sideEffect = {
+                }, label = stringResource(R.string.sort_by_name_a_z), sideEffect = {
                     viewModel.setSortBy(ProcessViewModel.Sortby.A_z)
                 })
 

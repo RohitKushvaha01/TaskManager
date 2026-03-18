@@ -115,5 +115,12 @@
     <string name="cores">%1$d cores</string>
     <string name="terminate_process_prompt">Are you sure you want to terminate \'%1$s\' process?</string>
     <string name="terminate">Terminate?</string>
+    <string name="app_info">App info</string>
+    <string name="application_info_settings">Application info settings</string>
+    <string name="debloater_info">Debloater info</string>
+    <string name="no_info_available_for_this_process">No info available for this process</string>
+    <string name="sort_by_ram">Sort by RAM</string>
+    <string name="sort_by_cpu">Sort by CPU</string>
+    <string name="sort_by_name_a_z">Sort by Name (A-z)</string>
 
 </resources>

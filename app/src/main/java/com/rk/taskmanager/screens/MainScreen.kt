@@ -33,17 +33,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.rk.DaemonResult
-import com.rk.isConnected
-import com.rk.startDaemon
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
-import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.components.ProcessSearchBar
+import com.rk.taskmanager.daemon.DaemonResult
+import com.rk.taskmanager.daemon.isConnected
+import com.rk.taskmanager.daemon.startDaemon
 import com.rk.taskmanager.screens.gpu.GpuViewModel
 import com.rk.taskmanager.settings.Settings
-import com.rk.taskmanager.settings.SupportDialog
+import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -175,26 +174,6 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
                 }
             }
 
-            var showSupportDialog by remember { mutableStateOf(false) }
-
-            LaunchedEffect(Settings.kills) {
-                val thirtyDaysMillis = 30L * 24 * 60 * 60 * 1000
-                val timePassed = System.currentTimeMillis() - Settings.supportDialogTimeStamp
-
-                showSupportDialog =
-                    Settings.kills > 20 && (timePassed > thirtyDaysMillis)
-            }
-
-            if(showSupportDialog){
-                SupportDialog(onDismiss = {
-                    Settings.supportDialogTimeStamp = System.currentTimeMillis()
-                    showSupportDialog = false
-                }, onSupportClick = {
-                    Settings.supportDialogTimeStamp = System.currentTimeMillis()
-                    showSupportDialog = false
-                    navController.navigate(SettingsRoutes.Support.route)
-                })
-            }
         }
 
 

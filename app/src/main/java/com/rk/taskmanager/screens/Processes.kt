@@ -61,8 +61,8 @@ import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
-import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.settings.Settings
+import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.settings.pullToRefresh_procs
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.delay

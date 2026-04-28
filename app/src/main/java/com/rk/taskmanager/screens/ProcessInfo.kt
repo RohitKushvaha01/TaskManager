@@ -72,13 +72,13 @@ import com.rk.components.TextCard
 import com.rk.components.XedDialog
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceTemplate
-import com.rk.daemon_messages
-import com.rk.send_daemon_messages
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
-import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
+import com.rk.taskmanager.daemon.daemon_messages
+import com.rk.taskmanager.daemon.send_daemon_messages
 import com.rk.taskmanager.getString
+import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers

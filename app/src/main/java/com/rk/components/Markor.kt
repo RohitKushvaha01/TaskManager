@@ -56,7 +56,7 @@ internal fun rememberMarker(
             fill = fill(MaterialTheme.colorScheme.surfaceContainer),
             shape = labelBackgroundShape,
             shadow =
-            shadow(radius = LABEL_BACKGROUND_SHADOW_RADIUS_DP.dp, y = LABEL_BACKGROUND_SHADOW_DY_DP.dp),
+                shadow(radius = LABEL_BACKGROUND_SHADOW_RADIUS_DP.dp, y = LABEL_BACKGROUND_SHADOW_DY_DP.dp),
         )
     val label =
         rememberTextComponent(
@@ -74,11 +74,11 @@ internal fun rememberMarker(
         LayeredComponent(
             back = indicatorRearComponent,
             front =
-            LayeredComponent(
-                back = indicatorCenterComponent,
-                front = indicatorFrontComponent,
-                padding = insets(5.dp),
-            ),
+                LayeredComponent(
+                    back = indicatorCenterComponent,
+                    front = indicatorFrontComponent,
+                    padding = insets(5.dp),
+                ),
             padding = insets(10.dp),
         )
     val guideline = rememberAxisGuidelineComponent()
@@ -88,28 +88,28 @@ internal fun rememberMarker(
                 label = label,
                 valueFormatter = valueFormatter,
                 indicator =
-                if (showIndicator) {
-                    { color ->
-                        LayeredComponent(
-                            back =
-                            ShapeComponent(Fill(ColorUtils.setAlphaComponent(color, 38)), CorneredShape.Pill),
-                            front =
+                    if (showIndicator) {
+                        { color ->
                             LayeredComponent(
                                 back =
-                                ShapeComponent(
-                                    fill = Fill(color),
-                                    shape = CorneredShape.Pill,
-                                    shadow = Shadow(radiusDp = 12f, color = color),
-                                ),
-                                front = indicatorFrontComponent,
-                                padding = insets(5.dp),
-                            ),
-                            padding = insets(10.dp),
-                        )
-                    }
-                } else {
-                    null
-                },
+                                    ShapeComponent(Fill(ColorUtils.setAlphaComponent(color, 38)), CorneredShape.Pill),
+                                front =
+                                    LayeredComponent(
+                                        back =
+                                            ShapeComponent(
+                                                fill = Fill(color),
+                                                shape = CorneredShape.Pill,
+                                                shadow = Shadow(radiusDp = 12f, color = color),
+                                            ),
+                                        front = indicatorFrontComponent,
+                                        padding = insets(5.dp),
+                                    ),
+                                padding = insets(10.dp),
+                            )
+                        }
+                    } else {
+                        null
+                    },
                 indicatorSizeDp = 36f,
                 guideline = guideline,
             ) {

@@ -24,44 +24,82 @@ object CpuInfoReader {
         val currentFreq: String?
     )
 
+    private var cachedSoc: String? = null
+    private var cachedAbi: String? = null
+    private var cachedCores: Int? = null
+    private var cachedArch: String? = null
+    private var cachedClustersTemplate: Map<String, List<File>>? = null
+
     fun read(): CpuInfo {
-        val cpuDirs = File("/sys/devices/system/cpu/")
-            .listFiles { f -> f.name.matches(Regex("cpu[0-9]+")) }
-            ?.sortedBy { it.name }
-            ?: emptyList()
-
-        val clusters = mutableMapOf<String, MutableList<File>>()
-
-        cpuDirs.forEach { cpu ->
-            val clusterId = readFile("${cpu.path}/topology/physical_package_id") ?: "0"
-            clusters.getOrPut(clusterId) { mutableListOf() }.add(cpu)
+        val cpuDirs = if (cachedCores == null) {
+            File("/sys/devices/system/cpu/")
+                .listFiles { f -> f.name.matches(Regex("cpu[0-9]+")) }
+                ?.sortedBy { it.name }
+                ?: emptyList()
+        } else {
+            emptyList()
         }
 
-        val clusterInfo = clusters.map { (id, cores) ->
+        if (cachedCores == null) {
+            cachedCores = cpuDirs.size
+            val clusters = mutableMapOf<String, MutableList<File>>()
+            cpuDirs.forEach { cpu ->
+                val clusterId = readFile("${cpu.path}/topology/physical_package_id") ?: "0"
+                clusters.getOrPut(clusterId) { mutableListOf() }.add(cpu)
+            }
+            cachedClustersTemplate = clusters
+        }
+
+        if (cachedSoc == null) cachedSoc = Build.HARDWARE ?: "Unknown"
+        if (cachedAbi == null) cachedAbi = Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown"
+        if (cachedArch == null) cachedArch = System.getProperty("os.arch") ?: "Unknown"
+
+        val clusterInfo = cachedClustersTemplate?.map { (id, cores) ->
             val cpu = cores.first()
+
+            fun freq(vararg paths: String): String? {
+                for (path in paths) {
+                    val value = readFile(path)?.toLongOrNull()
+
+                    if (value != null && value >= 10000) {
+                        return value.toFreqString()
+                    }
+                }
+                return "---"
+            }
+
             CpuCluster(
                 name = "Cluster $id",
                 cores = cores.size,
-                minFreq = readFile("${cpu.path}/cpufreq/cpuinfo_min_freq")?.toMHz(),
-                maxFreq = readFile("${cpu.path}/cpufreq/cpuinfo_max_freq")?.toMHz(),
-                currentFreq = readFile("${cpu.path}/cpufreq/scaling_cur_freq")?.toMHz()
+
+                minFreq = freq(
+                    "${cpu.path}/cpufreq/scaling_min_freq",
+                    "${cpu.path}/cpufreq/cpuinfo_min_freq"
+                ),
+
+                maxFreq = freq(
+                    "${cpu.path}/cpufreq/scaling_max_freq",
+                    "${cpu.path}/cpufreq/cpuinfo_max_freq"
+                ),
+
+                currentFreq = freq(
+                    "${cpu.path}/cpufreq/scaling_cur_freq",
+                    "${cpu.path}/cpufreq/cpuinfo_cur_freq"
+                )
             )
-        }
-
-
+        } ?: emptyList()
 
         return CpuInfo(
-            soc = Build.HARDWARE ?: "Unknown",
-            abi = Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown",
-            cores = cpuDirs.size,
-            arch = System.getProperty("os.arch") ?: "Unknown",
+            soc = cachedSoc!!,
+            abi = cachedAbi!!,
+            cores = cachedCores!!,
+            arch = cachedArch!!,
             clusters = clusterInfo,
             governor = readFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
         )
     }
 
     fun getUptimeFormatted(): String {
-        // SystemClock.elapsedRealtime() returns milliseconds since boot
         val uptimeMillis = SystemClock.elapsedRealtime()
         val uptimeSeconds = uptimeMillis / 1000
 
@@ -80,12 +118,13 @@ object CpuInfoReader {
     private fun readFile(path: String): String? =
         runCatching { File(path).readText().trim() }.getOrNull()
 
-    private fun String.toMHz(): String {
-        val khz = toLongOrNull() ?: return this
+    private fun Long.toFreqString(): String {
         return when {
-            khz >= 1000000 -> String.format(Locale.ENGLISH,"%.2f GHz", khz / 1000000.0)
-            khz >= 1000 -> "${khz / 1000} MHz"
-            else -> "$khz kHz"
+            this >= 1_000_000 ->
+                String.format(Locale.ENGLISH, "%.2f GHz", this / 1_000_000.0)
+
+            else ->
+                "${this / 1000} MHz"
         }
     }
 }

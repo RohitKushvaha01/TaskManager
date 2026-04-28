@@ -40,7 +40,6 @@ import com.rk.components.SettingsToggle
 import com.rk.components.rememberMarker
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
-import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.screens.cpu.MAX_GRAPH_POINTS
 import com.rk.taskmanager.screens.cpu.MarkerValueFormatter
@@ -48,6 +47,7 @@ import com.rk.taskmanager.screens.cpu.RangeProvider
 import com.rk.taskmanager.screens.cpu.StartAxisValueFormatter
 import com.rk.taskmanager.screens.cpu.xValues
 import com.rk.taskmanager.screens.selectedscreen
+import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -72,22 +72,40 @@ var totalSwap by mutableLongStateOf(0L)
 
 
 suspend fun getSystemRamUsage(context: Context): Int = withContext(Dispatchers.IO) {
-    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    val memoryInfo = ActivityManager.MemoryInfo()
-    activityManager.getMemoryInfo(memoryInfo)
+    val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    val info = ActivityManager.MemoryInfo()
+    am.getMemoryInfo(info)
 
-    totalRam = memoryInfo.totalMem  // Keep as Long
-    val availableRam = memoryInfo.availMem
-    usedRam = totalRam - availableRam  // Keep as Long
-    val usagePercentage = ((usedRam.toDouble() / totalRam.toDouble()) * 100).toInt()
+    totalRam = info.totalMem
+    val available = info.availMem
+    usedRam = totalRam - available
 
-    return@withContext usagePercentage
+    ((usedRam.toDouble() / totalRam.toDouble()) * 100)
+        .toInt()
+        .coerceIn(0, 100)
 }
 
 // Helper to format for display
-fun formatRamMB(bytes: Long): String = "${bytes / (1024 * 1024)} MB"
-fun formatRamGB(bytes: Long): String =
-    String.format(Locale.ENGLISH, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+fun formatBytes(bytes: Long): String {
+    val kb = 1024.0
+    val mb = kb * 1024
+    val gb = mb * 1024
+    val tb = gb * 1024
+
+    return when {
+        bytes >= tb.toLong() ->
+            String.format(Locale.ENGLISH, "%.2f TB", bytes / tb)
+
+        bytes >= gb.toLong() ->
+            String.format(Locale.ENGLISH, "%.2f GB", bytes / gb)
+
+        bytes >= mb.toLong() ->
+            String.format(Locale.ENGLISH, "%.0f MB", bytes / mb)
+
+        else ->
+            String.format(Locale.ENGLISH, "%.0f KB", bytes / kb)
+    }
+}
 
 private val mutex = Mutex()
 suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalBytes: Long) {
@@ -96,7 +114,6 @@ suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalByte
 
         // Update values
         RamUsage = ramUsage
-        usedRam = totalRam - (totalRam * (100 - ramUsage) / 100)
         usedSwap = usageBytes
         totalSwap = totalBytes
         SwapUsage = usagePercent
@@ -195,11 +212,8 @@ fun RAM(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
         )
 
         SettingsToggle(
-            description = "RAM: ${formatRamMB(usedRam)}/${formatRamGB(totalRam)} ($RamUsage%)\nSWAP: ${
-                formatRamMB(
-                    usedSwap
-                )
-            }/${formatRamGB(totalSwap)} ($SwapUsage%)",
+            description = "RAM: ${formatBytes(usedRam)}/${formatBytes(totalRam)} ($RamUsage%)\n" +
+                          "SWAP: ${formatBytes(usedSwap)}/${formatBytes(totalSwap)} ($SwapUsage%)",
             showSwitch = false,
             default = false
         )

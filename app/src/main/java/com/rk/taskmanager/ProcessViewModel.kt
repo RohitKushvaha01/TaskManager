@@ -7,8 +7,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rk.daemon_messages
-import com.rk.send_daemon_messages
+import com.rk.taskmanager.daemon.daemon_messages
+import com.rk.taskmanager.daemon.send_daemon_messages
 import com.rk.taskmanager.screens.getApkNameFromPackage
 import com.rk.taskmanager.screens.getAppIconBitmap
 import com.rk.taskmanager.screens.isAppInstalled
@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import java.util.concurrent.ConcurrentHashMap
 
 data class ProcessUiModel(
     val proc: ProcessViewModel.Process,
@@ -160,6 +161,15 @@ class ProcessViewModel : ViewModel() {
         val executablePath: String
     )
 
+    private data class AppInfoCache(
+        val name: String,
+        val icon: ImageBitmap?,
+        val isSystem: Boolean,
+        val isApp: Boolean
+    )
+
+    private val appInfoCache = ConcurrentHashMap<String, AppInfoCache>()
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             daemon_messages.collect { message ->
@@ -205,12 +215,19 @@ class ProcessViewModel : ViewModel() {
 
                         val uiList = newProcesses.map { proc ->
                             async(Dispatchers.IO) {
-                                val context = TaskManager.requireContext()
-                                val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
-                                val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
-                                val system = isSystemApp(context, proc.cmdLine)
-                                val isApp = isAppInstalled(context, proc.cmdLine)
-                                ProcessUiModel(proc, name, icon, system, isApp && !system, isApp = isApp)
+                                val cached = appInfoCache[proc.cmdLine]
+                                if (cached != null) {
+                                    ProcessUiModel(proc, cached.name, cached.icon, cached.isSystem, cached.isApp && !cached.isSystem, isApp = cached.isApp)
+                                } else {
+                                    val context = TaskManager.requireContext()
+                                    val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
+                                    val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
+                                    val system = isSystemApp(context, proc.cmdLine)
+                                    val isApp = isAppInstalled(context, proc.cmdLine)
+                                    val info = AppInfoCache(name, icon, system, isApp)
+                                    appInfoCache[proc.cmdLine] = info
+                                    ProcessUiModel(proc, name, icon, system, isApp && !system, isApp = isApp)
+                                }
                             }
                         }.awaitAll()
 

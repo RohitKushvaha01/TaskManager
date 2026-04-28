@@ -4,9 +4,9 @@ val isIzzyOrFdroid = false
 
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.compose.compiler)
     id("com.google.devtools.ksp")
+    alias(libs.plugins.baselineprofile)
 }
 
 val gitCommitHash: Provider<String> =
@@ -91,16 +91,16 @@ android {
         targetSdk = 36
 
         //versioning
-        versionCode = 34
-        versionName = "1.3.4"
+        versionCode = 38
+        versionName = "1.3.8"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
         // isCoreLibraryDesugaringEnabled = true
     }
     packaging {
@@ -114,13 +114,10 @@ android {
         compose = true
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 }
 
 tasks.whenTaskAdded {
-    if (name.contains("ArtProfile") && isIzzyOrFdroid) {
+    if (isIzzyOrFdroid && name.contains("ArtProfile")) {
         println("Skipped Task $name")
         enabled = false
     }
@@ -150,6 +147,13 @@ dependencies {
 
 
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.profileinstaller)
+    "baselineProfile"(project(":baselineprofile"))
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+
+    if (findProject(":taskmanager_pro") != null) {
+        runtimeOnly(project(":taskmanager_pro"))
+    }
+    implementation(project(":Bridge"))
 }

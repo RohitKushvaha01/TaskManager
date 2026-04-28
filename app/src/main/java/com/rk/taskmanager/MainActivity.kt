@@ -16,18 +16,17 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.rk.DaemonResult
-import com.rk.daemon_messages
-import com.rk.isConnected
-import com.rk.send_daemon_messages
-import com.rk.startDaemon
 import com.rk.taskmanager.animations.NavigationAnimationTransitions
+import com.rk.taskmanager.daemon.DaemonResult
+import com.rk.taskmanager.daemon.daemon_messages
+import com.rk.taskmanager.daemon.isConnected
+import com.rk.taskmanager.daemon.send_daemon_messages
+import com.rk.taskmanager.daemon.startDaemon
 import com.rk.taskmanager.settings.About
 import com.rk.taskmanager.screens.MainScreen
 import com.rk.taskmanager.screens.ProcessInfo
 import com.rk.taskmanager.settings.SelectedWorkingMode
 import com.rk.taskmanager.settings.SettingsScreen
-import com.rk.taskmanager.settings.SupportSettingsScreen
 import com.rk.taskmanager.settings.Themes
 import com.rk.taskmanager.screens.procByPid
 import com.rk.taskmanager.screens.selectedscreen
@@ -39,6 +38,7 @@ import com.rk.taskmanager.settings.DaemonSettings
 import com.rk.taskmanager.settings.GraphSettings
 import com.rk.taskmanager.settings.ProcSettings
 import com.rk.taskmanager.settings.Settings
+import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -79,36 +79,26 @@ class MainActivity : ComponentActivity() {
 
         val graphMutex = Mutex()
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch(Dispatchers.Default) {
             daemon_messages.collect { message ->
-                launch {
-                    graphMutex.lock()
-                    if (message.startsWith("CPU:")) {
-                        updateCpuGraph(message.removePrefix("CPU:").toInt())
-                        delay(32)
-                    }
-
-                    if (message.startsWith("GPU:")){
-                        updateGpuGraph(message.removePrefix("GPU:").toInt())
-                        delay(32)
-                    }
-
-                    if (message.startsWith("SWAP:")) {
-                        val parts = message.removePrefix("SWAP:").split(":")
-                        if (parts.size == 2) {
-                            val used = parts[0]
-                            val total = parts[1]
-
-                            val usedValue = used.toFloatOrNull() ?: 0f
-                            val totalValue = total.toFloatOrNull() ?: 1f
-
-                            val percentage = (usedValue / totalValue) * 100
-
-                            updateRamAndSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
+                graphMutex.withLock {
+                    when {
+                        message.startsWith("CPU:") -> {
+                            updateCpuGraph(message.removePrefix("CPU:").toInt())
+                        }
+                        message.startsWith("GPU:") -> {
+                            updateGpuGraph(message.removePrefix("GPU:").toInt())
+                        }
+                        message.startsWith("SWAP:") -> {
+                            val parts = message.removePrefix("SWAP:").split(":")
+                            if (parts.size == 2) {
+                                val usedValue = parts[0].toFloatOrNull() ?: 0f
+                                val totalValue = parts[1].toFloatOrNull() ?: 1f
+                                val percentage = (usedValue / totalValue) * 100
+                                updateRamAndSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
+                            }
                         }
                     }
-
-                    graphMutex.unlock()
                 }
             }
         }
@@ -117,15 +107,17 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
 
-            var hasSupportedGPU = run {
-                val renderer = gpuViewModel.gpuInfo.value?.renderer
-                renderer?.contains("mali", true) == true ||
-                        renderer?.contains("adreno", true) == true
-            }
-
+            var hasSupportedGPU = false
+            
             while (isActive) {
-                graphMutex.withLock {
-                    if (isConnected) {
+                if (isConnected) {
+                    if (!hasSupportedGPU) {
+                        hasSupportedGPU = gpuViewModel.gpuInfo.value?.renderer?.let { renderer ->
+                            renderer.contains("mali", true) || renderer.contains("adreno", true)
+                        } ?: false
+                    }
+
+                    graphMutex.withLock {
                         send_daemon_messages.emit("CPU_PING")
                         delay(16)
                         send_daemon_messages.emit("SWAP_PING")
@@ -133,12 +125,6 @@ class MainActivity : ComponentActivity() {
                         if (hasSupportedGPU){
                             delay(15)
                             send_daemon_messages.emit("GPU_PING")
-                        }else{
-                            hasSupportedGPU = run {
-                                val renderer = gpuViewModel.gpuInfo.value?.renderer
-                                renderer?.contains("mali", true) == true ||
-                                        renderer?.contains("adreno", true) == true
-                            }
                         }
                     }
                 }
@@ -198,10 +184,6 @@ class MainActivity : ComponentActivity() {
                             Themes()
                         }
 
-                        composable(SettingsRoutes.Support.route){
-                            SupportSettingsScreen()
-                        }
-
                         composable(SettingsRoutes.About.route){
                             About()
                         }
@@ -251,26 +233,4 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-sealed class SettingsRoutes(val route: String) {
-    //main
-    data object Home : SettingsRoutes("home")
-    data object Settings : SettingsRoutes("settings")
-    data object SelectWorkingMode : SettingsRoutes("SelectWorkingMode")
-    data object ProcessInfo : SettingsRoutes("proc/{pid}") {
-        fun createRoute(proc: ProcessUiModel):String{
-            procByPid[proc.proc.pid] = WeakReference(proc)
-            return "proc/${proc.proc.pid}"
-        }
-    }
 
-    //settings
-
-
-    data object Daemon : SettingsRoutes("daemon")
-    data object Graphs : SettingsRoutes("graphs")
-    data object Procs : SettingsRoutes("procs")
-    data object Themes : SettingsRoutes("themes")
-    data object Support : SettingsRoutes("support")
-    data object About : SettingsRoutes("about")
-
-}

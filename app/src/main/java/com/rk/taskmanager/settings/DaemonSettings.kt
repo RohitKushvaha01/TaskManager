@@ -22,27 +22,30 @@ fun DaemonSettings(modifier: Modifier = Modifier) {
 
         PreferenceGroup(heading = stringResource(strings.working_mode)) {
             WorkingMode.entries.forEach { mode ->
-                SettingsToggle(
-                    label = stringResource(mode.nameRes),
-                    description = null,
-                    default = selectedMode.intValue == mode.id,
-                    sideEffect = {
-                        Settings.workingMode = mode.id
-                        selectedMode.intValue = mode.id
-
-                        Toast.makeText(context, strings.requires_daemon_restart.getString(), Toast.LENGTH_SHORT).show()
-                    },
-                    showSwitch = false,
-                    startWidget = {
-                        RadioButton(selected = selectedMode.intValue == mode.id, onClick = {
+                if (mode != WorkingMode.NOT_SET){
+                    SettingsToggle(
+                        label = stringResource(mode.nameRes!!),
+                        description = null,
+                        default = selectedMode.intValue == mode.id,
+                        sideEffect = {
                             Settings.workingMode = mode.id
                             selectedMode.intValue = mode.id
-                            Toast.makeText(context, strings.requires_daemon_restart.getString(), Toast.LENGTH_SHORT)
-                                .show()
 
-                        })
-                    },
-                )
+                            Toast.makeText(context, strings.requires_daemon_restart.getString(), Toast.LENGTH_SHORT).show()
+                        },
+                        showSwitch = false,
+                        startWidget = {
+                            RadioButton(selected = selectedMode.intValue == mode.id, onClick = {
+                                Settings.workingMode = mode.id
+                                selectedMode.intValue = mode.id
+                                Toast.makeText(context, strings.requires_daemon_restart.getString(), Toast.LENGTH_SHORT)
+                                    .show()
+
+                            })
+                        },
+                    )
+                }
+
             }
         }
     }

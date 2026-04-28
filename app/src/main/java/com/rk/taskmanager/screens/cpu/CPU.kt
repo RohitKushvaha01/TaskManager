@@ -55,14 +55,14 @@ import com.rk.components.SettingsToggle
 import com.rk.components.rememberMarker
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
-import com.rk.taskmanager.SettingsRoutes
 import com.rk.taskmanager.screens.selectedscreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.text.DecimalFormat
 import androidx.compose.runtime.collectAsState
-import com.rk.daemon_messages
-import com.rk.send_daemon_messages
+import com.rk.taskmanager.daemon.daemon_messages
+import com.rk.taskmanager.daemon.send_daemon_messages
+import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex

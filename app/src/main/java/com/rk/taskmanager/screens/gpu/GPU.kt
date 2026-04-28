@@ -42,7 +42,7 @@ import com.rk.components.SettingsToggle
 import com.rk.components.rememberMarker
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
-import com.rk.taskmanager.SettingsRoutes
+
 import com.rk.taskmanager.screens.cpu.InfoCard
 import com.rk.taskmanager.screens.cpu.InfoItem
 import com.rk.taskmanager.screens.cpu.MAX_GRAPH_POINTS
@@ -51,6 +51,7 @@ import com.rk.taskmanager.screens.cpu.RangeProvider
 import com.rk.taskmanager.screens.cpu.StartAxisValueFormatter
 import com.rk.taskmanager.screens.cpu.xValues
 import com.rk.taskmanager.screens.selectedscreen
+import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

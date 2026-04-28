@@ -3,6 +3,8 @@ package com.rk.taskmanager
 import android.app.Application
 import android.content.Context
 import androidx.room.*
+import com.rk.bridge.BridgeProvider
+import com.rk.bridge.bridge
 import com.rk.taskmanager.data.AppDatabase
 
 class TaskManager : Application() {
@@ -43,5 +45,6 @@ class TaskManager : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        bridge?.initApp(this)
     }
 }

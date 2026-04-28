@@ -20,14 +20,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.rk.DaemonResult
 import com.rk.components.InfoBlock
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
-import com.rk.isSuWorking
-import com.rk.startDaemon
-import com.rk.taskmanager.SettingsRoutes
+import com.rk.taskmanager.daemon.DaemonResult
+import com.rk.taskmanager.daemon.isSuWorking
+import com.rk.taskmanager.daemon.startDaemon
 import com.rk.taskmanager.shizuku.ShizukuShell
 import com.rk.taskmanager.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -36,9 +35,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-enum class WorkingMode(val id:Int,val nameRes: Int){
+enum class WorkingMode(val id:Int,val nameRes: Int?){
     ROOT(0,strings.root),
-    SHIZUKU(1,strings.shizuku)
+    SHIZUKU(1,strings.shizuku),
+    NOT_SET(-1,null)
 }
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -73,42 +73,45 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
 
             PreferenceGroup(heading = stringResource(strings.working_mode)) {
                 WorkingMode.entries.forEach { mode ->
-                    SettingsToggle(
-                        label = mode.name,
-                        description = null,
-                        default = selectedMode.intValue == mode.id,
-                        sideEffect = {
-                            Settings.workingMode = mode.id
-                            selectedMode.intValue = mode.id
-                            message = ""
+                    if (mode != WorkingMode.NOT_SET){
+                        SettingsToggle(
+                            label = mode.name,
+                            description = null,
+                            default = selectedMode.intValue == mode.id,
+                            sideEffect = {
+                                Settings.workingMode = mode.id
+                                selectedMode.intValue = mode.id
+                                message = ""
 
-                            GlobalScope.launch(Dispatchers.IO) {
-                                val daemonResult = startDaemon(context, mode.id)
+                                GlobalScope.launch(Dispatchers.IO) {
+                                    val daemonResult = startDaemon(context, mode.id)
 
-                                withContext(Dispatchers.Main) {
-                                    when (daemonResult) {
-                                        DaemonResult.OK -> {
-                                            navController.navigate(SettingsRoutes.Home.route)
-                                        }
+                                    withContext(Dispatchers.Main) {
+                                        when (daemonResult) {
+                                            DaemonResult.OK -> {
+                                                navController.navigate(SettingsRoutes.Home.route)
+                                            }
 
-                                        else -> {
-                                            message = daemonResult.message.toString()
+                                            else -> {
+                                                message = daemonResult.message.toString()
+                                            }
                                         }
                                     }
-                                }
 
+                                }
+                            },
+                            showSwitch = false,
+                            startWidget = {},
+                            endWidget = {
+                                Icon(
+                                    modifier = Modifier.padding(end = 10.dp),
+                                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                    contentDescription = null
+                                )
                             }
-                        },
-                        showSwitch = false,
-                        startWidget = {},
-                        endWidget = {
-                            Icon(
-                                modifier = Modifier.padding(end = 10.dp),
-                                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                                contentDescription = null
-                            )
-                        }
-                    )
+                        )
+                    }
+
                 }
             }
 

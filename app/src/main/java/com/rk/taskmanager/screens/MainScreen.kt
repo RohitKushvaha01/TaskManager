@@ -49,7 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-var selectedscreen = mutableIntStateOf(0)
+var selectedscreen = mutableIntStateOf(if (Settings.defaultToProcessScreen) 1 else 0)
 var showFilter = mutableStateOf(false)
 var showSort = mutableStateOf(false)
 
@@ -103,32 +103,56 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
                         HorizontalDivider()
                     }
                     NavigationBar {
-                        NavigationBarItem(
-                            selected = selectedscreen.intValue == 0, onClick = {
-                                selectedscreen.intValue = 0
-                            },
-                            icon = {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.speed_24px),
-                                    contentDescription = null
-                                )
-                            },
-                            label = { Text(stringResource(strings.res)) }
-                        )
 
-                        NavigationBarItem(
-                            selected = selectedscreen.intValue == 1,
-                            onClick = {
-                                selectedscreen.intValue = 1
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Filled.PlayArrow,
-                                    contentDescription = null
-                                )
-                            },
-                            label = { Text(stringResource(strings.procs)) }
-                        )
+
+
+                        val processItem = @Composable {
+                            NavigationBarItem(
+                                selected = selectedscreen.intValue == 1,
+                                onClick = {
+                                    selectedscreen.intValue = 1
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Filled.PlayArrow,
+                                        contentDescription = null
+                                    )
+                                },
+                                label = { Text(stringResource(strings.procs)) }
+                            )
+                        }
+
+
+                        val resourceItem = @Composable {
+                            NavigationBarItem(
+                                selected = selectedscreen.intValue == 0, onClick = {
+                                    selectedscreen.intValue = 0
+                                },
+                                icon = {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.speed_24px),
+                                        contentDescription = null
+                                    )
+                                },
+                                label = { Text(stringResource(strings.res)) }
+                            )
+                        }
+
+
+
+                        if (Settings.defaultToProcessScreen) {
+                            processItem()
+                            resourceItem()
+                        } else {
+                            resourceItem()
+                            processItem()
+                        }
+
+
+
+
+
+
                     }
                 }
 

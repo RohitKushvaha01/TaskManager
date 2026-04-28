@@ -80,6 +80,13 @@ object Settings {
         )
         set(value) = Preference.setBoolean(key = "confirmkill",value)
 
+    var defaultToProcessScreen
+        get() = Preference.getBoolean(
+            key = "defaultToProcessScreen",
+            default = false
+        )
+        set(value) = Preference.setBoolean(key = "defaultToProcessScreen",value)
+
 
 }
 

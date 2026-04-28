@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
+import com.rk.taskmanager.screens.selectedscreen
 
 var pullToRefresh_procs by mutableStateOf(Settings.pullToRefresh_procs)
 
@@ -19,6 +20,9 @@ fun ProcSettings(modifier: Modifier = Modifier) {
             })
             SettingsToggle(label = "Confirm stop", description = "Confirm before killing a process", default = Settings.confirmkill, showSwitch = true, sideEffect = {
                 Settings.confirmkill = it
+            })
+            SettingsToggle(label = "Default to process screen", description = "Show processes screen by default", default = Settings.defaultToProcessScreen, showSwitch = true, sideEffect = {
+                Settings.defaultToProcessScreen = it
             })
         }
     }

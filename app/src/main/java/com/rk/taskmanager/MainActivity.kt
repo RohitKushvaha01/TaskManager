@@ -37,6 +37,7 @@ import com.rk.taskmanager.screens.ram.updateRamAndSwapGraph
 import com.rk.taskmanager.settings.DaemonSettings
 import com.rk.taskmanager.settings.GraphSettings
 import com.rk.taskmanager.settings.ProcSettings
+import com.rk.taskmanager.settings.ProVersion
 import com.rk.taskmanager.settings.Settings
 import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
@@ -188,6 +189,9 @@ class MainActivity : ComponentActivity() {
                             About()
                         }
 
+                        composable(SettingsRoutes.ProVersion.route){
+                            ProVersion()
+                        }
 
 
                         composable("proc/{pid}") {

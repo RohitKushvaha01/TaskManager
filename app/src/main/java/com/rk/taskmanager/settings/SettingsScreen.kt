@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MonitorHeart
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import com.rk.bridge.bridge
 
 
 @OptIn(
@@ -92,6 +94,18 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             },
             onNavigate = {
                 navController.navigate(SettingsRoutes.Themes.route)
+            },
+        )
+
+        PreferenceCategory(
+            label = "Pro Version",
+            description = "Unlock exclusive features",
+            startWidget = {
+                Icon(imageVector = Icons.Outlined.Star,null)
+            },
+            enabled = bridge != null,
+            onNavigate = {
+                navController.navigate(SettingsRoutes.ProVersion.route)
             },
         )
 

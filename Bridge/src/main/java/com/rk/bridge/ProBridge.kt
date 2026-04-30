@@ -6,4 +6,5 @@ import android.app.Application
 interface ProBridge {
     fun initApp(app: Application)
     fun launchPurchase(activity: Activity)
+    suspend fun getProVersionPrice(): String?
 }

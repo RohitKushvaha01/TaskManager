@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import androidx.navigation.NavController
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
+import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.components.ProcessSearchBar
 import com.rk.taskmanager.daemon.DaemonResult
 import com.rk.taskmanager.daemon.isConnected
@@ -64,18 +66,6 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
                         TopAppBar(
                             title = { Text(stringResource(strings.app_name)) },
                             actions = {
-                                if (selectedscreen.intValue == 1) {
-                                    IconButton(
-                                        modifier = Modifier.padding(8.dp),
-                                        onClick = {
-                                            showFilter.value = !showFilter.value
-                                        }) {
-                                        Icon(
-                                            imageVector = Filter,
-                                            contentDescription = null
-                                        )
-                                    }
-                                }
 
                                 IconButton(
                                     modifier = Modifier.padding(8.dp),

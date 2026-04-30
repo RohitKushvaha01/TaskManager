@@ -58,13 +58,6 @@ private data class ProFeature(
 
 private val features = listOf(
     ProFeature(
-        title = "System Overlay",
-        description = "Floating resource monitor over any app",
-        icon = Icons.Outlined.Layers,
-        iconTint = Purple600,
-        iconBackground = Purple50
-    ),
-    ProFeature(
         title = "Per-Core Live Graphs",
         description = "CPU usage breakdown per individual core",
         icon = Icons.Outlined.ShowChart,

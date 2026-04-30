@@ -1,5 +1,6 @@
 package com.rk.taskmanager.settings
 
+import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rk.bridge.bridge
+import com.rk.taskmanager.MainActivity
+import kotlinx.coroutines.launch
 
 // ── Palette ──────────────────────────────────────────────────────────────────
 
@@ -98,6 +101,7 @@ private val features = listOf(
 fun ProVersion(modifier: Modifier = Modifier) {
     val activity = LocalActivity.current
     var price by remember { mutableStateOf<String?>(null) }
+    val isPro by remember{ (bridge?.isPro() ?: mutableStateOf(false)) }
 
     LaunchedEffect(Unit) {
         price = bridge?.getProVersionPrice()
@@ -160,22 +164,30 @@ fun ProVersion(modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // ── Purchase card ─────────────────────────────────────────────
-            PurchaseCard(
-                price = price,
-                enabled = activity != null && bridge != null,
-                onPurchase = {
-                    activity?.let { bridge?.launchPurchase(it) }
-                }
-            )
+            // ── Purchase card or Unlocked card ────────────────────────────
+            if (isPro) {
+                UnlockedCard()
+            } else {
+                PurchaseCard(
+                    price = price,
+                    enabled = activity != null && bridge != null,
+                    onPurchase = {
+                        MainActivity.scope!!.launch {
+                            activity?.let { bridge?.launchPurchase(it) }
+                        }
+                    }
+                )
+            }
 
             // ── Footer note ───────────────────────────────────────────────
-            Text(
-                text = "Secure payment via Google Play",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            if (!isPro) {
+                Text(
+                    text = "Secure payment via Google Play",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
         }
     }
 }
@@ -342,7 +354,7 @@ private fun PurchaseCard(
             }
 
             Text(
-                text = "Pay once, own it forever. No subscription.",
+                text = "Pay once, permanent pro access.",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -357,15 +369,63 @@ private fun PurchaseCard(
                     disabledContainerColor = Purple200,
                     disabledContentColor = Color.White.copy(alpha = 0.7f)
                 ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Unlock Pro",
-                    fontSize = 15.sp,
+                    text = "Upgrade Now",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+// ── Unlocked Card ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun UnlockedCard() {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Teal50),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Check,
+                    contentDescription = null,
+                    tint = Teal700,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Column {
+                Text(
+                    text = "Pro Unlocked",
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.2.sp
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Thank you for supporting Task Manager!",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

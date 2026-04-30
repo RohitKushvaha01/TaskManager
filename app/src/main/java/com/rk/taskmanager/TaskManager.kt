@@ -2,10 +2,13 @@ package com.rk.taskmanager
 
 import android.app.Application
 import android.content.Context
+import android.widget.Toast
+import androidx.compose.runtime.*
 import androidx.room.*
 import com.rk.bridge.BridgeProvider
 import com.rk.bridge.bridge
 import com.rk.taskmanager.data.AppDatabase
+import com.rk.taskmanager.settings.SettingsRoutes
 
 class TaskManager : Application() {
     companion object {
@@ -45,6 +48,8 @@ class TaskManager : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        bridge?.initApp(this)
+        bridge?.initApp(this, launchPurchaseUiCallback = {navControllerRef.get()?.navigate(SettingsRoutes.ProVersion.route)}, onPurchaseCallback = {
+            // Purchase successful, state is updated automatically via the proUnlocked MutableState in the bridge
+        })
     }
 }

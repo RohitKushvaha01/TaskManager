@@ -62,8 +62,11 @@ import java.text.DecimalFormat
 import androidx.compose.runtime.collectAsState
 import com.rk.taskmanager.daemon.daemon_messages
 import com.rk.taskmanager.daemon.send_daemon_messages
+import com.rk.taskmanager.navControllerRef
 import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -85,18 +88,23 @@ private val cpuYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GR
 
 private val CpuModelProducer = CartesianChartModelProducer()
 
-private var cpuUsage by mutableIntStateOf(0)
+private val _cpuUsage = MutableStateFlow(0)
+val cpuUsage = _cpuUsage.asStateFlow()
+
+fun setCpuUsage(value: Int) {
+    _cpuUsage.value = value
+}
 private val mutex = Mutex()
 
 suspend fun updateCpuGraph(usage: Int) {
     mutex.withLock {
         withContext(Dispatchers.Main){
-            cpuUsage = usage
+            setCpuUsage(usage)
         }
         cpuYValues.removeFirst()
-        cpuYValues.addLast(cpuUsage)
+        cpuYValues.addLast(cpuUsage.value)
 
-        if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+        if (selectedscreen.intValue == 0 && navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
             CpuModelProducer.runTransaction {
                 lineSeries {
                     series(x = xValues, y = cpuYValues)
@@ -193,13 +201,15 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
             animationSpec = null,
         )
 
+        val usage by cpuUsage.collectAsState()
+
 
         SettingsToggle(
             description = "CPU - ${
-                if (cpuUsage < 0) {
+                if (usage < 0) {
                     "No Data"
                 } else {
-                    "$cpuUsage%"
+                    "$usage%"
                 }
             }",
             showSwitch = false,

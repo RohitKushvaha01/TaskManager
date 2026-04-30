@@ -24,6 +24,7 @@ import androidx.core.content.pm.PackageInfoCompat
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.rk.bridge.bridge
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
@@ -113,6 +114,46 @@ fun About(modifier: Modifier = Modifier) {
                     Text(text = BuildConfig.GIT_SHORT_COMMIT_HASH, style = MaterialTheme.typography.titleSmall)
                 },
             )
+
+            PreferenceTemplate(
+                modifier =
+                    Modifier.combinedClickable(
+                        enabled = true,
+                        onClick = {},
+                        onLongClick = { copyToClipboard(context,BuildConfig.GIT_SHORT_COMMIT_HASH) },
+                    ),
+                title = {
+                    Text(text = "Build Type", style = MaterialTheme.typography.titleMedium)
+                },
+                description = {
+                    Text(text = if (bridge == null){
+                        "Community"
+                    }else{
+                        "Full"
+                    }, style = MaterialTheme.typography.titleSmall)
+                },
+            )
+
+
+            PreferenceTemplate(
+                modifier =
+                    Modifier.combinedClickable(
+                        enabled = true,
+                        onClick = {},
+                        onLongClick = { copyToClipboard(context,BuildConfig.GIT_SHORT_COMMIT_HASH) },
+                    ),
+                title = {
+                    Text(text = "Is Pro", style = MaterialTheme.typography.titleMedium)
+                },
+                description = {
+                    Text(text = if (bridge?.isPro()?.value == true){
+                        "Yes"
+                    }else{
+                        "No"
+                    }, style = MaterialTheme.typography.titleSmall)
+                },
+            )
+
         }
     }
 }

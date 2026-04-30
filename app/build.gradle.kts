@@ -153,7 +153,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
 
     if (findProject(":taskmanager_pro") != null) {
-        runtimeOnly(project(":taskmanager_pro"))
+        implementation(project(":taskmanager_pro"))
     }
     implementation(project(":Bridge"))
 }

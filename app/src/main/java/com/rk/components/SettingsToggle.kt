@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -93,20 +94,30 @@ fun SettingsToggle(
                 if (label != null) {
                    if (selection){
                        SelectionContainer {
-                           Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                           Text(
+                               text = label,
+                               style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                               maxLines = 1,
+                               overflow = TextOverflow.Ellipsis
+                           )
                        }
                    }else{
-                       Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                       Text(
+                           text = label,
+                           style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                           maxLines = 1,
+                           overflow = TextOverflow.Ellipsis
+                       )
                    }
                 }
             },
             description = { description?.let {
                 if (selection){
                     SelectionContainer {
-                        Text(text = it)
+                        Text(text = it, style = MaterialTheme.typography.bodyMedium)
                     }
                 }else{
-                    Text(it)
+                    Text(text = it, style = MaterialTheme.typography.bodyMedium)
                 }
             } },
             enabled = true,

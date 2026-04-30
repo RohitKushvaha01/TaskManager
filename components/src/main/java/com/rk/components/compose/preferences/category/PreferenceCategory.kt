@@ -20,18 +20,20 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 
@@ -50,34 +52,44 @@ fun PreferenceCategory(
     PreferenceTemplate(
         modifier =
             modifier
-                .padding(horizontal = 16.dp)
-                .clip(MaterialTheme.shapes.large)
-                .clickable { onNavigate() }
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(enabled = enabled) { onNavigate() }
                 .background(
-                    if (isSelected) MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp)
+                    if (isSelected) MaterialTheme.colorScheme.surfaceVariant
                     else Color.Transparent
                 ),
-        verticalPadding = 14.dp,
+        verticalPadding = 12.dp,
         title = {
             Text(
                 text = label,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
                 color =
                     if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onBackground,
+                    else MaterialTheme.colorScheme.onSurface,
             )
         },
         description = {
             if (description != null) {
-                Text(text = description)
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         },
         startWidget = {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(32.dp)) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+            ) {
                 if (iconResource != null) {
                     Icon(
                         painter = painterResource(id = iconResource),
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -86,7 +98,18 @@ fun PreferenceCategory(
                 }
             }
         },
-        endWidget = { endWidget?.let { it() } },
+        endWidget = {
+            if (endWidget != null) {
+                endWidget()
+            } else {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        },
         enabled = enabled,
     )
 }

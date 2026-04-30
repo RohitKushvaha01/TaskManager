@@ -42,6 +42,7 @@ import com.rk.components.SettingsToggle
 import com.rk.components.rememberMarker
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
+import com.rk.taskmanager.navControllerRef
 
 import com.rk.taskmanager.screens.cpu.InfoCard
 import com.rk.taskmanager.screens.cpu.InfoItem
@@ -72,7 +73,7 @@ suspend fun updateGpuGraph(usage: Int) {
         gpuYValues.removeFirst()
         gpuYValues.addLast(gpuUsage)
 
-        if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+        if (selectedscreen.intValue == 0 && navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
             GpuModelProducer.runTransaction {
                 lineSeries {
                     series(x = xValues, y = gpuYValues)

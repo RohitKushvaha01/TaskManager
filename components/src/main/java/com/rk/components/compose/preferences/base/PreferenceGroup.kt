@@ -16,6 +16,7 @@ package com.rk.components.compose.preferences.base
  * limitations under the License.
  */
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,8 +33,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun PreferenceGroup(
@@ -50,8 +54,13 @@ fun PreferenceGroup(
         PreferenceGroupHeading(heading)
         Surface(
             modifier = Modifier.padding(horizontal = 16.dp),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = 1.dp,
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
+            border = BorderStroke(
+                width = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            ),
         ) {
             if (showDividers) {
                 DividerColumn(
@@ -73,12 +82,18 @@ fun PreferenceGroupHeading(heading: String?, modifier: Modifier = Modifier) {
     if (heading != null) {
         Column(
             verticalArrangement = Arrangement.Center,
-            modifier = modifier.height(48.dp).padding(horizontal = 32.dp).fillMaxWidth(),
+            modifier = modifier
+                .padding(horizontal = 24.dp)
+                .padding(top = 16.dp, bottom = 8.dp)
+                .fillMaxWidth(),
         ) {
             Text(
-                text = heading,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                text = heading.uppercase(),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.5.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.semantics { this.heading() },
             )
         }

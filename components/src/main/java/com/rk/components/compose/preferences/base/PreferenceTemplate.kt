@@ -33,8 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rk.components.compose.utils.addIf
 
 /** A template used to create most preference-related components in the Preference UI. */
@@ -77,14 +79,21 @@ fun PreferenceTemplate(
             ) {
                 Column(Modifier.weight(1f)) {
                     CompositionLocalProvider(
-                        LocalContentColor provides MaterialTheme.colorScheme.onBackground,
-                        LocalTextStyle provides MaterialTheme.typography.bodyLarge,
+                        LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+                        LocalTextStyle provides MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.sp
+                        ),
                     ) {
                         title()
                     }
                     CompositionLocalProvider(
                         LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
-                        LocalTextStyle provides MaterialTheme.typography.bodyMedium,
+                        LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp
+                        ),
                     ) {
                         description()
                     }

@@ -41,6 +41,7 @@ import com.rk.components.rememberMarker
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.TaskManager
+import com.rk.taskmanager.navControllerRef
 import com.rk.taskmanager.screens.cpu.MAX_GRAPH_POINTS
 import com.rk.taskmanager.screens.cpu.MarkerValueFormatter
 import com.rk.taskmanager.screens.cpu.RangeProvider
@@ -128,7 +129,7 @@ suspend fun updateRamAndSwapGraph(usagePercent: Int, usageBytes: Long, totalByte
 
 
         // Update chart model with both lines
-        if (selectedscreen.intValue == 0 && MainActivity.instance?.navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+        if (selectedscreen.intValue == 0 && navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
             RamModelProducer.runTransaction {
                 lineSeries {
                     series(x = xValues, y = ramYValues) // RAM line

@@ -9,12 +9,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Android
 import androidx.compose.material.icons.outlined.ColorLens
-import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -57,7 +57,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             label = "Daemon",
             description = "TaskManagerD settings",
             startWidget = {
-                Icon(imageVector = Icons.Outlined.Android,null)
+                Icon(imageVector = Icons.Outlined.Android,null, tint = MaterialTheme.colorScheme.primary)
             },
             onNavigate = {
                 navController.navigate(SettingsRoutes.Daemon.route)
@@ -67,7 +67,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             label = "Graph",
             description = "cpu,ram,swap graph settings",
             startWidget = {
-                Icon(imageVector = Icons.Outlined.MonitorHeart,null)
+                Icon(imageVector = Icons.Outlined.MonitorHeart,null, tint = MaterialTheme.colorScheme.primary)
             },
             onNavigate = {
                 navController.navigate(SettingsRoutes.Graphs.route)
@@ -79,7 +79,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             label = "Processes",
             description = "settings for processes screen",
             startWidget = {
-                Icon(imageVector = Icons.AutoMirrored.Outlined.FormatListBulleted,null)
+                Icon(imageVector = Icons.AutoMirrored.Outlined.FormatListBulleted,null, tint = MaterialTheme.colorScheme.primary)
             },
             onNavigate = {
                 navController.navigate(SettingsRoutes.Procs.route)
@@ -90,7 +90,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             label = "Themes",
             description = "look and feel",
             startWidget = {
-                Icon(imageVector = Icons.Outlined.ColorLens,null)
+                Icon(imageVector = Icons.Outlined.ColorLens,null, tint = MaterialTheme.colorScheme.primary)
             },
             onNavigate = {
                 navController.navigate(SettingsRoutes.Themes.route)
@@ -101,7 +101,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             label = "Pro Version",
             description = "Unlock exclusive features",
             startWidget = {
-                Icon(imageVector = Icons.Outlined.Star,null)
+                Icon(imageVector = Icons.Outlined.Star,null, tint = MaterialTheme.colorScheme.primary)
             },
             enabled = bridge != null,
             onNavigate = {
@@ -113,7 +113,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             label = "About",
             description = "Application info",
             startWidget = {
-                Icon(imageVector = Icons.Outlined.Info,null)
+                Icon(imageVector = Icons.Outlined.Info,null, tint = MaterialTheme.colorScheme.primary)
             },
             onNavigate = {
                 navController.navigate(SettingsRoutes.About.route)
@@ -146,7 +146,7 @@ fun SelectableCard(
             .fillMaxHeight()
             .padding(vertical = 16.dp)
             .padding(start = 16.dp),
-        title = { Text(fontWeight = FontWeight.Bold, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        title = { Text(fontWeight = FontWeight.Medium, text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         description = { description?.let { Text(it) } },
         enabled = isEnaled,
         applyPaddings = false,

@@ -15,35 +15,38 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.json.JSONObject
 
 suspend fun CoroutineScope.graphUpdater(activity: MainActivity){
     val graphMutex = Mutex()
     launch(Dispatchers.Default) {
         daemon_messages.collect { message ->
-            graphMutex.withLock {
-                when {
-                    message.startsWith("CPU:") -> {
-                        updateCpuGraph(message.removePrefix("CPU:").toInt())
-                    }
-                    message.startsWith("GPU:") -> {
-                        updateGpuGraph(message.removePrefix("GPU:").toInt())
-                    }
-                    message.startsWith("SWAP:") -> {
-                        val parts = message.removePrefix("SWAP:").split(":")
-                        if (parts.size == 2) {
-                            val usedValue = parts[0].toFloatOrNull() ?: 0f
-                            val totalValue = parts[1].toFloatOrNull() ?: 1f
-                            val percentage = (usedValue / totalValue) * 100
-                            updateRamAndSwapGraph(percentage.toInt(), usedValue.toLong(), totalValue.toLong())
+            try {
+                val json = JSONObject(message)
+                val type = json.optString("type")
+                graphMutex.withLock {
+                    when (type) {
+                        "CPU_USAGE" -> {
+                            updateCpuGraph(json.optInt("usage"))
+                        }
+                        "GPU_USAGE" -> {
+                            updateGpuGraph(json.optInt("usage"))
+                        }
+                        "SWAP_USAGE" -> {
+                            val used = json.optLong("used", 0L)
+                            val total = json.optLong("total", 1L)
+                            val percentage = (used.toFloat() / total.toFloat()) * 100
+                            updateRamAndSwapGraph(percentage.toInt(), used, total)
                         }
                     }
                 }
+            } catch (e: Exception) {
+                // Ignore non-graph messages
             }
         }
     }
 
     launch(Dispatchers.IO) {
-
         var hasSupportedGPU = false
 
         while (isActive) {
@@ -55,13 +58,13 @@ suspend fun CoroutineScope.graphUpdater(activity: MainActivity){
                 }
 
                 graphMutex.withLock {
-                    send_daemon_messages.emit("CPU_PING")
+                    send_daemon_messages.emit(JSONObject().apply { put("cmd", "CPU_PING") }.toString())
                     delay(16)
-                    send_daemon_messages.emit("SWAP_PING")
+                    send_daemon_messages.emit(JSONObject().apply { put("cmd", "SWAP_PING") }.toString())
 
                     if (hasSupportedGPU){
                         delay(15)
-                        send_daemon_messages.emit("GPU_PING")
+                        send_daemon_messages.emit(JSONObject().apply { put("cmd", "GPU_PING") }.toString())
                     }
                 }
             }

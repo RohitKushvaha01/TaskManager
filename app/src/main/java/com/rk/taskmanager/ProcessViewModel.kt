@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
 data class ProcessUiModel(
@@ -161,6 +161,8 @@ class ProcessViewModel : ViewModel() {
         val executablePath: String
     )
 
+    private val appInfoCache = ConcurrentHashMap<String, AppInfoCache>()
+
     private data class AppInfoCache(
         val name: String,
         val icon: ImageBitmap?,
@@ -168,25 +170,22 @@ class ProcessViewModel : ViewModel() {
         val isApp: Boolean
     )
 
-    private val appInfoCache = ConcurrentHashMap<String, AppInfoCache>()
-
     init {
         viewModelScope.launch(Dispatchers.IO) {
             daemon_messages.collect { message ->
-                if (message.startsWith("[") && message.endsWith("]")) {
-                    try {
-                        val jsonArray = JSONArray(message)
+                try {
+                    val root = JSONObject(message)
+                    if (root.optString("type") == "PROCESS_LIST") {
+                        val jsonArray = root.getJSONArray("processes")
                         val newProcesses = mutableListOf<Process>()
-
                         var totalThreads = 0
+                        val context = TaskManager.requireContext()
+                        val myPkg = context.packageName
+
                         for (i in 0 until jsonArray.length()) {
                             val obj = jsonArray.getJSONObject(i)
-
                             val cmdLine = obj.optString("cmdLine", "")
-                            if (cmdLine == TaskManager.requireContext().packageName){
-                                //do not show taskmanager itself
-                                continue
-                            }
+                            if (cmdLine == myPkg) continue
 
                             newProcesses.add(
                                 Process(
@@ -198,7 +197,7 @@ class ProcessViewModel : ViewModel() {
                                     parentPid = obj.optInt("parentPid", 0),
                                     isForeground = obj.optBoolean("isForeground", false),
                                     memoryUsageKb = obj.optLong("memoryUsageKb", 0L),
-                                    cmdLine = obj.optString("cmdLine", ""),
+                                    cmdLine = cmdLine,
                                     state = obj.optString("state", ""),
                                     threads = obj.optInt("threads", 0).also { totalThreads += it },
                                     startTime = obj.optLong("startTime", 0L),
@@ -219,7 +218,6 @@ class ProcessViewModel : ViewModel() {
                                 if (cached != null) {
                                     ProcessUiModel(proc, cached.name, cached.icon, cached.isSystem, cached.isApp && !cached.isSystem, isApp = cached.isApp)
                                 } else {
-                                    val context = TaskManager.requireContext()
                                     val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
                                     val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
                                     val system = isSystemApp(context, proc.cmdLine)
@@ -233,14 +231,13 @@ class ProcessViewModel : ViewModel() {
 
                         _procCount.value = newProcesses.size
 
-                        // Update state on Main thread to avoid snapshot issues
                         withContext(Dispatchers.Main) {
                             _uiProcesses.update { uiList }
                             isLoading.value = false
                         }
-                    } catch (e: Exception) {
-                        Log.e("ProcessList", "Failed to parse process list: ${e.message}")
                     }
+                } catch (e: Exception) {
+                    Log.e("ProcessList", "Failed to parse process list: ${e.message}")
                 }
             }
         }
@@ -253,13 +250,13 @@ class ProcessViewModel : ViewModel() {
     fun refreshProcessesManual() {
         isLoading.value = true
         viewModelScope.launch {
-            send_daemon_messages.emit("LIST_PROCESS")
+            send_daemon_messages.emit(JSONObject().apply { put("cmd", "LIST_PROCESS") }.toString())
         }
     }
 
     fun refreshProcessesAuto() {
         viewModelScope.launch {
-            send_daemon_messages.emit("LIST_PROCESS")
+            send_daemon_messages.emit(JSONObject().apply { put("cmd", "LIST_PROCESS") }.toString())
         }
     }
 }

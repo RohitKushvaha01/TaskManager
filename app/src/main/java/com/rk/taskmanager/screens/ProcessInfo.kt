@@ -89,6 +89,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.ref.WeakReference
@@ -195,16 +196,26 @@ suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
             withTimeout(3000L) {
                 val resultDeferred = async {
                     daemon_messages.first { message ->
-                        message.startsWith("KILL_RESULT:")
-                    }.removePrefix("KILL_RESULT:").toBoolean()
+                        try {
+                            val json = JSONObject(message)
+                            json.optString("type") == "KILL_RESULT"
+                        } catch (e: Exception) {
+                            false
+                        }
+                    }.let { JSONObject(it).optBoolean("success") }
                 }
 
                 // Send kill command
-                if (isApk) {
-                    send_daemon_messages.emit("FORCE_STOP:${proc.cmdLine}")
-                } else {
-                    send_daemon_messages.emit("KILL:${proc.pid}")
+                val cmd = JSONObject().apply {
+                    if (isApk) {
+                        put("cmd", "FORCE_STOP")
+                        put("pkg", proc.cmdLine)
+                    } else {
+                        put("cmd", "KILL")
+                        put("pid", proc.pid)
+                    }
                 }
+                send_daemon_messages.emit(cmd.toString())
 
                 // Wait for result
                 resultDeferred.await()
@@ -269,12 +280,6 @@ fun ProcessInfo(
                                 indication = ripple(),
                                 interactionSource = interactionSource,
                                 onClick = {
-//                                    scope.launch {
-//                                        proc!!.killing.value = true
-//                                        proc!!.killed.value = killProc(proc!!.proc)
-//                                        delay(300)
-//                                        proc!!.killing.value = false
-//                                    }
                                     showKillDialog = proc
                                 }
                             ),
@@ -376,16 +381,22 @@ fun ProcessInfo(
 
                     LaunchedEffect(Unit) {
                         daemon_messages.collect { message ->
-                            if (message.startsWith("CPU_PID:")) {
-                                cpuUsage.intValue =
-                                    message.removePrefix("CPU_PID:").toFloat().toInt()
-                            }
+                            try {
+                                val json = JSONObject(message)
+                                if (json.optString("type") == "PROCESS_CPU_USAGE") {
+                                    cpuUsage.intValue = json.optInt("usage", -1)
+                                }
+                            } catch (e: Exception) {}
                         }
                     }
 
                     LaunchedEffect(Unit) {
                         while (isActive) {
-                            send_daemon_messages.emit("PING_PID_CPU:${proc!!.proc.pid}")
+                            val cmd = JSONObject().apply {
+                                put("cmd", "PING_PID_CPU")
+                                put("pid", proc!!.proc.pid)
+                            }
+                            send_daemon_messages.emit(cmd.toString())
                             delay(1000)
                         }
                     }

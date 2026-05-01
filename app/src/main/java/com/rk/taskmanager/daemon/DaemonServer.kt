@@ -3,7 +3,6 @@ package com.rk.taskmanager.daemon
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.rk.taskmanager.daemon.DaemonServer.received_messages
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -14,6 +13,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.io.IOException
 import java.net.InetAddress
 import java.net.ServerSocket
@@ -21,18 +21,11 @@ import java.net.Socket
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.text.isNotEmpty
-import kotlin.text.trim
 
-
-
-
-val daemon_messages = received_messages.asSharedFlow()
+val daemon_messages = DaemonServer.received_messages.asSharedFlow()
 val send_daemon_messages = MutableSharedFlow<String>(extraBufferCapacity = 10, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 var isConnected by mutableStateOf(false)
     private set
-
-
 
 object DaemonServer {
 
@@ -42,12 +35,10 @@ object DaemonServer {
     val received_messages =
         MutableSharedFlow<String>(extraBufferCapacity = 10, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-
     private var acceptJob: Job? = null
     private var clientJob: Job? = null
     private var currentClient: Socket? = null
 
-    // --- Logging helper ---
     private fun log(msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
         println("[$ts] [DaemonServer] $msg")
@@ -84,10 +75,10 @@ object DaemonServer {
                     if (currentClient != null) {
                         log("Client rejected (already connected)")
                         try {
-                            client.outputStream.write("BUSY\n".toByteArray())
+                            val busy = JSONObject().apply { put("cmd", "BUSY") }
+                            client.outputStream.write("${busy}\n".toByteArray())
                             client.outputStream.flush()
-                        } catch (_: IOException) {
-                        }
+                        } catch (_: IOException) {}
                         client.close()
                         continue
                     }
@@ -121,7 +112,6 @@ object DaemonServer {
                         while (isActive) {
                             val message = reader.readLine()
                             if (message == null) break
-
                             if (message.isNotEmpty()) {
                                 received_messages.emit(message.trim())
                             }
@@ -162,6 +152,7 @@ object DaemonServer {
         currentClient = null
         clientJob?.cancelAndJoin()
         clientJob = null
+        isConnected = false
     }
 
     suspend fun stop() {

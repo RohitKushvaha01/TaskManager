@@ -1,10 +1,6 @@
-// ============================================
-// FILE 1: CPU.kt
-// ============================================
 package com.rk.taskmanager.screens.cpu
 
 import android.graphics.Typeface
-import android.os.Handler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,9 +17,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,24 +48,23 @@ import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import com.rk.components.SettingsToggle
 import com.rk.components.rememberMarker
-import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
-import com.rk.taskmanager.screens.selectedscreen
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import java.text.DecimalFormat
-import androidx.compose.runtime.collectAsState
 import com.rk.taskmanager.daemon.daemon_messages
 import com.rk.taskmanager.daemon.send_daemon_messages
 import com.rk.taskmanager.navControllerRef
+import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.text.DecimalFormat
 
 //global stuff
 const val MAX_GRAPH_POINTS = 120
@@ -104,7 +98,7 @@ suspend fun updateCpuGraph(usage: Int) {
         cpuYValues.removeFirst()
         cpuYValues.addLast(cpuUsage.value)
 
-        if (selectedscreen.intValue == 0 && navControllerRef?.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+        if (selectedscreen.intValue == 0 && navControllerRef.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
             CpuModelProducer.runTransaction {
                 lineSeries {
                     series(x = xValues, y = cpuYValues)
@@ -138,7 +132,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
     // Update real-time data every 2 seconds
     LaunchedEffect(Unit) {
         while (isActive) {
-            send_daemon_messages.emit("CTEMP_PING")
+            send_daemon_messages.emit(JSONObject().apply { put("cmd", "CTEMP_PING") }.toString())
             uptime = CpuInfoReader.getUptimeFormatted()
             cpuInfo = CpuInfoReader.read()
             delay(2000)
@@ -148,12 +142,15 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
     LaunchedEffect(Unit) {
         launch(Dispatchers.IO) {
             daemon_messages.collect { message ->
-                if (message.startsWith("CTEMP:")){
-                    val temp = message.removePrefix("CTEMP:").toInt()
-                     if (temp > 0){
-                         temperature = temp.toString()
-                     }
-                }
+                try {
+                    val json = JSONObject(message)
+                    if (json.optString("type") == "CPU_TEMP") {
+                        val temp = json.optInt("temp", -1)
+                        if (temp > 0) {
+                            temperature = temp.toString()
+                        }
+                    }
+                } catch (e: Exception) {}
             }
         }
     }

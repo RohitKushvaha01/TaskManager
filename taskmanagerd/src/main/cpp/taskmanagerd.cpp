@@ -90,6 +90,30 @@ int getCpuTemperatureCelsius() {
     return maxTemp;
 }
 
+std::optional<int> getBatteryCycleCount() {
+    static const std::vector<std::string> paths = {
+            "/sys/class/power_supply/battery/cycle_count",
+            "/sys/class/power_supply/bms/cycle_count",
+            "/sys/class/power_supply/Battery/cycle_count",
+    };
+
+    for (const auto& path : paths) {
+        std::ifstream file(path);
+        if (!file.is_open()) continue;
+
+        std::string content;
+        std::getline(file, content);
+
+        try {
+            return std::stoi(content);
+        } catch (...) {
+            continue;
+        }
+    }
+
+    return std::nullopt;
+}
+
 static std::regex pid_regex("\\d+");
 
 std::vector<int> listPids() {
@@ -418,7 +442,11 @@ void processCommand(int sock, const std::string &received) {
             j_out["type"] = "PROCESS_CPU_USAGE";
             j_out["usage"] = calculateProcessCpuUsage(pid);
             send_json(sock, j_out);
-        } else {
+        } else if(cmd == "BAT_CHARGE_CYCLES"){
+            j_out["type"] = "CHARGE_CYCLES";
+            j_out["cycles"] = getBatteryCycleCount().value_or(-1);
+            send_json(sock,j_out);
+        }else{
             log_line("Unknown command: " + cmd);
         }
     } catch (const std::exception& e) {

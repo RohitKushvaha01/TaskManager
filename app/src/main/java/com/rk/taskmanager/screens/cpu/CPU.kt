@@ -1,6 +1,5 @@
 package com.rk.taskmanager.screens.cpu
 
-import android.graphics.Typeface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,30 +23,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
-import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
-import com.patrykandpatrick.vico.core.common.component.TextComponent
-import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
+import com.rk.commons.charts.GraphDataHandler
+import com.rk.commons.charts.UsageChart
+import com.rk.commons.ui.FrequencyInfo
+import com.rk.commons.ui.InfoCard
+import com.rk.commons.ui.InfoItem
+import com.rk.commons.ui.SectionHeader
+import com.rk.commons.utils.CpuInfoReader
 import com.rk.components.SettingsToggle
-import com.rk.components.rememberMarker
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.daemon.daemon_messages
 import com.rk.taskmanager.daemon.send_daemon_messages
@@ -60,27 +45,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.text.DecimalFormat
 
-//global stuff
-const val MAX_GRAPH_POINTS = 120
-val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = 100.0)
-val YDecimalFormat = DecimalFormat("#.##'%'")
-val StartAxisValueFormatter = CartesianValueFormatter.decimal(YDecimalFormat)
-val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default(YDecimalFormat)
-
-val xValues = List(MAX_GRAPH_POINTS) { it.toDouble() }
-
-
-
-//CPU
-private val cpuYValues = ArrayDeque<Int>(MAX_GRAPH_POINTS).apply { repeat(MAX_GRAPH_POINTS) { add(0) } }
-
-private val CpuModelProducer = CartesianChartModelProducer()
+val cpuGraphHandler = GraphDataHandler(seriesCount = 1)
 
 private val _cpuUsage = MutableStateFlow(0)
 val cpuUsage = _cpuUsage.asStateFlow()
@@ -88,48 +55,24 @@ val cpuUsage = _cpuUsage.asStateFlow()
 fun setCpuUsage(value: Int) {
     _cpuUsage.value = value
 }
-private val mutex = Mutex()
 
 suspend fun updateCpuGraph(usage: Int) {
-    mutex.withLock {
-        withContext(Dispatchers.Main){
-            setCpuUsage(usage)
-        }
-        cpuYValues.removeFirst()
-        cpuYValues.addLast(cpuUsage.value)
-
-        if (selectedscreen.intValue == 0 && navControllerRef.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
-            CpuModelProducer.runTransaction {
-                lineSeries {
-                    series(x = xValues, y = cpuYValues)
-                }
-            }
-        }
+    setCpuUsage(usage)
+    cpuGraphHandler.update(usage) {
+        selectedscreen.intValue == 0 && navControllerRef.get()?.currentDestination?.route == SettingsRoutes.Home.route
     }
-
 }
 
 @Composable
-fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
-    val lineColor = MaterialTheme.colorScheme.primary
-
+fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
     LaunchedEffect(Unit) {
-        mutex.withLock {
-            CpuModelProducer.runTransaction {
-                lineSeries {
-                    series(x = xValues, y = cpuYValues)
-                }
-            }
-        }
+        cpuGraphHandler.refresh()
     }
 
-    // Real-time data that updates periodically
-    var temperature by remember { mutableStateOf<String>("N/A") }
+    var temperature by remember { mutableStateOf("N/A") }
     var uptime by remember { mutableStateOf("") }
-
     var cpuInfo by remember { mutableStateOf<CpuInfoReader.CpuInfo?>(null) }
 
-    // Update real-time data every 2 seconds
     LaunchedEffect(Unit) {
         while (isActive) {
             send_daemon_messages.emit(JSONObject().apply { put("cmd", "CTEMP_PING") }.toString())
@@ -155,60 +98,17 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
         }
     }
 
-
     Column(modifier.verticalScroll(rememberScrollState())) {
-
-        CartesianChartHost(
-            rememberCartesianChart(
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(
-                        LineCartesianLayer.rememberLine(
-                            fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                            areaFill = LineCartesianLayer.AreaFill.single(
-                                fill(
-                                    ShaderProvider.verticalGradient(
-                                        intArrayOf(
-                                            lineColor.copy(alpha = 0.4f).toArgb(),
-                                            Color.Transparent.toArgb()
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                    rangeProvider = RangeProvider,
-                ),
-                startAxis = VerticalAxis.rememberStart(
-                    valueFormatter = StartAxisValueFormatter,
-                    label = TextComponent(
-                        color = MaterialTheme.colorScheme.onSurface.toArgb(),
-                        textSizeSp = 10f,
-                        lineCount = 1,
-                        typeface = Typeface.DEFAULT
-                    ),
-                    guideline = rememberAxisGuidelineComponent(),
-                ),
-                bottomAxis = null,
-                marker = rememberMarker(MarkerValueFormatter),
-            ),
-            CpuModelProducer,
-            modifier,
-            rememberVicoScrollState(scrollEnabled = false),
-            animateIn = false,
-            animationSpec = null,
+        UsageChart(
+            modelProducer = cpuGraphHandler.modelProducer,
+            lineColors = listOf(MaterialTheme.colorScheme.primary),
+            modifier = modifier
         )
 
         val usage by cpuUsage.collectAsState()
 
-
         SettingsToggle(
-            description = "CPU - ${
-                if (usage < 0) {
-                    "No Data"
-                } else {
-                    "$usage%"
-                }
-            }",
+            description = "CPU - ${if (usage < 0) "No Data" else "$usage%"}",
             showSwitch = false,
             default = false
         )
@@ -221,20 +121,13 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             HorizontalDivider()
 
-            // Main CPU Info Card
             InfoCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     SectionHeader("Processor Information")
 
-                    InfoItem(
-                        label = "SoC",
-                        value = cpuInfo?.soc ?: "N/A",
-                        highlighted = true
-                    )
-
+                    InfoItem(label = "SoC", value = cpuInfo?.soc ?: "N/A", highlighted = true)
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -265,11 +158,7 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Temperature", if (temperature.toIntOrNull() != null){
-                                "$temperature°C (estimated)"
-                            }else{
-                                temperature
-                            })
+                            InfoItem("Temperature", if (temperature.toIntOrNull() != null) "$temperature°C (estimated)" else temperature)
                         }
                     }
                 }
@@ -277,7 +166,6 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
 
             HorizontalDivider()
 
-            // System Stats Card
             InfoCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     SectionHeader("System Statistics")
@@ -292,7 +180,6 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                         Column(modifier = Modifier.weight(1f)) {
                             InfoItem("Threads", viewModel.threadCount.collectAsState().value.toString())
                         }
-
                     }
 
                     Row(
@@ -303,15 +190,12 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
                             InfoItem("Uptime", uptime)
                         }
                     }
-
                 }
             }
 
             HorizontalDivider()
 
-            // Clusters Section
             if (cpuInfo?.clusters?.isNotEmpty() == true) {
-
                 cpuInfo?.clusters?.forEach { cluster ->
                     ClusterCard(cluster)
                 }
@@ -323,15 +207,8 @@ fun CPU(modifier: Modifier = Modifier,viewModel: ProcessViewModel) {
 }
 
 @Composable
-fun InfoCard(content: @Composable () -> Unit) {
-    content()
-}
-
-@Composable
 fun ClusterCard(cluster: CpuInfoReader.CpuCluster) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -366,112 +243,11 @@ fun ClusterCard(cluster: CpuInfoReader.CpuCluster) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            FrequencyInfo(
-                label = "Min",
-                value = cluster.minFreq ?: "—",
-                modifier = Modifier.weight(1f)
-            )
+            FrequencyInfo(label = "Min", value = cluster.minFreq ?: "—", modifier = Modifier.weight(1f))
             cluster.currentFreq?.let { freq ->
-                FrequencyInfo(
-                    label = "Current",
-                    value = freq,
-                    modifier = Modifier.weight(1f)
-                )
+                FrequencyInfo(label = "Current", value = freq, modifier = Modifier.weight(1f))
             }
-            FrequencyInfo(
-                label = "Max",
-                value = cluster.maxFreq ?: "—",
-                modifier = Modifier.weight(1f)
-            )
+            FrequencyInfo(label = "Max", value = cluster.maxFreq ?: "—", modifier = Modifier.weight(1f))
         }
-    }
-}
-
-@Composable
-fun FrequencyInfo(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.Start
-    ) {
-        Text(
-            text = label.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            letterSpacing = 0.5.sp
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurface
-    )
-}
-
-@Composable
-fun InfoItem(
-    label: String,
-    value: String,
-    highlighted: Boolean = false
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            letterSpacing = 0.5.sp
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = if (highlighted) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (highlighted) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
-        )
-    }
-}
-
-@Composable
-fun StatCard(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .background(
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                RoundedCornerShape(12.dp)
-            )
-            .padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }

@@ -46,6 +46,9 @@ private val Amber700  = Color(0xFF854F0B)
 private val Coral50   = Color(0xFFFAECE7)
 private val Coral700  = Color(0xFF993C1D)
 
+private val Green50  = Color(0xFFEAF3DE)
+private val Green700 = Color(0xFF3B6D11)
+
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 private data class ProFeature(
@@ -58,34 +61,42 @@ private data class ProFeature(
 
 private val features = listOf(
     ProFeature(
+        title = "Battery Stats",
+        description = "View charge level, status, and battery health at a glance",
+        icon = Icons.Outlined.BatteryChargingFull,
+        iconTint = Green700,
+        iconBackground = Green50
+    ),
+    ProFeature(
         title = "Per-Core Live Graphs",
-        description = "CPU usage breakdown per individual core",
+        description = "Visualize CPU usage broken down by individual core",
         icon = Icons.Outlined.ShowChart,
         iconTint = Teal700,
         iconBackground = Teal50
     ),
     ProFeature(
         title = "Network Monitor",
-        description = "Data usage and speeds per process",
+        description = "Track data usage and speeds per process in real time",
         icon = Icons.Outlined.NetworkCheck,
         iconTint = Blue700,
         iconBackground = Blue50
     ),
     ProFeature(
         title = "Disk Monitor",
-        description = "Track disk I/O in real time",
+        description = "Monitor read and write activity across storage in real time",
         icon = Icons.Outlined.Storage,
-        iconTint = Amber700,
-        iconBackground = Amber50
+        iconTint = Purple700,
+        iconBackground = Purple50
     ),
     ProFeature(
         title = "Process Tree",
-        description = "Visualize parent–child process hierarchy",
+        description = "Explore parent–child process relationships in a hierarchy view",
         icon = Icons.Outlined.AccountTree,
-        iconTint = Coral700,
-        iconBackground = Coral50
-    )
+        iconTint = Teal700,
+        iconBackground = Teal50
+    ),
 )
+
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 

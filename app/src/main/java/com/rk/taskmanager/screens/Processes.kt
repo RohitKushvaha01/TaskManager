@@ -28,7 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -37,7 +36,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,10 +59,10 @@ import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
-import com.rk.taskmanager.settings.Settings
+import com.rk.commons.Settings
 import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.settings.pullToRefresh_procs
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale

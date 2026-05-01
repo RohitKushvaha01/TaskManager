@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.NetworkCheck
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material3.Icon
@@ -92,7 +93,21 @@ private val tabs = listOf(
             if (bridge != null) bridge!!.NetScreen()
             else OpenSourceOnly()
         }
+    ),
+
+
+
+    ResourceTab(
+        label = "BAT",
+        icon = TabIcon.Vector(Icons.Outlined.BatteryChargingFull),
+        content = { _, _, _ ->
+            if (bridge != null) bridge!!.BatteryScreen()
+            else OpenSourceOnly()
+        }
     )
+
+
+
 )
 
 var currentResource by mutableIntStateOf(0)

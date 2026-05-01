@@ -19,7 +19,7 @@ import com.rk.taskmanager.settings.GraphSettings
 import com.rk.taskmanager.settings.ProVersion
 import com.rk.taskmanager.settings.ProcSettings
 import com.rk.taskmanager.settings.SelectedWorkingMode
-import com.rk.taskmanager.settings.Settings
+import com.rk.commons.Settings
 import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.settings.SettingsScreen
 import com.rk.taskmanager.settings.Themes

@@ -8,9 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.rk.taskmanager.TaskManager
-import com.rk.taskmanager.getString
-import com.rk.taskmanager.strings
+import com.rk.commons.application
+import com.rk.commons.getString
+import com.rk.commons.strings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -22,7 +22,7 @@ fun TextCard(modifier: Modifier = Modifier,text: String?,description: String? = 
     SettingsToggle(applyPaddingsNoSwitch = applyPaddings,
         modifier = modifier, label = text, description = description, default = false, showSwitch = false, selection = selection, onLongClick = {
             if (copyDesOnLong){
-                val clipboard = TaskManager.requireContext()
+                val clipboard = application!!
                     .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText(text, description)
                 clipboard.setPrimaryClip(clip)

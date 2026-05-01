@@ -18,4 +18,7 @@ interface ProBridge {
     fun DiskScreen()
     @Composable
     fun NetScreen()
+
+    @Composable
+    fun BatteryScreen()
 }

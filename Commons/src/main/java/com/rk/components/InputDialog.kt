@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 
 @Composable
 fun InputDialog(

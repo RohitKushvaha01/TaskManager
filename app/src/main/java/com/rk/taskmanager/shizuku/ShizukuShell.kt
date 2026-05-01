@@ -8,7 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.daemon.startDaemon
-import com.rk.taskmanager.settings.Settings
+import com.rk.commons.Settings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -77,9 +77,9 @@ import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.daemon.daemon_messages
 import com.rk.taskmanager.daemon.send_daemon_messages
-import com.rk.taskmanager.getString
+import com.rk.commons.getString
 import com.rk.taskmanager.settings.SettingsRoutes
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -225,7 +225,7 @@ suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
         }.getOrDefault(false)
     }
 
-    com.rk.taskmanager.settings.Settings.kills++
+    com.rk.commons.Settings.kills++
     return killResult
 }
 
@@ -593,7 +593,7 @@ fun ProcessInfo(
     }
 
     if (showKillDialog != null) {
-        if (com.rk.taskmanager.settings.Settings.confirmkill){
+        if (com.rk.commons.Settings.confirmkill){
             XedDialog(
                 onDismissRequest = { showKillDialog = null }
             ) {

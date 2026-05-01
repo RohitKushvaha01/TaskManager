@@ -48,6 +48,8 @@ class TaskManager : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        com.rk.commons.application = this
+
         bridge?.initApp(this, launchPurchaseUiCallback = {navControllerRef.get()?.navigate(SettingsRoutes.ProVersion.route)}, onPurchaseCallback = {
             // Purchase successful, state is updated automatically via the proUnlocked MutableState in the bridge
         })

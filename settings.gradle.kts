@@ -51,3 +51,4 @@ if (File(rootDir, "taskmanager_pro").exists() && File(rootDir, "taskmanager_pro"
     include(":taskmanager_pro")
 }
 include(":Bridge")
+include(":Commons")

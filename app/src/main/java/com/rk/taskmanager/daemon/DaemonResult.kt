@@ -1,8 +1,8 @@
 package com.rk.taskmanager.daemon
 
-import com.rk.taskmanager.getString
+import com.rk.commons.getString
 import com.rk.taskmanager.shizuku.ShizukuShell
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 
 enum class DaemonResult(var message: String?) {
     OK(null),

@@ -29,7 +29,7 @@ import androidx.navigation.NavController
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.components.compose.preferences.category.PreferenceCategory
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor

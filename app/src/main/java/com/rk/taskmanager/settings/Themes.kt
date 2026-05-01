@@ -5,10 +5,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
+import com.rk.commons.Settings
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.taskmanager.MainActivity
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 import com.rk.taskmanager.ui.theme.currentTheme
 import com.rk.taskmanager.ui.theme.dynamicTheme
 import com.rk.taskmanager.ui.theme.themes

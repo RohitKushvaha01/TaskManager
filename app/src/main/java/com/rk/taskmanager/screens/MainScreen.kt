@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,15 +36,14 @@ import androidx.navigation.NavController
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
-import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.components.ProcessSearchBar
 import com.rk.taskmanager.daemon.DaemonResult
 import com.rk.taskmanager.daemon.isConnected
 import com.rk.taskmanager.daemon.startDaemon
 import com.rk.taskmanager.screens.gpu.GpuViewModel
-import com.rk.taskmanager.settings.Settings
+import com.rk.commons.Settings
 import com.rk.taskmanager.settings.SettingsRoutes
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

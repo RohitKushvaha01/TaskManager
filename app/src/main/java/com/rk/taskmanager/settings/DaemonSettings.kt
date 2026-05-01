@@ -8,11 +8,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.rk.commons.Settings
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
-import com.rk.taskmanager.getString
-import com.rk.taskmanager.strings
+import com.rk.commons.getString
+import com.rk.commons.strings
 
 @Composable
 fun DaemonSettings(modifier: Modifier = Modifier) {

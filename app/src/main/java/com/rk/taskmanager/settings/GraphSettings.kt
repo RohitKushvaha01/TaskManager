@@ -9,10 +9,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.rk.commons.Settings
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 
 @Composable
 fun GraphSettings(modifier: Modifier = Modifier) {

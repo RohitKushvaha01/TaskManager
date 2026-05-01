@@ -3,10 +3,10 @@ package com.rk.taskmanager.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import com.rk.commons.Settings
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
-import com.rk.taskmanager.screens.selectedscreen
 
 var pullToRefresh_procs by mutableStateOf(Settings.pullToRefresh_procs)
 

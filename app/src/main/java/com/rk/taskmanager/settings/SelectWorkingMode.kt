@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.rk.commons.Settings
 import com.rk.components.InfoBlock
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
@@ -28,7 +29,7 @@ import com.rk.taskmanager.daemon.DaemonResult
 import com.rk.taskmanager.daemon.isSuWorking
 import com.rk.taskmanager.daemon.startDaemon
 import com.rk.taskmanager.shizuku.ShizukuShell
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope

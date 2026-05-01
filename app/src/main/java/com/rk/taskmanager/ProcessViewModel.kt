@@ -13,7 +13,7 @@ import com.rk.taskmanager.screens.getApkNameFromPackage
 import com.rk.taskmanager.screens.getAppIconBitmap
 import com.rk.taskmanager.screens.isAppInstalled
 import com.rk.taskmanager.screens.isSystemApp
-import com.rk.taskmanager.settings.Settings
+import com.rk.commons.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
@@ -52,6 +52,7 @@ class ProcessViewModel : ViewModel() {
 
 
     enum class Sortby(val id: Int){
+        //edit default value in settings.kt of 0
         Ram(0),Cpu(1),A_z(2)
     }
     private val _sortBy = MutableStateFlow(Settings.sortby)

@@ -156,4 +156,5 @@ dependencies {
         implementation(project(":taskmanager_pro"))
     }
     implementation(project(":Bridge"))
+    implementation(project(":Commons"))
 }

@@ -4,10 +4,10 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.ui.util.fastJoinToString
 import com.rk.taskmanager.TaskManager
-import com.rk.taskmanager.getString
+import com.rk.commons.getString
 import com.rk.taskmanager.settings.WorkingMode
 import com.rk.taskmanager.shizuku.ShizukuShell
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File

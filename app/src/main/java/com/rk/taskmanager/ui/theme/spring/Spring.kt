@@ -3,7 +3,7 @@ package com.rk.taskmanager.ui.theme.spring
 import androidx.annotation.Keep
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import com.rk.taskmanager.strings
+import com.rk.commons.strings
 import com.rk.taskmanager.ui.theme.Theme
 
 @Keep

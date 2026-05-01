@@ -1,11 +1,8 @@
-package com.rk.taskmanager.settings
+package com.rk.commons
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
-import com.rk.taskmanager.ProcessViewModel
-import com.rk.taskmanager.TaskManager
 
 object Settings {
     var shouldPreLoadThemeAd
@@ -21,7 +18,7 @@ object Settings {
 
 
     var sortby
-        get() = Preference.getInt(key = "sortby", ProcessViewModel.Sortby.Ram.id)
+        get() = Preference.getInt(key = "sortby", 0)
         set(value) { Preference.setInt(key = "sortby",value) }
 
     var updateFrequency
@@ -91,7 +88,7 @@ object Settings {
 }
 
 object Preference {
-    private var sharedPreferences: SharedPreferences = TaskManager.requireContext().getSharedPreferences("Settings", Context.MODE_PRIVATE)
+    private var sharedPreferences: SharedPreferences = application!!.getSharedPreferences("Settings", Context.MODE_PRIVATE)
 
     //store the result into memory for faster access
     private val stringCache = hashMapOf<String, String?>()

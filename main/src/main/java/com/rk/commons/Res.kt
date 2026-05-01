@@ -5,6 +5,7 @@ package com.rk.commons
 import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
+import com.rk.taskmanager.R
 
 //typealias drawables = R.drawable
 typealias strings = R.string

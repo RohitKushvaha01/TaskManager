@@ -2,10 +2,7 @@ package com.rk.taskmanager
 
 import android.app.Application
 import android.content.Context
-import android.widget.Toast
-import androidx.compose.runtime.*
-import androidx.room.*
-import com.rk.bridge.BridgeProvider
+import androidx.room.Room
 import com.rk.bridge.bridge
 import com.rk.taskmanager.data.AppDatabase
 import com.rk.taskmanager.settings.SettingsRoutes

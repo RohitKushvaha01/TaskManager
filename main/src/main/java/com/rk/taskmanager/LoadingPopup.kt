@@ -1,9 +1,9 @@
-package com.rk
-
+package com.rk.taskmanager
 
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +28,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-
 
 class LoadingPopup @OptIn(DelicateCoroutinesApi::class) constructor(
     private val ctx: Context,
@@ -64,21 +63,21 @@ class LoadingPopup @OptIn(DelicateCoroutinesApi::class) constructor(
         }
     }
 
-    private fun createComposeView(): android.view.View {
+    private fun createComposeView(): View {
         return ComposeView(ctx).apply {
             setContent {
                 TaskManagerTheme {
                     Surface {
                         Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.Companion.padding(16.dp),
+                            verticalAlignment = Alignment.Companion.CenterVertically
                         ) {
                             CircularProgressIndicator(
-                                modifier = Modifier
+                                modifier = Modifier.Companion
                                     .size(48.dp)
                                     .padding(8.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.Companion.width(8.dp))
                             Text(
                                 text = message,
                                 style = MaterialTheme.typography.bodyMedium

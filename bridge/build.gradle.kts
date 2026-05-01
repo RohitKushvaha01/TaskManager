@@ -4,10 +4,8 @@ plugins {
 }
 
 android {
-    namespace = "com.rk.commons"
-    compileSdk {
-        version = release(36)
-    }
+    namespace = "com.rk.bridge"
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -30,28 +28,29 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.appcompat)
-    implementation(libs.material)
-    implementation(project(":components"))
-    
-    // Compose
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.activity.compose)
     implementation(platform(libs.compose.bom))
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.material3)
-    
-    // Vico
+    implementation(libs.navigation.compose)
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
     implementation(libs.vico.compose.m3)
-    implementation(libs.vico.compose)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.ext.junit)
-    androidTestImplementation(libs.espresso.core)
+    implementation(project(":components"))
+    implementation(libs.accompanist.swiperefresh)
+    implementation(libs.material)
+    implementation(libs.material3)
+    implementation(libs.androidx.javascriptengine)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 }

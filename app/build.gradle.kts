@@ -5,23 +5,15 @@ val isIzzyOrFdroid = false
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.compose.compiler)
-    id("com.google.devtools.ksp")
+
     alias(libs.plugins.baselineprofile)
 }
 
-val gitCommitHash: Provider<String> =
-    providers.exec { commandLine("git", "rev-parse", "--short=8", "HEAD") }.standardOutput.asText.map { it.trim() }
-
-val fullGitCommitHash: Provider<String> =
-    providers.exec { commandLine("git", "rev-parse", "HEAD") }.standardOutput.asText.map { it.trim() }
-
-val gitCommitDate: Provider<String> =
-    providers.exec { commandLine("git", "show", "-s", "--format=%cI", "HEAD") }.standardOutput.asText.map { it.trim() }
 
 android {
-    namespace = "com.rk.taskmanager"
+    namespace = "com.rk.taskmanager.app"
     compileSdk = 36
-    buildFeatures.buildConfig = true
+
 
     dependenciesInfo {
         includeInApk = isIzzyOrFdroid.not()
@@ -68,20 +60,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
-
-
-
-            buildConfigField("String", "GIT_COMMIT_HASH", "\"${fullGitCommitHash.get()}\"")
-            buildConfigField("String", "GIT_SHORT_COMMIT_HASH", "\"${gitCommitHash.get()}\"")
-            buildConfigField("String", "GIT_COMMIT_DATE", "\"${gitCommitDate.get()}\"")
         }
         debug{
             versionNameSuffix = "-DEBUG"
-
-
-            buildConfigField("String", "GIT_COMMIT_HASH", "\"${fullGitCommitHash.get()}\"")
-            buildConfigField("String", "GIT_SHORT_COMMIT_HASH", "\"${gitCommitHash.get()}\"")
-            buildConfigField("String", "GIT_COMMIT_DATE", "\"${gitCommitDate.get()}\"")
         }
     }
 
@@ -124,37 +105,15 @@ tasks.whenTaskAdded {
 }
 
 dependencies {
-    implementation(libs.lifecycle.viewmodel.ktx)
-    implementation(libs.lifecycle.runtime.ktx)
-    implementation(libs.activity.compose)
-    implementation(platform(libs.compose.bom))
-    implementation(libs.ui)
-    implementation(libs.ui.graphics)
-    implementation(libs.material3)
-    implementation(libs.navigation.compose)
-    implementation(libs.shizuku.api)
-    implementation(libs.shizuku.provider)
-    implementation(libs.vico.compose.m3)
-    implementation(project(":components"))
-    implementation(libs.accompanist.swiperefresh)
-    implementation(libs.material)
-    implementation(libs.material3)
-    implementation(project(":taskmanagerd"))
-    implementation(libs.androidx.javascriptengine)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.coil.compose)
-    implementation(libs.coil.svg)
 
-
-    implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.profileinstaller)
     "baselineProfile"(project(":baselineprofile"))
-    ksp(libs.androidx.room.compiler)
+
     implementation(libs.androidx.room.ktx)
+
 
     if (findProject(":taskmanager_pro") != null) {
         implementation(project(":taskmanager_pro"))
     }
-    implementation(project(":Bridge"))
-    implementation(project(":Commons"))
+    implementation(project(":main"))
 }

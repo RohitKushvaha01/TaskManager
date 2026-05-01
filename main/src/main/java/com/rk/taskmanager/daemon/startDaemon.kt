@@ -3,7 +3,7 @@ package com.rk.taskmanager.daemon
 import android.content.Context
 import android.util.Log
 import androidx.compose.ui.util.fastJoinToString
-import com.rk.taskmanager.TaskManager
+import com.rk.commons.application
 import com.rk.commons.getString
 import com.rk.taskmanager.settings.WorkingMode
 import com.rk.taskmanager.shizuku.ShizukuShell
@@ -18,7 +18,7 @@ suspend fun startDaemon(
     context: Context,
     mode: Int
 ): DaemonResult {
-    val daemonFile = File(TaskManager.requireContext().applicationInfo.nativeLibraryDir, "libtaskmanagerd.so")
+    val daemonFile = File(application!!.applicationInfo.nativeLibraryDir, "libtaskmanagerd.so")
     val result = withContext(Dispatchers.IO) {
         if (daemonCalled) {
             return@withContext DaemonResult.DAEMON_ALREADY_BEING_STARTED

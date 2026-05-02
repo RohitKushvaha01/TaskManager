@@ -35,6 +35,28 @@ class GraphDataHandler(
             }
         }
     }
+
+    suspend fun reset() {
+        mutex.withLock {
+            // Reset internal data
+            seriesData.forEach { deque ->
+                deque.clear()
+                repeat(maxPoints) { deque.addLast(0) }
+            }
+
+            // Update chart
+            modelProducer.runTransaction {
+                lineSeries {
+                    seriesData.forEach { data ->
+                        series(
+                            x = ChartConfig.xValues,
+                            y = data.toList()
+                        )
+                    }
+                }
+            }
+        }
+    }
     
     suspend fun refresh() {
         mutex.withLock {

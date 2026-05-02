@@ -84,6 +84,10 @@ object Settings {
         )
         set(value) = Preference.setBoolean(key = "defaultToProcessScreen",value)
 
+    var pinnedProcesses: Set<String>
+        get() = Preference.getString("pinned_processes", "").split(",").filter { it.isNotEmpty() }.toSet()
+        set(value) = Preference.setString("pinned_processes", value.joinToString(","))
+
 
 }
 

@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -265,14 +266,25 @@ fun ProcessItem(
             .padding(start = 16.dp),
         enabled = !uiProc.killed.value,
         title = {
-            Text(
-                fontWeight = FontWeight.Bold,
-                text = if (uiProc.name.length > textLimit) {
-                    uiProc.name.take(textLimit) + "..."
-                } else uiProc.name,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    fontWeight = FontWeight.Bold,
+                    text = if (uiProc.name.length > textLimit) {
+                        uiProc.name.take(textLimit) + "..."
+                    } else uiProc.name,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (uiProc.isPinned.value) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Outlined.PushPin,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         },
         description = {
             //Text(uiProc.proc.cmdLine.removePrefix("/system/bin/").take(textLimit))

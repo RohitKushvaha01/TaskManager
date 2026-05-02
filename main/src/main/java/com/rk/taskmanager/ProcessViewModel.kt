@@ -39,7 +39,8 @@ data class ProcessUiModel(
     val isUserApp: Boolean,
     val isApp: Boolean,
     val killing: MutableState<Boolean> = mutableStateOf(false),
-    val killed: MutableState<Boolean> = mutableStateOf(false)
+    val killed: MutableState<Boolean> = mutableStateOf(false),
+    val isPinned: MutableState<Boolean> = mutableStateOf(false)
 )
 
 @OptIn(FlowPreview::class)
@@ -84,12 +85,14 @@ class ProcessViewModel : ViewModel() {
             }
         }
 
-        when (sortBy) {
+        val sorted = when (sortBy) {
             Sortby.Ram.id -> filtered.sortedByDescending { it.proc.memoryUsageKb }
             Sortby.Cpu.id -> filtered.sortedByDescending { it.proc.cpuUsage }
             Sortby.A_z.id -> filtered.sortedBy { it.name.lowercase() }
             else -> filtered
         }
+
+        sorted.sortedByDescending { it.isPinned.value }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -139,6 +142,23 @@ class ProcessViewModel : ViewModel() {
         _showLinuxProcess.value = value
     }
 
+    fun togglePin(uiModel: ProcessUiModel) {
+        val pinned = Settings.pinnedProcesses.toMutableSet()
+        if (uiModel.isPinned.value) {
+            pinned.remove(uiModel.proc.cmdLine)
+            uiModel.isPinned.value = false
+        } else {
+            pinned.add(uiModel.proc.cmdLine)
+            uiModel.isPinned.value = true
+        }
+        Settings.pinnedProcesses = pinned
+        
+        // Trigger a re-sort by updating the list
+        _uiProcesses.update { currentList ->
+            currentList.toList()
+        }
+    }
+
     val uiProcesses = _uiProcesses.asStateFlow()
     var isLoading = mutableStateOf(true)
 
@@ -182,6 +202,7 @@ class ProcessViewModel : ViewModel() {
                         var totalThreads = 0
                         val context = TaskManager.requireContext()
                         val myPkg = context.packageName
+                        val pinnedSet = Settings.pinnedProcesses
 
                         for (i in 0 until jsonArray.length()) {
                             val obj = jsonArray.getJSONObject(i)
@@ -215,9 +236,10 @@ class ProcessViewModel : ViewModel() {
 
                         val uiList = newProcesses.map { proc ->
                             async(Dispatchers.IO) {
+                                val isPinned = pinnedSet.contains(proc.cmdLine)
                                 val cached = appInfoCache[proc.cmdLine]
                                 if (cached != null) {
-                                    ProcessUiModel(proc, cached.name, cached.icon, cached.isSystem, cached.isApp && !cached.isSystem, isApp = cached.isApp)
+                                    ProcessUiModel(proc, cached.name, cached.icon, cached.isSystem, cached.isApp && !cached.isSystem, isApp = cached.isApp, isPinned = mutableStateOf(isPinned))
                                 } else {
                                     val name = getApkNameFromPackage(context, proc.cmdLine) ?: proc.name
                                     val icon = getAppIconBitmap(context, proc.cmdLine)?.asImageBitmap()
@@ -225,7 +247,7 @@ class ProcessViewModel : ViewModel() {
                                     val isApp = isAppInstalled(context, proc.cmdLine)
                                     val info = AppInfoCache(name, icon, system, isApp)
                                     appInfoCache[proc.cmdLine] = info
-                                    ProcessUiModel(proc, name, icon, system, isApp && !system, isApp = isApp)
+                                    ProcessUiModel(proc, name, icon, system, isApp && !system, isApp = isApp, isPinned = mutableStateOf(isPinned))
                                 }
                             }
                         }.awaitAll()

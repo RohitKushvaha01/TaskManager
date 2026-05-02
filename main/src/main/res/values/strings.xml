@@ -63,5 +63,6 @@
     <string name="root">Root</string>
     <string name="shizuku">Shizuku</string>
     <string name="title_taskmanager_pro">TaskManager Pro</string>
-
+    <string name="pin">Pin</string>
+    <string name="unpin">Unpin</string>
 </resources>

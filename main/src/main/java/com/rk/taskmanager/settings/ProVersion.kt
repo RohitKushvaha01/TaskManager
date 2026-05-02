@@ -81,13 +81,13 @@ private val features = listOf(
         iconTint = Purple700,
         iconBackground = Purple50
     ),
-//    ProFeature(
-//        title = "Process Tree",
-//        description = "Explore parent–child process relationships in a hierarchy view",
-//        icon = Icons.Outlined.AccountTree,
-//        iconTint = Teal700,
-//        iconBackground = Teal50
-//    ),
+    ProFeature(
+        title = "Process Pin",
+        description = "Pin processes to show them at top",
+        icon = Icons.Outlined.PushPin,
+        iconTint = Teal700,
+        iconBackground = Teal50
+    ),
 )
 
 

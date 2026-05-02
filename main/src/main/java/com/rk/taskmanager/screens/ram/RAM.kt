@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -84,13 +85,18 @@ fun RAM(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
             modifier = modifier
         )
 
-        SettingsToggle(
-            description = "RAM: ${FormatUtils.formatBytes(usedRam)}/${FormatUtils.formatBytes(totalRam)} ($RamUsage%)\n" +
-                          "SWAP: ${FormatUtils.formatBytes(usedSwap)}/${FormatUtils.formatBytes(totalSwap)} ($SwapUsage%)",
-            showSwitch = false,
-            default = false
-        )
-
+        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            Text(
+                "RAM: ${FormatUtils.formatBytes(usedRam)}/${FormatUtils.formatBytes(totalRam)} ($RamUsage%)",
+                color = ramColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                "SWAP: ${FormatUtils.formatBytes(usedSwap)}/${FormatUtils.formatBytes(totalSwap)} ($SwapUsage%)",
+                color = swapColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
         Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
         Column(

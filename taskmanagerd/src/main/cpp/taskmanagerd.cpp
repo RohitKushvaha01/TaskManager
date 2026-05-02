@@ -6,7 +6,7 @@
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
-#include <limits.h>
+#include <climits>
 #include <pwd.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
@@ -391,60 +391,32 @@ std::vector<DiskInfo> listDisks() {
 
     for (const auto& entry : fs::directory_iterator(path)) {
         std::string name = entry.path().filename().string();
-
-        // Skip partitions: mmcblk0p1, mmcblk0p2, sda1, etc.
         if (fs::exists(entry.path() / "partition")) continue;
-
-        // Skip loop, ram, zram, dm (device mapper), vd internals
-        if (name.find("loop") == 0 ||
-            name.find("ram")  == 0 ||
-            name.find("zram") == 0 ||
-            name.find("dm-")  == 0 ||
-            name.find("vd")   == 0) continue;
-
-        // Also skip mmcblk*rpmb (replay protected memory block — not a real disk)
-        if (name.find("rpmb") != std::string::npos) continue;
-
-        // Also skip mmcblk*boot0 / boot1 partitions
-        if (name.find("boot") != std::string::npos) continue;
+        if (name.find("loop") == 0 || name.find("ram") == 0 || name.find("zram") == 0 || name.find("dm-") == 0 || name.find("vd") == 0) continue;
+        if (name.find("rpmb") != std::string::npos || name.find("boot") != std::string::npos) continue;
 
         DiskInfo info;
         info.name = name;
-
         std::ifstream sizeFile(entry.path() / "size");
         long long sectors = 0;
-        if (sizeFile >> sectors) {
-            info.sizeBytes = sectors * 512;
-        } else {
-            info.sizeBytes = 0;
-        }
+        if (sizeFile >> sectors) info.sizeBytes = sectors * 512;
+        else info.sizeBytes = 0;
 
-        // On Android, mmcblk devices often lack device/model.
-        // Try device/model first, then fall back to device/name or the block name.
         std::ifstream modelFile(entry.path() / "device/model");
-        if (modelFile) {
-            std::getline(modelFile, info.model);
-        } else {
+        if (modelFile) std::getline(modelFile, info.model);
+        else {
             std::ifstream nameFile(entry.path() / "device/name");
-            if (nameFile) {
-                std::getline(nameFile, info.model);
-            } else {
-                info.model = name; // fallback to block device name
-            }
+            if (nameFile) std::getline(nameFile, info.model);
+            else info.model = name;
         }
-
-        // Trim trailing whitespace/newlines from model string
-        info.model.erase(std::find_if(info.model.rbegin(), info.model.rend(),
-                                      [](unsigned char c) { return !std::isspace(c); }).base(), info.model.end());
+        info.model.erase(std::find_if(info.model.rbegin(), info.model.rend(), [](unsigned char c) { return !std::isspace(c); }).base(), info.model.end());
 
         std::ifstream removableFile(entry.path() / "removable");
         int removable = 0;
         removableFile >> removable;
         info.isRemovable = (removable == 1);
 
-        if (info.sizeBytes > 100LL * 1024 * 1024) {
-            disks.push_back(info);
-        }
+        if (info.sizeBytes > 100LL * 1024 * 1024) disks.push_back(info);
     }
     return disks;
 }
@@ -463,11 +435,47 @@ DiskStat getDiskStat(const std::string& diskName) {
         std::string name;
         unsigned long long reads, readsMerged, readSectors, readTime;
         unsigned long long writes, writesMerged, writeSectors, writeTime;
-
         if (iss >> major >> minor >> name >> reads >> readsMerged >> readSectors >> readTime >> writes >> writesMerged >> writeSectors >> writeTime) {
-            if (name == diskName) {
-                return {readSectors * 512, writeSectors * 512};
-            }
+            if (name == diskName) return {readSectors * 512, writeSectors * 512};
+        }
+    }
+    return {0, 0};
+}
+
+struct NetStat {
+    unsigned long long rxBytes;
+    unsigned long long txBytes;
+};
+
+std::vector<std::string> listNetInterfaces() {
+    std::vector<std::string> interfaces;
+    std::ifstream netdev("/proc/net/dev");
+    std::string line;
+    std::getline(netdev, line);
+    std::getline(netdev, line);
+    while (std::getline(netdev, line)) {
+        size_t colon = line.find(':');
+        if (colon != std::string::npos) {
+            std::string name = line.substr(0, colon);
+            name.erase(0, name.find_first_not_of(' '));
+            if (name != "lo") interfaces.push_back(name);
+        }
+    }
+    return interfaces;
+}
+
+NetStat getNetStat(const std::string& iface) {
+    std::ifstream netdev("/proc/net/dev");
+    std::string line;
+    while (std::getline(netdev, line)) {
+        if (line.find(iface + ":") != std::string::npos) {
+            std::istringstream iss(line.substr(line.find(':') + 1));
+            unsigned long long rxBytes, dummy;
+            unsigned long long txBytes;
+            iss >> rxBytes;
+            for(int i=0; i<7; ++i) iss >> dummy;
+            iss >> txBytes;
+            return {rxBytes, txBytes};
         }
     }
     return {0, 0};
@@ -484,7 +492,7 @@ void processCommand(int sock, const std::string &received) {
             send_json(sock, j_out);
         } else if (cmd == "KILL") {
             int pid = j_in.value("pid", -1);
-            bool success = (pid > 0) ? killProcess(pid) : false;
+            bool success = (pid > 0) && killProcess(pid);
             j_out["type"] = "KILL_RESULT";
             j_out["success"] = success;
             send_json(sock, j_out);
@@ -547,10 +555,7 @@ void processCommand(int sock, const std::string &received) {
             json disks_j = json::array();
             for (const auto& d : disks) {
                 disks_j.push_back({
-                    {"name", d.name},
-                    {"model", d.model},
-                    {"sizeBytes", d.sizeBytes},
-                    {"isRemovable", d.isRemovable}
+                    {"name", d.name}, {"model", d.model}, {"sizeBytes", d.sizeBytes}, {"isRemovable", d.isRemovable}
                 });
             }
             j_out["type"] = "DISK_LIST";
@@ -562,6 +567,17 @@ void processCommand(int sock, const std::string &received) {
             j_out["type"] = "DISK_STATS";
             j_out["readBytes"] = stat.readBytes;
             j_out["writeBytes"] = stat.writeBytes;
+            send_json(sock, j_out);
+        } else if (cmd == "LIST_NET_INTERFACES") {
+            j_out["type"] = "NET_INTERFACE_LIST";
+            j_out["interfaces"] = listNetInterfaces();
+            send_json(sock, j_out);
+        } else if (cmd == "NET_PING") {
+            std::string iface = j_in.value("interface", "");
+            auto stat = getNetStat(iface);
+            j_out["type"] = "NET_STATS";
+            j_out["rxBytes"] = stat.rxBytes;
+            j_out["txBytes"] = stat.txBytes;
             send_json(sock, j_out);
         } else {
             log_line("Unknown command: " + cmd);
@@ -614,7 +630,7 @@ int main(int argc, char* argv[]) {
         close(sock); return 1;
     }
 
-    fcntl(sock, F_SETFL, flags); // blocking for handshake if needed, but we go non-blocking soon
+    fcntl(sock, F_SETFL, flags);
     log_line("Connected to server.");
     fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 

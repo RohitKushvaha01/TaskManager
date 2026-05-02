@@ -54,7 +54,7 @@ fun UsageChart(
                                 )
                             ),
                             pointConnector = LineCartesianLayer.PointConnector.cubic(curvature = 0.7f),
-                            stroke = LineCartesianLayer.LineStroke.continuous(thickness = 2.dp)
+                            stroke = LineCartesianLayer.LineStroke.continuous(thickness = 1.7.dp)
                         )
                     }
                 ),

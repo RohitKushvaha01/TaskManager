@@ -68,13 +68,6 @@ private val features = listOf(
         iconBackground = Green50
     ),
     ProFeature(
-        title = "Per-Core Live Graphs",
-        description = "Visualize CPU usage broken down by individual core",
-        icon = Icons.Outlined.ShowChart,
-        iconTint = Teal700,
-        iconBackground = Teal50
-    ),
-    ProFeature(
         title = "Network Monitor",
         description = "Track data usage and speeds per process in real time",
         icon = Icons.Outlined.NetworkCheck,
@@ -88,13 +81,13 @@ private val features = listOf(
         iconTint = Purple700,
         iconBackground = Purple50
     ),
-    ProFeature(
-        title = "Process Tree",
-        description = "Explore parent–child process relationships in a hierarchy view",
-        icon = Icons.Outlined.AccountTree,
-        iconTint = Teal700,
-        iconBackground = Teal50
-    ),
+//    ProFeature(
+//        title = "Process Tree",
+//        description = "Explore parent–child process relationships in a hierarchy view",
+//        icon = Icons.Outlined.AccountTree,
+//        iconTint = Teal700,
+//        iconBackground = Teal50
+//    ),
 )
 
 

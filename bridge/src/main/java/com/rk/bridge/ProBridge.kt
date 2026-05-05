@@ -8,14 +8,17 @@ import androidx.compose.runtime.MutableState
 
 @Keep
 interface ProBridge {
-    fun initApp(app: Application,launchPurchaseUiCallback:()-> Unit,onPurchaseCallback:()-> Unit)
+    fun initApp(app: Application, launchPurchaseUiCallback: () -> Unit, onPurchaseCallback: () -> Unit)
     fun launchPurchase(activity: Activity)
     suspend fun getProVersionPrice(): String?
 
     fun isPro(): MutableState<Boolean>
+    fun isPending(): MutableState<Boolean>
+    fun updatePurchaseStatus()
 
     @Composable
     fun DiskScreen()
+
     @Composable
     fun NetScreen()
 

@@ -2,6 +2,7 @@ package com.rk.taskmanager
 
 import android.app.Application
 import android.content.Context
+import android.widget.Toast
 import androidx.room.Room
 import com.rk.bridge.bridge
 import com.rk.taskmanager.data.AppDatabase
@@ -49,6 +50,7 @@ class TaskManager : Application() {
 
         bridge?.initApp(this, launchPurchaseUiCallback = {navControllerRef.get()?.navigate(SettingsRoutes.ProVersion.route)}, onPurchaseCallback = {
             // Purchase successful, state is updated automatically via the proUnlocked MutableState in the bridge
+            Toast.makeText(this@TaskManager, "Restart recommended", Toast.LENGTH_LONG).show()
         })
     }
 }

@@ -35,7 +35,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -356,8 +355,8 @@ fun ProcessInfo(
                         label = if (proc.isPinned.value) stringResource(strings.unpin) else stringResource(strings.pin),
                         description = if (proc.isPinned.value) "Unpin this process from top" else "Pin this process to top",
                         default = proc.isPinned.value,
+                        isEnabled = bridge?.isPro()?.value == true,
                         showSwitch = true,
-                        isEnabled = bridge?.isPro()?.value ?: false,
                         sideEffect = {
                             viewModel.togglePin(proc)
                         }

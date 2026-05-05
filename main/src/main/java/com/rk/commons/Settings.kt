@@ -88,6 +88,13 @@ object Settings {
         get() = Preference.getString("pinned_processes", "").split(",").filter { it.isNotEmpty() }.toSet()
         set(value) = Preference.setString("pinned_processes", value.joinToString(","))
 
+    var selectedNetInterface: String
+        get() = Preference.getString("selected_net_interface", "")
+        set(value) = Preference.setString("selected_net_interface", value)
+
+    var selectedDisk: String
+        get() = Preference.getString("selected_disk", "")
+        set(value) = Preference.setString("selected_disk", value)
 
 }
 

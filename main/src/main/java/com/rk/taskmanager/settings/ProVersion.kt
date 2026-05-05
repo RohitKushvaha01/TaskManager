@@ -1,5 +1,7 @@
 package com.rk.taskmanager.settings
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
@@ -19,12 +21,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rk.bridge.bridge
 import com.rk.taskmanager.MainActivity
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 // ── Palette ──────────────────────────────────────────────────────────────────
 
@@ -69,7 +76,7 @@ private val features = listOf(
     ),
     ProFeature(
         title = "Network Monitor",
-        description = "Track data usage and speeds per process in real time",
+        description = "Track data usage and speeds in real time",
         icon = Icons.Outlined.NetworkCheck,
         iconTint = Blue700,
         iconBackground = Blue50
@@ -98,10 +105,24 @@ private val features = listOf(
 fun ProVersion(modifier: Modifier = Modifier) {
     val activity = LocalActivity.current
     var price by remember { mutableStateOf<String?>(null) }
-    val isPro by remember{ (bridge?.isPro() ?: mutableStateOf(false)) }
+    
+    val proState = remember { bridge?.isPro() } ?: remember { mutableStateOf(false) }
+    val isPro by proState
+    
+    val pendingState = remember { bridge?.isPending() } ?: remember { mutableStateOf(false) }
+    val isPending by pendingState
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         price = bridge?.getProVersionPrice()
+    }
+    
+    // Poll for status updates when purchase is pending
+    LaunchedEffect(isPending || isPro.not()) {
+        while (isActive && (isPending || isPro.not())) {
+            delay(3000)
+            bridge?.updatePurchaseStatus()
+        }
     }
 
     Scaffold(
@@ -113,6 +134,24 @@ fun ProVersion(modifier: Modifier = Modifier) {
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Medium
                     )
+                },
+                actions = {
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = "mailto:".toUri()
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf("kushvahar173+taskmanager@gmail.com"))
+                                putExtra(Intent.EXTRA_SUBJECT, "Help Needed")
+                                putExtra(Intent.EXTRA_TEXT, "Describe your issue here...")
+                            }
+
+                            context.startActivity(intent)
+                        },
+                        shape = RoundedCornerShape(8.dp),
+
+                    ) {
+                        Text("Help", fontSize = 12.sp)
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { activity?.onBackPressed() }) {
@@ -167,6 +206,7 @@ fun ProVersion(modifier: Modifier = Modifier) {
             } else {
                 PurchaseCard(
                     price = price,
+                    isPending = isPending,
                     enabled = activity != null && bridge != null,
                     onPurchase = {
                         MainActivity.scope!!.launch {
@@ -305,6 +345,7 @@ private fun FeatureRow(feature: ProFeature) {
 @Composable
 private fun PurchaseCard(
     price: String?,
+    isPending: Boolean,
     enabled: Boolean,
     onPurchase: () -> Unit
 ) {
@@ -327,12 +368,22 @@ private fun PurchaseCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "One-time purchase",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Text(
+                        text = "One-time purchase",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (isPending) {
+                        Text(
+                            text = "Purchase in progress...",
+                            fontSize = 12.sp,
+                            color = Amber700,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
 
                 if (price != null) {
                     Text(
@@ -358,7 +409,7 @@ private fun PurchaseCard(
 
             Button(
                 onClick = onPurchase,
-                enabled = enabled && price != null,
+                enabled = enabled && price != null && !isPending,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Purple600,
@@ -369,7 +420,7 @@ private fun PurchaseCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Upgrade Now",
+                    text = if (isPending) "Processing..." else "Upgrade Now",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )

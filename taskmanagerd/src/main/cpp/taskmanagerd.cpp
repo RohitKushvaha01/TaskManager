@@ -471,10 +471,17 @@ struct NetStat {
     unsigned long long txBytes;
 };
 
-std::vector<std::string> listNetInterfaces() {
-    std::vector<std::string> interfaces;
+struct NetInterfaceInfo {
+    std::string name;
+    unsigned long long totalBytes;
+};
+
+std::vector<NetInterfaceInfo> listNetInterfaces() {
+    std::vector<NetInterfaceInfo> interfaces;
     std::ifstream netdev("/proc/net/dev");
     std::string line;
+    if (!netdev.is_open()) return interfaces;
+
     std::getline(netdev, line);
     std::getline(netdev, line);
     while (std::getline(netdev, line)) {
@@ -482,7 +489,15 @@ std::vector<std::string> listNetInterfaces() {
         if (colon != std::string::npos) {
             std::string name = line.substr(0, colon);
             name.erase(0, name.find_first_not_of(' '));
-            if (name != "lo") interfaces.push_back(name);
+            if (name == "lo") continue;
+
+            std::istringstream iss(line.substr(colon + 1));
+            unsigned long long rxBytes, txBytes, dummy;
+            iss >> rxBytes;
+            for(int i=0; i<7; ++i) iss >> dummy;
+            iss >> txBytes;
+
+            interfaces.push_back({name, rxBytes + txBytes});
         }
     }
     return interfaces;
@@ -602,8 +617,13 @@ void processCommand(int sock, const std::string &received) {
             j_out["writeBytes"] = stat.writeBytes;
             send_json(sock, j_out);
         } else if (cmd == "LIST_NET_INTERFACES") {
+            auto interfaces = listNetInterfaces();
+            json interfaces_j = json::array();
+            for (const auto& iface : interfaces) {
+                interfaces_j.push_back({{"name", iface.name}, {"totalBytes", iface.totalBytes}});
+            }
             j_out["type"] = "NET_INTERFACE_LIST";
-            j_out["interfaces"] = listNetInterfaces();
+            j_out["interfaces"] = interfaces_j;
             send_json(sock, j_out);
         } else if (cmd == "NET_PING") {
             std::string iface = j_in.value("interface", "");

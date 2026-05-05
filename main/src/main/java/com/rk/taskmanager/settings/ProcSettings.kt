@@ -3,26 +3,32 @@ package com.rk.taskmanager.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.rk.commons.Settings
+import androidx.compose.ui.res.stringResource
+import com.rk.commons.settings.Settings
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
+import com.rk.commons.strings
 
 var pullToRefresh_procs by mutableStateOf(Settings.pullToRefresh_procs)
 
 @Composable
 fun ProcSettings(modifier: Modifier = Modifier) {
-    PreferenceLayout(label = "Processes") {
+    PreferenceLayout(label = stringResource(strings.procs)) {
         PreferenceGroup() {
-            SettingsToggle(label = "Pull to refresh", description = "Allow pull to refresh in the processes screen", default = Settings.pullToRefresh_procs, showSwitch = true, sideEffect = {
+            SettingsToggle(label = stringResource(strings.pull_to_refresh), description = stringResource(strings.pull_to_refresh_desc), default = Settings.pullToRefresh_procs, showSwitch = true, sideEffect = {
                 Settings.pullToRefresh_procs = it
                 pullToRefresh_procs = it
             })
-            SettingsToggle(label = "Confirm stop", description = "Confirm before killing a process", default = Settings.confirmkill, showSwitch = true, sideEffect = {
+            SettingsToggle(label = stringResource(strings.confirm_stop), description = stringResource(strings.confirm_stop_desc), default = Settings.confirmkill, showSwitch = true, sideEffect = {
                 Settings.confirmkill = it
             })
-            SettingsToggle(label = "Default to process screen", description = "Show processes screen by default", default = Settings.defaultToProcessScreen, showSwitch = true, sideEffect = {
+            SettingsToggle(label = stringResource(strings.default_to_process), description = stringResource(strings.default_to_process_desc), default = Settings.defaultToProcessScreen, showSwitch = true, sideEffect = {
                 Settings.defaultToProcessScreen = it
+            })
+            SettingsToggle(label = stringResource(strings.auto_refresh), description = stringResource(strings.auto_refresh_desc), default = Settings.procAutoRefresh
+                , showSwitch = true, sideEffect = {
+                Settings.procAutoRefresh = it
             })
         }
     }

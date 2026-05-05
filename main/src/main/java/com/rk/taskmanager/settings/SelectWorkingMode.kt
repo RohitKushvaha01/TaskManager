@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import com.rk.components.InfoBlock
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
@@ -76,7 +76,7 @@ fun SelectedWorkingMode(modifier: Modifier = Modifier, navController: NavControl
                 WorkingMode.entries.forEach { mode ->
                     if (mode != WorkingMode.NOT_SET){
                         SettingsToggle(
-                            label = mode.name,
+                            label = stringResource(mode.nameRes!!),
                             description = null,
                             default = selectedMode.intValue == mode.id,
                             sideEffect = {

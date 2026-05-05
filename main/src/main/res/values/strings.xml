@@ -69,4 +69,135 @@
     <string name="auto">Follow System</string>
     <string name="light">Light</string>
     <string name="dark">Dark</string>
+
+    <!-- Settings -->
+    <string name="daemon">Daemon</string>
+    <string name="daemon_desc">TaskManagerD settings</string>
+    <string name="graph">Graph</string>
+    <string name="graph_desc">cpu,ram,swap graph settings</string>
+    <string name="procs_desc">settings for processes screen</string>
+    <string name="themes">Themes</string>
+    <string name="themes_desc">look and feel</string>
+    <string name="pro_version">Pro Version</string>
+    <string name="pro_version_desc">Unlock exclusive features</string>
+    <string name="about">About</string>
+    <string name="about_desc">Application info</string>
+
+    <!-- About -->
+    <string name="developer">Developer</string>
+    <string name="view_github">View github profile</string>
+    <string name="build_info">Build Info</string>
+    <string name="version">Version</string>
+    <string name="version_code">Version Code</string>
+    <string name="git_hash">Git Commit hash</string>
+    <string name="build_type">Build Type</string>
+    <string name="community">Community</string>
+    <string name="full">Full</string>
+    <string name="is_pro">Is Pro</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="copied_to_clipboard">Copied on clipboard</string>
+
+    <!-- Process Settings -->
+    <string name="pull_to_refresh">Pull to refresh</string>
+    <string name="pull_to_refresh_desc">Allow pull to refresh in the processes screen</string>
+    <string name="confirm_stop">Confirm stop</string>
+    <string name="confirm_stop_desc">Confirm before killing a process</string>
+    <string name="default_to_process">Default to process screen</string>
+    <string name="default_to_process_desc">Show processes screen by default</string>
+    <string name="auto_refresh">Auto Refresh</string>
+    <string name="auto_refresh_desc">Auto Refresh Processes</string>
+
+    <!-- Pro Version Screen -->
+    <string name="battery_stats">Battery Stats</string>
+    <string name="battery_stats_desc">View charge level, status, and battery health at a glance</string>
+    <string name="network_monitor">Network Monitor</string>
+    <string name="network_monitor_desc">Track data usage and speeds in real time</string>
+    <string name="disk_monitor">Disk Monitor</string>
+    <string name="disk_monitor_desc">Monitor read and write activity across storage in real time</string>
+    <string name="process_pin">Process Pin</string>
+    <string name="process_pin_desc">Pin processes to show them at top</string>
+    <string name="upgrade_to_pro">Upgrade to Pro</string>
+    <string name="help">Help</string>
+    <string name="back">Back</string>
+    <string name="search">Search</string>
+    <string name="what_you_get">WHAT YOU GET</string>
+    <string name="secure_payment">Secure payment via Google Play</string>
+    <string name="task_manager_uppercase">TASK MANAGER</string>
+    <string name="pro_version_tagline">Everything you need to understand your device, deeply.</string>
+    <string name="one_time_purchase">One-time purchase</string>
+    <string name="purchase_in_progress">Purchase in progress…</string>
+    <string name="permanent_pro_access">Pay once, permanent pro access.</string>
+    <string name="processing">Processing…</string>
+    <string name="upgrade_now">Upgrade Now</string>
+    <string name="pro_unlocked">Pro Unlocked</string>
+    <string name="thanks_support">Thank you for supporting Task Manager!</string>
+
+    <!-- Processes Screen -->
+    <string name="sort_by_ram">Sort by RAM</string>
+    <string name="sort_by_cpu">Sort by CPU</string>
+    <string name="sort_by_name">Sort by Name (A-z)</string>
+    <string name="refresh">Refresh</string>
+    <string name="terminate">Terminate?</string>
+    <string name="terminate_confirm">Are you sure you want to terminate \'%s\' process?</string>
+    <string name="filters">Filters</string>
+    <string name="sort">Sort</string>
+
+    <!-- Process Info Screen -->
+    <string name="unknown">Unknown</string>
+    <string name="go_back">go back</string>
+    <string name="unpin_desc">Unpin this process from top</string>
+    <string name="pin_desc">Pin this process to top</string>
+    <string name="pid">PID</string>
+    <string name="parent_not_found">Unable to find parent by its pid</string>
+    <string name="app_info">App info</string>
+    <string name="app_info_desc">Application info settings</string>
+    <string name="debloater_info">Debloater info</string>
+    <string name="no_info_debloater">No info available for this process</string>
+
+    <!-- Resource Host Screen -->
+    <string name="cpu">CPU</string>
+    <string name="ram">RAM</string>
+    <string name="gpu">GPU</string>
+    <string name="disk">DISK</string>
+    <string name="net">NET</string>
+    <string name="bat">BAT</string>
+    <string name="not_implemented">This feature is not implemented</string>
+
+    <!-- CPU Screen -->
+    <string name="processor_info">Processor Information</string>
+    <string name="soc">SoC</string>
+    <string name="architecture">Architecture</string>
+    <string name="abi">ABI</string>
+    <string name="cores">Cores</string>
+    <string name="governor">Governor</string>
+    <string name="temperature">Temperature</string>
+    <string name="system_stats">System Statistics</string>
+    <string name="uptime">Uptime</string>
+    <string name="min">Min</string>
+    <string name="current">Current</string>
+    <string name="max">Max</string>
+    <string name="temp_c_estimated">%1$s°C (estimated)</string>
+    <string name="cores_count">%1$d cores</string>
+
+    <!-- RAM Screen -->
+    <string name="ram_label">RAM: %1$s/%2$s (%3$d%%)</string>
+    <string name="swap_label">SWAP: %1$s/%2$s (%3$d%%)</string>
+
+    <!-- GPU Screen -->
+    <string name="vendor">Vendor</string>
+    <string name="gpu_model">GPU Model</string>
+    <string name="opengl">OpenGL</string>
+    <string name="vulkan">Vulkan</string>
+    <string name="vulkan_api">Vulkan API</string>
+    <string name="supported">Supported</string>
+    <string name="not_supported">Not Supported</string>
+    <string name="no_data">N/A</string>
+    <string name="gpu_usage_label">GPU - %s</string>
+    <string name="cpu_usage_label">CPU - %s</string>
+
+    <!-- Misc -->
+    <string name="please_wait">Please wait</string>
+    <string name="ms_unit">%1$dms</string>
+
 </resources>

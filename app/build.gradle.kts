@@ -14,6 +14,9 @@ android {
     namespace = "com.rk.taskmanager.app"
     compileSdk = 36
 
+    lint {
+        disable += "MissingTranslation"
+    }
 
     dependenciesInfo {
         includeInApk = isIzzyOrFdroid.not()

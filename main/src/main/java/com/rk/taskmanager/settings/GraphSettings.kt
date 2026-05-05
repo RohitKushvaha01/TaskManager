@@ -9,7 +9,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
@@ -17,7 +17,7 @@ import com.rk.commons.strings
 
 @Composable
 fun GraphSettings(modifier: Modifier = Modifier) {
-    PreferenceLayout(label = "Graph"){
+    PreferenceLayout(label = stringResource(strings.graph)){
         val minFreq = 150 // 150ms at 0%
         val maxFreq = 1000
 
@@ -33,7 +33,7 @@ fun GraphSettings(modifier: Modifier = Modifier) {
                 Text(stringResource(strings.graph_update))
             }) {
                 val currentFreq = (minFreq + (sliderPosition * (maxFreq - minFreq))).toInt()
-                Text("${currentFreq}ms")
+                Text(stringResource(strings.ms_unit, currentFreq))
             }
             PreferenceTemplate(title = {}) {
                 Slider(

@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rk.commons.charts.GraphDataHandler
 import com.rk.commons.charts.UsageChart
@@ -25,6 +26,7 @@ import com.rk.components.SettingsToggle
 import com.rk.taskmanager.navControllerRef
 import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.settings.SettingsRoutes
+import com.rk.commons.strings
 
 val gpuGraphHandler = GraphDataHandler(seriesCount = 1)
 private var gpuUsage by mutableIntStateOf(-1)
@@ -52,7 +54,7 @@ fun GPU(modifier: Modifier = Modifier, viewModel: GpuViewModel) {
         )
 
         SettingsToggle(
-            description = "GPU - ${if (gpuUsage < 0) "No Data" else "$gpuUsage%"}",
+            description = stringResource(strings.gpu_usage_label, if (gpuUsage < 0) stringResource(strings.no_data) else "$gpuUsage%"),
             showSwitch = false,
             default = false
         )
@@ -70,32 +72,32 @@ fun GPU(modifier: Modifier = Modifier, viewModel: GpuViewModel) {
             InfoCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     InfoItem(
-                        label = "Vendor",
-                        value = gpuInfo?.vendor ?: "N/A",
+                        label = stringResource(strings.vendor),
+                        value = gpuInfo?.vendor ?: stringResource(strings.no_data),
                         highlighted = true
                     )
 
                     InfoItem(
-                        label = "GPU Model",
-                        value = gpuInfo?.renderer ?: "N/A",
+                        label = stringResource(strings.gpu_model),
+                        value = gpuInfo?.renderer ?: stringResource(strings.no_data),
                         highlighted = false
                     )
 
                     InfoItem(
-                        label = "OpenGL",
-                        value = gpuInfo?.openGlVersion ?: "N/A",
+                        label = stringResource(strings.opengl),
+                        value = gpuInfo?.openGlVersion ?: stringResource(strings.no_data),
                         highlighted = false
                     )
 
                     InfoItem(
-                        label = "Vulkan",
-                        value = if (gpuInfo?.vulkanSupported == true) "Supported" else "Not Supported",
+                        label = stringResource(strings.vulkan),
+                        value = if (gpuInfo?.vulkanSupported == true) stringResource(strings.supported) else stringResource(strings.not_supported),
                         highlighted = false
                     )
 
                     InfoItem(
-                        label = "Vulkan API",
-                        value = gpuInfo?.vulkanApiVersion ?: "N/A",
+                        label = stringResource(strings.vulkan_api),
+                        value = gpuInfo?.vulkanApiVersion ?: stringResource(strings.no_data),
                         highlighted = false
                     )
                 }

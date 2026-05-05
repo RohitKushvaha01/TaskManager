@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.rk.commons.getString
+import com.rk.commons.strings
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -35,7 +37,7 @@ class LoadingPopup @OptIn(DelicateCoroutinesApi::class) constructor(
     scope: CoroutineScope = GlobalScope
 ) {
     private var dialog: AlertDialog? = null
-    private var message: String = "Please wait"
+    private var message: String = strings.please_wait.getString()
 
     init {
         val code = {
@@ -69,15 +71,15 @@ class LoadingPopup @OptIn(DelicateCoroutinesApi::class) constructor(
                 TaskManagerTheme {
                     Surface {
                         Row(
-                            modifier = Modifier.Companion.padding(16.dp),
+                            modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.Companion.CenterVertically
                         ) {
                             CircularProgressIndicator(
-                                modifier = Modifier.Companion
+                                modifier = Modifier
                                     .size(48.dp)
                                     .padding(8.dp)
                             )
-                            Spacer(modifier = Modifier.Companion.width(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = message,
                                 style = MaterialTheme.typography.bodyMedium

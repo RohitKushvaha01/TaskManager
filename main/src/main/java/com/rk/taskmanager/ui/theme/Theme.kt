@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import com.rk.taskmanager.ui.theme.autumn.Autumn
 import com.rk.taskmanager.ui.theme.frostfall.Frostfall
 import com.rk.taskmanager.ui.theme.spring.Spring

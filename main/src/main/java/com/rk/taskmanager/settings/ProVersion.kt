@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
+import com.rk.commons.strings
 
 // ── Palette ──────────────────────────────────────────────────────────────────
 
@@ -59,38 +61,39 @@ private val Green700 = Color(0xFF3B6D11)
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 private data class ProFeature(
-    val title: String,
-    val description: String,
+    val titleRes: Int,
+    val descriptionRes: Int,
     val icon: ImageVector,
     val iconTint: Color,
     val iconBackground: Color
 )
 
-private val features = listOf(
+@Composable
+private fun getFeatures() = listOf(
     ProFeature(
-        title = "Battery Stats",
-        description = "View charge level, status, and battery health at a glance",
+        titleRes = strings.battery_stats,
+        descriptionRes = strings.battery_stats_desc,
         icon = Icons.Outlined.BatteryChargingFull,
         iconTint = Green700,
         iconBackground = Green50
     ),
     ProFeature(
-        title = "Network Monitor",
-        description = "Track data usage and speeds in real time",
+        titleRes = strings.network_monitor,
+        descriptionRes = strings.network_monitor_desc,
         icon = Icons.Outlined.NetworkCheck,
         iconTint = Blue700,
         iconBackground = Blue50
     ),
     ProFeature(
-        title = "Disk Monitor",
-        description = "Monitor read and write activity across storage in real time",
+        titleRes = strings.disk_monitor,
+        descriptionRes = strings.disk_monitor_desc,
         icon = Icons.Outlined.Storage,
         iconTint = Purple700,
         iconBackground = Purple50
     ),
     ProFeature(
-        title = "Process Pin",
-        description = "Pin processes to show them at top",
+        titleRes = strings.process_pin,
+        descriptionRes = strings.process_pin_desc,
         icon = Icons.Outlined.PushPin,
         iconTint = Teal700,
         iconBackground = Teal50
@@ -130,7 +133,7 @@ fun ProVersion(modifier: Modifier = Modifier) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Upgrade to Pro",
+                        text = stringResource(strings.upgrade_to_pro),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -150,14 +153,14 @@ fun ProVersion(modifier: Modifier = Modifier) {
                         shape = RoundedCornerShape(8.dp),
 
                     ) {
-                        Text("Help", fontSize = 12.sp)
+                        Text(stringResource(strings.help), fontSize = 12.sp)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { activity?.onBackPressed() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(strings.back)
                         )
                     }
                 },
@@ -186,7 +189,7 @@ fun ProVersion(modifier: Modifier = Modifier) {
 
             // ── Section label ─────────────────────────────────────────────
             Text(
-                text = "WHAT YOU GET",
+                text = stringResource(strings.what_you_get),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 letterSpacing = 0.5.sp,
@@ -194,7 +197,7 @@ fun ProVersion(modifier: Modifier = Modifier) {
             )
 
             // ── Feature rows ──────────────────────────────────────────────
-            features.forEach { feature ->
+            getFeatures().forEach { feature ->
                 FeatureRow(feature = feature)
             }
 
@@ -219,7 +222,7 @@ fun ProVersion(modifier: Modifier = Modifier) {
             // ── Footer note ───────────────────────────────────────────────
             if (!isPro) {
                 Text(
-                    text = "Secure payment via Google Play",
+                    text = stringResource(strings.secure_payment),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -264,21 +267,21 @@ private fun HeroBanner() {
 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "TASK MANAGER",
+                text = stringResource(strings.task_manager_uppercase),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
                 letterSpacing = 0.5.sp,
                 color = Color.White.copy(alpha = 0.85f)
             )
             Text(
-                text = "Pro Version",
+                text = stringResource(strings.pro_version),
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Everything you need to understand your device, deeply.",
+                text = stringResource(strings.pro_version_tagline),
                 fontSize = 13.sp,
                 color = Color.White.copy(alpha = 0.8f),
                 lineHeight = 18.sp
@@ -324,13 +327,13 @@ private fun FeatureRow(feature: ProFeature) {
 
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = feature.title,
+                    text = stringResource(feature.titleRes),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = feature.description,
+                    text = stringResource(feature.descriptionRes),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 16.sp
@@ -370,14 +373,14 @@ private fun PurchaseCard(
             ) {
                 Column {
                     Text(
-                        text = "One-time purchase",
+                        text = stringResource(strings.one_time_purchase),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     if (isPending) {
                         Text(
-                            text = "Purchase in progress...",
+                            text = stringResource(strings.purchase_in_progress),
                             fontSize = 12.sp,
                             color = Amber700,
                             fontWeight = FontWeight.Medium
@@ -402,7 +405,7 @@ private fun PurchaseCard(
             }
 
             Text(
-                text = "Pay once, permanent pro access.",
+                text = stringResource(strings.permanent_pro_access),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -420,7 +423,7 @@ private fun PurchaseCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = if (isPending) "Processing..." else "Upgrade Now",
+                    text = if (isPending) stringResource(strings.processing) else stringResource(strings.upgrade_now),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -465,13 +468,13 @@ private fun UnlockedCard() {
 
             Column {
                 Text(
-                    text = "Pro Unlocked",
+                    text = stringResource(strings.pro_unlocked),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Thank you for supporting Task Manager!",
+                    text = stringResource(strings.thanks_support),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
@@ -47,6 +48,7 @@ import com.rk.taskmanager.screens.ProcessItem
 import com.rk.taskmanager.screens.Sort
 import com.rk.taskmanager.screens.showFilter
 import com.rk.taskmanager.screens.showSort
+import com.rk.commons.strings
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -82,7 +84,7 @@ fun ProcessSearchBar(
                     onSearch = {},
                     expanded = expanded,
                     onExpandedChange = { expanded = it },
-                    placeholder = { Text("Search") },
+                    placeholder = { Text(stringResource(strings.search)) },
                     trailingIcon = {
                         var showMoreMenu by remember { mutableStateOf(false) }
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -98,7 +100,7 @@ fun ProcessSearchBar(
                             showMoreMenu = false
                         }) {
                             DropdownMenuItem(text = {
-                                Text("Filters")
+                                Text(stringResource(strings.filters))
                             }, onClick = {
                                 showMoreMenu = false
                                 showFilter.value = true
@@ -107,7 +109,7 @@ fun ProcessSearchBar(
                             })
 
                             DropdownMenuItem(text = {
-                                Text("Sort")
+                                Text(stringResource(strings.sort))
                             }, onClick = {
                                 showMoreMenu = false
                                 showSort.value = true
@@ -133,12 +135,12 @@ fun ProcessSearchBar(
                                 if (targetExpanded) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                        contentDescription = "Back"
+                                        contentDescription = stringResource(strings.back)
                                     )
                                 } else {
                                     Icon(
                                         imageVector = Icons.Outlined.Search,
-                                        contentDescription = "Search"
+                                        contentDescription = stringResource(strings.search)
                                     )
                                 }
                             }

@@ -8,7 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import com.rk.components.SettingsToggle
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
@@ -17,7 +17,7 @@ import com.rk.commons.strings
 
 @Composable
 fun DaemonSettings(modifier: Modifier = Modifier) {
-    PreferenceLayout(label = "Daemon") {
+    PreferenceLayout(label = stringResource(strings.daemon)) {
         val context = LocalContext.current
         val selectedMode = remember { mutableIntStateOf(Settings.workingMode) }
 

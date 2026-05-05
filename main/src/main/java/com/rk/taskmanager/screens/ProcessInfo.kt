@@ -226,7 +226,7 @@ suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
         }.getOrDefault(false)
     }
 
-    com.rk.commons.Settings.kills++
+    com.rk.commons.settings.Settings.kills++
     return killResult
 }
 
@@ -246,7 +246,7 @@ fun ProcessInfo(
 ) {
     var showKillDialog by remember { mutableStateOf<ProcessUiModel?>(null) }
 
-    val username = remember { mutableStateOf("Unknown") }
+    val username = remember { mutableStateOf(strings.unknown.getString()) }
     val scope = rememberCoroutineScope()
     val cpuUsage = remember { mutableIntStateOf(-1) }
 
@@ -264,7 +264,7 @@ fun ProcessInfo(
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                    contentDescription = "go back"
+                    contentDescription = stringResource(strings.go_back)
                 )
             }
         })
@@ -353,7 +353,7 @@ fun ProcessInfo(
 
                     SettingsToggle(
                         label = if (proc.isPinned.value) stringResource(strings.unpin) else stringResource(strings.pin),
-                        description = if (proc.isPinned.value) "Unpin this process from top" else "Pin this process to top",
+                        description = if (proc.isPinned.value) stringResource(strings.unpin_desc) else stringResource(strings.pin_desc),
                         default = proc.isPinned.value,
                         isEnabled = bridge?.isPro()?.value == true,
                         showSwitch = true,
@@ -375,7 +375,7 @@ fun ProcessInfo(
                     }
 
                     TextCard(text = stringResource(strings.name), description = name.trim())
-                    TextCard(text = "PID", description = proc!!.proc.pid.toString())
+                    TextCard(text = stringResource(strings.pid), description = proc!!.proc.pid.toString())
                     TextCard(
                         text = stringResource(
                             if (proc.isApp) {
@@ -534,7 +534,7 @@ fun ProcessInfo(
                                                 )
                                             )
                                         }else{
-                                            Toast.makeText(TaskManager.requireContext(), "Unable to find parent by its pid", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(TaskManager.requireContext(), strings.parent_not_found.getString(), Toast.LENGTH_SHORT).show()
                                         }
                                     }
 
@@ -547,8 +547,8 @@ fun ProcessInfo(
                     val context = LocalContext.current
                     if (proc.isApp){
                         SettingsToggle(
-                            label = "App info",
-                            description = "Application info settings",
+                            label = stringResource(strings.app_info),
+                            description = stringResource(strings.app_info_desc),
                             default = false,
                             showSwitch = false,
                             endWidget = {
@@ -586,11 +586,11 @@ fun ProcessInfo(
                         }
                     }
 
-                    PreferenceGroup(heading = "Debloater info") {
+                    PreferenceGroup(heading = stringResource(strings.debloater_info)) {
                         when (descriptionState) {
                             is DescriptionState.Loading -> TextCard(text = stringResource(strings.loading), description = null, selection = true, copyDesOnLong = false)
                             is DescriptionState.Success -> TextCard(text = null, description = (descriptionState as DescriptionState.Success).text, selection = true,copyDesOnLong = false)
-                            is DescriptionState.Empty -> TextCard(text = null, description = "No info available for this process", selection = true,copyDesOnLong = false)
+                            is DescriptionState.Empty -> TextCard(text = null, description = stringResource(strings.no_info_debloater), selection = true,copyDesOnLong = false)
                         }
                     }
                 }
@@ -605,21 +605,21 @@ fun ProcessInfo(
     }
 
     if (showKillDialog != null) {
-        if (com.rk.commons.Settings.confirmkill){
+        if (com.rk.commons.settings.Settings.confirmkill){
             XedDialog(
                 onDismissRequest = { showKillDialog = null }
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = "Terminate?",
+                        text = stringResource(strings.terminate),
                         style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
                     Text(
-                        text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
+                        text = stringResource(strings.terminate_confirm, showKillDialog?.name ?: "")
                     )
 
                     Spacer(modifier = Modifier.padding(vertical = 16.dp))
@@ -632,7 +632,7 @@ fun ProcessInfo(
                         TextButton(onClick = {
                             showKillDialog = null
                         }) {
-                            Text("Cancel")
+                            Text(stringResource(strings.cancel))
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -654,7 +654,7 @@ fun ProcessInfo(
 
                         }) {
                             Text(
-                                text = "Kill",
+                                text = stringResource(strings.kill),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }

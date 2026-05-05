@@ -54,8 +54,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
 
 
         PreferenceCategory(
-            label = "Daemon",
-            description = "TaskManagerD settings",
+            label = stringResource(strings.daemon),
+            description = stringResource(strings.daemon_desc),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.Android,null, tint = MaterialTheme.colorScheme.primary)
             },
@@ -64,8 +64,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
                          },
         )
         PreferenceCategory(
-            label = "Graph",
-            description = "cpu,ram,swap graph settings",
+            label = stringResource(strings.graph),
+            description = stringResource(strings.graph_desc),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.MonitorHeart,null, tint = MaterialTheme.colorScheme.primary)
             },
@@ -76,8 +76,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
 
 
         PreferenceCategory(
-            label = "Processes",
-            description = "settings for processes screen",
+            label = stringResource(strings.procs),
+            description = stringResource(strings.procs_desc),
             startWidget = {
                 Icon(imageVector = Icons.AutoMirrored.Outlined.FormatListBulleted,null, tint = MaterialTheme.colorScheme.primary)
             },
@@ -87,8 +87,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
         )
 
         PreferenceCategory(
-            label = "Themes",
-            description = "look and feel",
+            label = stringResource(strings.themes),
+            description = stringResource(strings.themes_desc),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.ColorLens,null, tint = MaterialTheme.colorScheme.primary)
             },
@@ -98,8 +98,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
         )
 
         PreferenceCategory(
-            label = "Pro Version",
-            description = "Unlock exclusive features",
+            label = stringResource(strings.pro_version),
+            description = stringResource(strings.pro_version_desc),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.Star,null, tint = MaterialTheme.colorScheme.primary)
             },
@@ -110,8 +110,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
         )
 
         PreferenceCategory(
-            label = "About",
-            description = "Application info",
+            label = stringResource(strings.about),
+            description = stringResource(strings.about_desc),
             startWidget = {
                 Icon(imageVector = Icons.Outlined.Info,null, tint = MaterialTheme.colorScheme.primary)
             },

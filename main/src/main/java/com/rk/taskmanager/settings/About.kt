@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
 import coil.compose.AsyncImage
@@ -30,6 +31,8 @@ import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.BuildConfig
+import com.rk.commons.strings
+import com.rk.commons.getString
 
 @Composable
 fun About(modifier: Modifier = Modifier) {
@@ -38,11 +41,11 @@ fun About(modifier: Modifier = Modifier) {
     val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
     val context = LocalContext.current
 
-    PreferenceLayout(label = "About", backArrowVisible = true) {
-        PreferenceGroup(heading = "Developer") {
+    PreferenceLayout(label = stringResource(strings.about), backArrowVisible = true) {
+        PreferenceGroup(heading = stringResource(strings.developer)) {
             SettingsToggle(
                 label = "RohitKushvaha01",
-                description = "View github profile",
+                description = stringResource(strings.view_github),
                 default = false,
                 sideEffect = {
                     val url = "https://github.com/RohitKushvaha01"
@@ -73,7 +76,7 @@ fun About(modifier: Modifier = Modifier) {
             )
         }
 
-        PreferenceGroup(heading = "Build Info") {
+        PreferenceGroup(heading = stringResource(strings.build_info)) {
             PreferenceTemplate(
                 modifier =
                     Modifier.combinedClickable(
@@ -82,7 +85,7 @@ fun About(modifier: Modifier = Modifier) {
                         onLongClick = { copyToClipboard(context,versionName.toString()) },
                     ),
                 title = {
-                    Text(text = "Version", style = MaterialTheme.typography.titleMedium)
+                    Text(text = stringResource(strings.version), style = MaterialTheme.typography.titleMedium)
                 },
                 description = { Text(text = versionName.toString(), style = MaterialTheme.typography.titleSmall) },
             )
@@ -95,7 +98,7 @@ fun About(modifier: Modifier = Modifier) {
                         onLongClick = { copyToClipboard(context,versionCode.toString()) },
                     ),
                 title = {
-                    Text(text = "Version Code", style = MaterialTheme.typography.titleMedium)
+                    Text(text = stringResource(strings.version_code), style = MaterialTheme.typography.titleMedium)
                 },
                 description = { Text(text = versionCode.toString(), style = MaterialTheme.typography.titleSmall) },
             )
@@ -108,7 +111,7 @@ fun About(modifier: Modifier = Modifier) {
                         onLongClick = { copyToClipboard(context,BuildConfig.GIT_SHORT_COMMIT_HASH) },
                     ),
                 title = {
-                    Text(text = "Git Commit hash", style = MaterialTheme.typography.titleMedium)
+                    Text(text = stringResource(strings.git_hash), style = MaterialTheme.typography.titleMedium)
                 },
                 description = {
                     Text(text = BuildConfig.GIT_SHORT_COMMIT_HASH, style = MaterialTheme.typography.titleSmall)
@@ -123,13 +126,13 @@ fun About(modifier: Modifier = Modifier) {
                         onLongClick = { copyToClipboard(context,BuildConfig.GIT_SHORT_COMMIT_HASH) },
                     ),
                 title = {
-                    Text(text = "Build Type", style = MaterialTheme.typography.titleMedium)
+                    Text(text = stringResource(strings.build_type), style = MaterialTheme.typography.titleMedium)
                 },
                 description = {
                     Text(text = if (bridge == null){
-                        "Community"
+                        stringResource(strings.community)
                     }else{
-                        "Full"
+                        stringResource(strings.full)
                     }, style = MaterialTheme.typography.titleSmall)
                 },
             )
@@ -143,13 +146,13 @@ fun About(modifier: Modifier = Modifier) {
                         onLongClick = { copyToClipboard(context,BuildConfig.GIT_SHORT_COMMIT_HASH) },
                     ),
                 title = {
-                    Text(text = "Is Pro", style = MaterialTheme.typography.titleMedium)
+                    Text(text = stringResource(strings.is_pro), style = MaterialTheme.typography.titleMedium)
                 },
                 description = {
                     Text(text = if (bridge?.isPro()?.value == true){
-                        "Yes"
+                        stringResource(strings.yes)
                     }else{
-                        "No"
+                        stringResource(strings.no)
                     }, style = MaterialTheme.typography.titleSmall)
                 },
             )
@@ -160,7 +163,7 @@ fun About(modifier: Modifier = Modifier) {
 
 
 private fun copyToClipboard(context: Context,text: String, showToast: Boolean = true) {
-    copyToClipboard(context,label = "Xed-Editor", text, showToast = showToast)
+    copyToClipboard(context,label = "TaskManager", text, showToast = showToast)
 }
 
 
@@ -169,6 +172,6 @@ private fun copyToClipboard(context: Context,label: String, text: String, showTo
     val clip = ClipData.newPlainText(label, text)
     clipboard.setPrimaryClip(clip)
     if (showToast) {
-        Toast.makeText(context, "Copied on clipboard", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, strings.copied_to_clipboard.getString(), Toast.LENGTH_SHORT).show()
     }
 }

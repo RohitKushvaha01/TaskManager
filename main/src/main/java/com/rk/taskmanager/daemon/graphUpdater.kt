@@ -6,7 +6,7 @@ import com.rk.taskmanager.screens.cpu.updateCpuGraph
 import com.rk.taskmanager.screens.gpu.updateGpuGraph
 import com.rk.taskmanager.screens.ram.updateRamAndSwapGraph
 import com.rk.taskmanager.screens.selectedscreen
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rk.commons.charts.GraphDataHandler
 import com.rk.commons.charts.UsageChart
@@ -29,6 +30,7 @@ import com.rk.taskmanager.TaskManager
 import com.rk.taskmanager.navControllerRef
 import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.settings.SettingsRoutes
+import com.rk.commons.strings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -87,12 +89,22 @@ fun RAM(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
 
         Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             Text(
-                "RAM: ${FormatUtils.formatBytes(usedRam)}/${FormatUtils.formatBytes(totalRam)} ($RamUsage%)",
+                stringResource(
+                    strings.ram_label,
+                    FormatUtils.formatBytes(usedRam),
+                    FormatUtils.formatBytes(totalRam),
+                    RamUsage
+                ),
                 color = ramColor,
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                "SWAP: ${FormatUtils.formatBytes(usedSwap)}/${FormatUtils.formatBytes(totalSwap)} ($SwapUsage%)",
+                stringResource(
+                    strings.swap_label,
+                    FormatUtils.formatBytes(usedSwap),
+                    FormatUtils.formatBytes(totalSwap),
+                    SwapUsage
+                ),
                 color = swapColor,
                 style = MaterialTheme.typography.bodyMedium
             )

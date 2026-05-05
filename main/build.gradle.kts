@@ -18,6 +18,9 @@ android {
     compileSdk {
         version = release(36)
     }
+    lint {
+        disable += "MissingTranslation"
+    }
     buildFeatures.buildConfig = true
 
     defaultConfig {

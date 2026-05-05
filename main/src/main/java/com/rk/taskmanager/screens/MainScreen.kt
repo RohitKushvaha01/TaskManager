@@ -41,7 +41,7 @@ import com.rk.taskmanager.daemon.DaemonResult
 import com.rk.taskmanager.daemon.isConnected
 import com.rk.taskmanager.daemon.startDaemon
 import com.rk.taskmanager.screens.gpu.GpuViewModel
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import com.rk.commons.strings
 import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.Dispatchers

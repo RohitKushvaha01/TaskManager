@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rk.commons.charts.GraphDataHandler
@@ -39,6 +40,8 @@ import com.rk.taskmanager.daemon.send_daemon_messages
 import com.rk.taskmanager.navControllerRef
 import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.settings.SettingsRoutes
+import com.rk.commons.strings
+import com.rk.commons.getString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +72,7 @@ fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
         cpuGraphHandler.refresh()
     }
 
-    var temperature by remember { mutableStateOf("N/A") }
+    var temperature by remember { mutableStateOf(strings.no_data.getString()) }
     var uptime by remember { mutableStateOf("") }
     var cpuInfo by remember { mutableStateOf<CpuInfoReader.CpuInfo?>(null) }
 
@@ -108,7 +111,7 @@ fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
         val usage by cpuUsage.collectAsState()
 
         SettingsToggle(
-            description = "CPU - ${if (usage < 0) "No Data" else "$usage%"}",
+            description = stringResource(strings.cpu_usage_label, if (usage < 0) stringResource(strings.no_data) else "$usage%"),
             showSwitch = false,
             default = false
         )
@@ -125,19 +128,19 @@ fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
 
             InfoCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SectionHeader("Processor Information")
+                    SectionHeader(stringResource(strings.processor_info))
 
-                    InfoItem(label = "SoC", value = cpuInfo?.soc ?: "N/A", highlighted = true)
+                    InfoItem(label = stringResource(strings.soc), value = cpuInfo?.soc ?: stringResource(strings.no_data), highlighted = true)
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Architecture", cpuInfo?.arch ?: "N/A")
+                            InfoItem(stringResource(strings.architecture), cpuInfo?.arch ?: stringResource(strings.no_data))
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("ABI", cpuInfo?.abi ?: "N/A")
+                            InfoItem(stringResource(strings.abi), cpuInfo?.abi ?: stringResource(strings.no_data))
                         }
                     }
 
@@ -146,10 +149,10 @@ fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Cores", cpuInfo?.cores.toString())
+                            InfoItem(stringResource(strings.cores), cpuInfo?.cores.toString())
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Governor", cpuInfo?.governor ?: "N/A")
+                            InfoItem(stringResource(strings.governor), cpuInfo?.governor ?: stringResource(strings.no_data))
                         }
                     }
 
@@ -158,7 +161,7 @@ fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Temperature", if (temperature.toIntOrNull() != null) "$temperature°C (estimated)" else temperature)
+                            InfoItem(stringResource(strings.temperature), if (temperature.toIntOrNull() != null) stringResource(strings.temp_c_estimated, temperature) else temperature)
                         }
                     }
                 }
@@ -168,17 +171,17 @@ fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
 
             InfoCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SectionHeader("System Statistics")
+                    SectionHeader(stringResource(strings.system_stats))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Processes", viewModel.procCount.collectAsState().value.toString())
+                            InfoItem(stringResource(strings.procs), viewModel.procCount.collectAsState().value.toString())
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Threads", viewModel.threadCount.collectAsState().value.toString())
+                            InfoItem(stringResource(strings.threads), viewModel.threadCount.collectAsState().value.toString())
                         }
                     }
 
@@ -187,7 +190,7 @@ fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem("Uptime", uptime)
+                            InfoItem(stringResource(strings.uptime), uptime)
                         }
                     }
                 }
@@ -222,7 +225,7 @@ fun ClusterCard(cluster: CpuInfoReader.CpuCluster) {
             )
 
             Text(
-                text = "${cluster.cores} cores",
+                text = stringResource(strings.cores_count, cluster.cores),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -243,11 +246,11 @@ fun ClusterCard(cluster: CpuInfoReader.CpuCluster) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            FrequencyInfo(label = "Min", value = cluster.minFreq ?: "—", modifier = Modifier.weight(1f))
+            FrequencyInfo(label = stringResource(strings.min), value = cluster.minFreq ?: "—", modifier = Modifier.weight(1f))
             cluster.currentFreq?.let { freq ->
-                FrequencyInfo(label = "Current", value = freq, modifier = Modifier.weight(1f))
+                FrequencyInfo(label = stringResource(strings.current), value = freq, modifier = Modifier.weight(1f))
             }
-            FrequencyInfo(label = "Max", value = cluster.maxFreq ?: "—", modifier = Modifier.weight(1f))
+            FrequencyInfo(label = stringResource(strings.max), value = cluster.maxFreq ?: "—", modifier = Modifier.weight(1f))
         }
     }
 }

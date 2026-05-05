@@ -13,7 +13,7 @@ import com.rk.taskmanager.screens.getApkNameFromPackage
 import com.rk.taskmanager.screens.getAppIconBitmap
 import com.rk.taskmanager.screens.isAppInstalled
 import com.rk.taskmanager.screens.isSystemApp
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async

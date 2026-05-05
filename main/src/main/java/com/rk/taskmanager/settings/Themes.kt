@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.components.compose.preferences.base.PreferenceLayout
 import com.rk.taskmanager.MainActivity
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun Themes(modifier: Modifier = Modifier) {
-    PreferenceLayout(label = "Themes") {
+    PreferenceLayout(label = stringResource(strings.themes)) {
         PreferenceGroup(heading = stringResource(strings.theme_mode)) {
             val modes = listOf(
                 Triple(0, strings.auto, null),

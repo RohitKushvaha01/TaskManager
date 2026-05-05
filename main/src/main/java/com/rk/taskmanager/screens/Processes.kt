@@ -60,11 +60,12 @@ import com.rk.components.compose.preferences.base.PreferenceTemplate
 import com.rk.taskmanager.ProcessUiModel
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
-import com.rk.commons.Settings
+import com.rk.commons.settings.Settings
 import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.settings.pullToRefresh_procs
 import com.rk.commons.strings
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -77,6 +78,15 @@ fun Processes(
     navController: NavController
 ) {
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        if (Settings.procAutoRefresh){
+            while (isActive){
+                viewModel.refreshProcessesAuto()
+                delay(5000)
+            }
+        }
+    }
 
     if (showFilter.value) {
         XedDialog(onDismissRequest = { showFilter.value = false }) {
@@ -148,7 +158,7 @@ fun Processes(
                     RadioButton(selected = sortBy == ProcessViewModel.Sortby.Ram.id, onClick = {
                         viewModel.setSortBy(ProcessViewModel.Sortby.Ram)
                     })
-                }, label = "Sort by RAM", sideEffect = {
+                }, label = stringResource(strings.sort_by_ram), sideEffect = {
                     viewModel.setSortBy(ProcessViewModel.Sortby.Ram)
                 })
 
@@ -156,7 +166,7 @@ fun Processes(
                     RadioButton(selected = sortBy == ProcessViewModel.Sortby.Cpu.id, onClick = {
                         viewModel.setSortBy(ProcessViewModel.Sortby.Cpu)
                     })
-                }, label = "Sort by CPU", sideEffect = {
+                }, label = stringResource(strings.sort_by_cpu), sideEffect = {
                     viewModel.setSortBy(ProcessViewModel.Sortby.Cpu)
                 })
 
@@ -164,7 +174,7 @@ fun Processes(
                     RadioButton(selected = sortBy == ProcessViewModel.Sortby.A_z.id, onClick = {
                         viewModel.setSortBy(ProcessViewModel.Sortby.A_z)
                     })
-                }, label = "Sort by Name (A-z)", sideEffect = {
+                }, label = stringResource(strings.sort_by_name), sideEffect = {
                     viewModel.setSortBy(ProcessViewModel.Sortby.A_z)
                 })
 
@@ -220,7 +230,7 @@ fun Processes(
                     Button(onClick = {
                         viewModel.refreshProcessesManual()
                     }) {
-                        Text("Refresh")
+                        Text(stringResource(strings.refresh))
                     }
                 }
 
@@ -342,7 +352,7 @@ fun ProcessItem(
             if (uiProc.icon != null) {
                 Image(
                     bitmap = uiProc.icon,
-                    contentDescription = "App Icon",
+                    contentDescription = stringResource(strings.app_name), // Using app_name for generic icon description
                     modifier = Modifier
                         .padding(start = 19.dp)
                         .size(24.dp),
@@ -412,14 +422,14 @@ fun ProcessItem(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = "Terminate?",
+                        text = stringResource(strings.terminate),
                         style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
                     Text(
-                        text = "Are you sure you want to terminate '${showKillDialog?.name}' process?"
+                        text = stringResource(strings.terminate_confirm, showKillDialog?.name ?: "")
                     )
 
                     Spacer(modifier = Modifier.padding(vertical = 16.dp))
@@ -432,7 +442,7 @@ fun ProcessItem(
                         TextButton(onClick = {
                             showKillDialog = null
                         }) {
-                            Text("Cancel")
+                            Text(stringResource(strings.cancel))
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -454,7 +464,7 @@ fun ProcessItem(
 
                         }) {
                             Text(
-                                text = "Kill",
+                                text = stringResource(strings.kill),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }

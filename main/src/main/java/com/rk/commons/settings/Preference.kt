@@ -1,105 +1,10 @@
-package com.rk.commons
+package com.rk.commons.settings
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-
-object Settings {
-    var shouldPreLoadThemeAd
-        get() = Preference.getBoolean(key = "theme-ad",true)
-        set(value) = Preference.setBoolean(key = "theme-ad",value)
-
-
-    var theme
-        //0 is the id of the theme in the themes hashmap
-        get() = Preference.getInt(key = "theme",0)
-        set(value) { Preference.setInt(key = "theme",value) }
-
-    var themeMode
-        // 0: Auto, 1: Light, 2: Dark
-        get() = Preference.getInt(key = "theme_mode", 0)
-        set(value) { Preference.setInt(key = "theme_mode", value) }
-
-    var sortby
-        get() = Preference.getInt(key = "sortby", 0)
-        set(value) { Preference.setInt(key = "sortby",value) }
-
-    var updateFrequency
-        get() = Preference.getInt(key = "updateFrequency",800)
-        set(value) = Preference.setInt(key = "updateFrequency",value)
-
-    var workingMode
-        get() = Preference.getInt(key = "workingMode", -1)
-        set(value) = Preference.setInt(key = "workingMode",value)
-    var monet
-        get() = Preference.getBoolean(
-            key = "monet",
-            default = false
-        )
-        set(value) = Preference.setBoolean(key = "monet",value)
-
-    var showSystemApps
-        get() = Preference.getBoolean(
-            key = "showSystemApps",
-            default = true
-        )
-        set(value) = Preference.setBoolean(key = "showSystemApps",value)
-
-    var showUserApps
-        get() = Preference.getBoolean(
-            key = "showUserApps",
-            default = true
-        )
-        set(value) = Preference.setBoolean(key = "showUserApps",value)
-
-    var showLinuxProcess
-        get() = Preference.getBoolean(
-            key = "showLinuxProcess",
-            default = false
-        )
-        set(value) = Preference.setBoolean(key = "showLinuxProcess",value)
-
-    var kills get() = Preference.getInt(key = "kills", 0)
-        set(value) = Preference.setInt(key = "kills",value)
-
-    var supportDialogTimeStamp get() = Preference.getLong(key = "supportDialogTimeStamp", 0)
-        set(value) = Preference.setLong(key = "supportDialogTimeStamp",value)
-
-    var pullToRefresh_procs
-        get() = Preference.getBoolean(
-            key = "pullToRefresh_procs",
-            default = true
-        )
-        set(value) = Preference.setBoolean(key = "pullToRefresh_procs",value)
-
-
-    var confirmkill
-        get() = Preference.getBoolean(
-            key = "confirmkill",
-            default = true
-        )
-        set(value) = Preference.setBoolean(key = "confirmkill",value)
-
-    var defaultToProcessScreen
-        get() = Preference.getBoolean(
-            key = "defaultToProcessScreen",
-            default = false
-        )
-        set(value) = Preference.setBoolean(key = "defaultToProcessScreen",value)
-
-    var pinnedProcesses: Set<String>
-        get() = Preference.getString("pinned_processes", "").split(",").filter { it.isNotEmpty() }.toSet()
-        set(value) = Preference.setString("pinned_processes", value.joinToString(","))
-
-    var selectedNetInterface: String
-        get() = Preference.getString("selected_net_interface", "")
-        set(value) = Preference.setString("selected_net_interface", value)
-
-    var selectedDisk: String
-        get() = Preference.getString("selected_disk", "")
-        set(value) = Preference.setString("selected_disk", value)
-
-}
+import com.rk.commons.application
+import kotlin.reflect.KProperty
 
 object Preference {
     private var sharedPreferences: SharedPreferences = application!!.getSharedPreferences("Settings", Context.MODE_PRIVATE)
@@ -259,5 +164,7 @@ object Preference {
             it.printStackTrace()
         }
     }
+
+
 
 }

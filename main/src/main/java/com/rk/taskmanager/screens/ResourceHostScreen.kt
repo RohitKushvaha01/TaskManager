@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rk.bridge.OpenSourceOnly
 import com.rk.bridge.ProBridge
@@ -33,9 +34,10 @@ import com.rk.taskmanager.screens.gpu.GPU
 import com.rk.taskmanager.screens.gpu.GpuViewModel
 import com.rk.taskmanager.screens.ram.RAM
 import com.rk.taskmanager.settings.SettingsRoutes
+import com.rk.commons.strings
 
 private data class ResourceTab(
-    val label: String,
+    val labelRes: Int,
     val icon: TabIcon,
     val content: @Composable (
         Modifier,
@@ -54,7 +56,7 @@ private val tabs = listOf(
 
 
     ResourceTab(
-        label = "CPU",
+        labelRes = strings.cpu,
         icon = TabIcon.Res(R.drawable.cpu_24px),
         content = { modifier, vm, _ ->
             CPU(modifier, vm)
@@ -62,7 +64,7 @@ private val tabs = listOf(
     ),
 
     ResourceTab(
-        label = "RAM",
+        labelRes = strings.ram,
         icon = TabIcon.Res(R.drawable.memory_alt_24px),
         content = { modifier, vm, _ ->
             RAM(modifier, vm)
@@ -70,7 +72,7 @@ private val tabs = listOf(
     ),
 
     ResourceTab(
-        label = "GPU",
+        labelRes = strings.gpu,
         icon = TabIcon.Res(R.drawable.cpu_24px),
         content = { modifier, _, gpuVm ->
             GPU(modifier, gpuVm)
@@ -78,7 +80,7 @@ private val tabs = listOf(
     ),
 
     ResourceTab(
-        label = "DISK",
+        labelRes = strings.disk,
         icon = TabIcon.Vector(Icons.Outlined.Storage),
         content = { _, _, _ ->
             if (bridge != null) bridge!!.DiskScreen()
@@ -87,7 +89,7 @@ private val tabs = listOf(
     ),
 
     ResourceTab(
-        label = "NET",
+        labelRes = strings.net,
         icon = TabIcon.Vector(Icons.Outlined.NetworkCheck),
         content = { _, _, _ ->
             if (bridge != null) bridge!!.NetScreen()
@@ -98,7 +100,7 @@ private val tabs = listOf(
 
 
     ResourceTab(
-        label = "BAT",
+        labelRes = strings.bat,
         icon = TabIcon.Vector(Icons.Outlined.BatteryChargingFull),
         content = { _, _, _ ->
             if (bridge != null) bridge!!.BatteryScreen()
@@ -142,7 +144,7 @@ fun ResourceHostScreen(
                         }
                     },
                     label = {
-                        Text(tab.label)
+                        Text(stringResource(tab.labelRes))
                     }
                 )
             }
@@ -159,7 +161,7 @@ fun ResourceHostScreen(
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("This feature is not implemented")
+                    Text(stringResource(strings.not_implemented))
                 }
             }
         }

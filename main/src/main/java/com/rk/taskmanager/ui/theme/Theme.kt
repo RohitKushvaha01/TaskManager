@@ -29,10 +29,15 @@ val themes = hashMapOf(
 
 var currentTheme = mutableIntStateOf(Settings.theme)
 var dynamicTheme = mutableStateOf(Settings.monet)
+var themeMode = mutableIntStateOf(Settings.themeMode)
 
 @Composable
 fun TaskManagerTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = when (themeMode.intValue) {
+        1 -> false
+        2 -> true
+        else -> isSystemInDarkTheme()
+    },
     dynamicColor: Boolean = dynamicTheme.value,
     content: @Composable () -> Unit
 ) {

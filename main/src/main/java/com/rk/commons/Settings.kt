@@ -15,7 +15,10 @@ object Settings {
         get() = Preference.getInt(key = "theme",0)
         set(value) { Preference.setInt(key = "theme",value) }
 
-
+    var themeMode
+        // 0: Auto, 1: Light, 2: Dark
+        get() = Preference.getInt(key = "theme_mode", 0)
+        set(value) { Preference.setInt(key = "theme_mode", value) }
 
     var sortby
         get() = Preference.getInt(key = "sortby", 0)

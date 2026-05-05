@@ -12,12 +12,36 @@ import com.rk.taskmanager.MainActivity
 import com.rk.commons.strings
 import com.rk.taskmanager.ui.theme.currentTheme
 import com.rk.taskmanager.ui.theme.dynamicTheme
+import com.rk.taskmanager.ui.theme.themeMode
 import com.rk.taskmanager.ui.theme.themes
 import kotlinx.coroutines.launch
 
 @Composable
 fun Themes(modifier: Modifier = Modifier) {
     PreferenceLayout(label = "Themes") {
+        PreferenceGroup(heading = stringResource(strings.theme_mode)) {
+            val modes = listOf(
+                Triple(0, strings.auto, null),
+                Triple(1, strings.light, null),
+                Triple(2, strings.dark, null)
+            )
+
+            modes.forEach { (mode, labelRes, descRes) ->
+                SelectableCard(
+                    selected = themeMode.intValue == mode,
+                    label = stringResource(labelRes),
+                    description = if (descRes != null) stringResource(descRes) else null,
+                    onClick = {
+                        MainActivity.instance?.lifecycleScope?.launch {
+                            themeMode.intValue = mode
+                            Settings.themeMode = mode
+                        }
+                    }
+                )
+            }
+        }
+
+
         PreferenceGroup(heading = stringResource(strings.theme)) {
             SelectableCard(
                 selected = dynamicTheme.value,

@@ -65,4 +65,8 @@
     <string name="title_taskmanager_pro">TaskManager Pro</string>
     <string name="pin">Pin</string>
     <string name="unpin">Unpin</string>
+    <string name="theme_mode">Theme Mode</string>
+    <string name="auto">Follow System</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
 </resources>

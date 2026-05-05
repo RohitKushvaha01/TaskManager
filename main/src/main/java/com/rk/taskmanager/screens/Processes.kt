@@ -309,7 +309,7 @@ fun ProcessItem(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
+                    Icon(
                         painter = painterResource(id = R.drawable.memory_alt_24px),
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
@@ -329,7 +329,7 @@ fun ProcessItem(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
+                    Icon(
                         painter = painterResource(id = R.drawable.cpu_24px),
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
@@ -369,7 +369,7 @@ fun ProcessItem(
                         R.drawable.ic_android_black_24dp
                 }
 
-                Image(
+                Icon(
                     painter = painterResource(id = fallbackId),
                     contentDescription = null,
                     modifier = Modifier

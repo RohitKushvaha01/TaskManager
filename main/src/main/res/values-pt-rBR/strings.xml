@@ -1,0 +1,203 @@
+<resources>
+    <string name="app_name">TaskManager</string>
+    <string name="info">Info</string>
+    <string name="working_mode">Modo de Operação</string>
+    <string name="shizuku_permission_denied">Permissão do Shizuku negada, conceda a permissão manualmente</string>
+    <string name="shizuku_not_running">Shizuku não está rodando</string>
+    <string name="shizuku_not_installed">Shizuku não está instalado</string>
+    <string name="su_not_in_path">\'su\' não existe ou não está funcionando corretamente</string>
+    <string name="daemon_not_started">Falha ao iniciar o daemon</string>
+    <string name="port_busy">"Não foi possível obter uma porta aberta: obtida %port"</string>
+    <string name="starting_daemon">Iniciando daemon…</string>
+    <string name="apply">Aplicar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="show_user_app">Mostrar apps do usuário</string>
+    <string name="show_system_app">Mostrar apps do sistema</string>
+    <string name="show_linux_process">Mostrar processos Linux</string>
+    <string name="proc_info">Info do Processo</string>
+    <string name="killing">Finalizando…</string>
+    <string name="stopping">Parando…</string>
+    <string name="kill">Finalizar Processo</string>
+    <string name="killed">Finalizado</string>
+    <string name="stopped">Parado</string>
+    <string name="kill_fail">Falha ao Finalizar</string>
+    <string name="kill_proc">Matar este processo</string>
+    <string name="loading">Carregando…</string>
+    <string name="name">Nome</string>
+    <string name="str_package">Pacote</string>
+    <string name="command">Comando</string>
+    <string name="no_cmd">Nenhum comando</string>
+    <string name="user">Usuário</string>
+    <string name="parent_pid">PID Pai</string>
+    <string name="cpu_usage">Uso de CPU</string>
+    <string name="estimated">estimado</string>
+    <string name="is_foreground">Está em Primeiro Plano</string>
+    <string name="ram_usage">Uso de RAM</string>
+    <string name="actual_ram_usage">Uso Real de RAM (RSS)</string>
+    <string name="niceness">Valor Nice</string>
+    <string name="status">Status</string>
+    <string name="threads">Threads</string>
+    <string name="start_time">Hora de Início</string>
+    <string name="elapsed_time">Tempo Decorrido</string>
+    <string name="exec_path">Caminho do Executável</string>
+    <string name="requires_daemon_restart">As alterações surtirão efeito após a próxima inicialização</string>
+    <string name="daemon_wait">Aguardando conexão com o daemon…</string>
+    <string name="timeout">Tempo esgotado</string>
+    <string name="res">Recursos</string>
+    <string name="procs">Processos</string>
+    <string name="copied">Copiado para a área de transferência</string>
+    <string name="settings">Configurações</string>
+    <string name="intro">O TaskManager precisa de permissões elevadas para funcionar corretamente. Por favor, selecione o modo de operação que deseja usar.</string>
+    <string name="noob">Este app precisa de permissões especiais para gerenciar tarefas do sistema.\nSeu dispositivo não possui esse acesso no momento.\nPara continuar, por favor:\n\n• Instale o app Shizuku e inicie-o, ou\n• Use um dispositivo com root.</string>
+    <string name="theme">Tema</string>
+    <string name="dynamic_theme">Tema Dinâmico</string>
+    <string name="ad_desc">Para alterar o tema, por favor assista a um rápido vídeo de anúncio. Isso ajuda a manter o app gratuito para todos.</string>
+    <string name="ok">OK</string>
+    <string name="ad">Anúncio</string>
+    <string name="privacy_policy">Política de Privacidade</string>
+    <string name="privacy_desc">Política de Privacidade do TaskManager</string>
+    <string name="graph_update">Atraso na atualização do gráfico</string>
+    <string name="autumn">Outono</string>
+    <string name="frostfall">Inverno</string>
+    <string name="spring">Primavera</string>
+    <string name="root">Root</string>
+    <string name="shizuku">Shizuku</string>
+    <string name="title_taskmanager_pro">TaskManager Pro</string>
+    <string name="pin">Fixar</string>
+    <string name="unpin">Desafixar</string>
+    <string name="theme_mode">Modo do Tema</string>
+    <string name="auto">Seguir o Sistema</string>
+    <string name="light">Claro</string>
+    <string name="dark">Escuro</string>
+    
+    <!-- Settings -->
+    <string name="daemon">Daemon</string>
+    <string name="daemon_desc">Configurações do TaskManagerD</string>
+    <string name="graph">Gráfico</string>
+    <string name="graph_desc">Configurações dos gráficos de cpu, ram e swap</string>
+    <string name="procs_desc">Configurações para a tela de processos</string>
+    <string name="themes">Temas</string>
+    <string name="themes_desc">Aparência e estilo</string>
+    <string name="pro_version">Versão Pro</string>
+    <string name="pro_version_desc">Desbloqueie recursos exclusivos</string>
+    <string name="about">Sobre</string>
+    <string name="about_desc">Informações do aplicativo</string>
+
+    <!-- About -->
+    <string name="developer">Desenvolvedor</string>
+    <string name="view_github">Ver perfil no GitHub</string>
+    <string name="build_info">Informações de Compilação</string>
+    <string name="version">Versão</string>
+    <string name="version_code">Código da Versão</string>
+    <string name="git_hash">Hash do commit do git</string>
+    <string name="build_type">Tipo de Compilação</string>
+    <string name="community">Comunidade</string>
+    <string name="full">Completo</string>
+    <string name="is_pro">É Pro</string>
+    <string name="yes">Sim</string>
+    <string name="no">Não</string>
+    <string name="copied_to_clipboard">Copiado para a área de transferência</string>
+
+    <!-- Process Settings -->
+    <string name="pull_to_refresh">Puxar para atualizar</string>
+    <string name="pull_to_refresh_desc">Permitir puxar para atualizar na tela de processos</string>
+    <string name="confirm_stop">Confirmar parada</string>
+    <string name="confirm_stop_desc">Confirmar antes de finalizar um processo</string>
+    <string name="default_to_process">Padrão na tela de processos</string>
+    <string name="default_to_process_desc">Mostrar a tela de processos por padrão</string>
+    <string name="auto_refresh">Atualização Automática</string>
+    <string name="auto_refresh_desc">Atualizar processos automaticamente</string>
+
+    <!-- Pro Version Screen -->
+    <string name="battery_stats">Estatísticas da Bateria</string>
+    <string name="battery_stats_desc">Veja o nível de carga, status e integridade da bateria rapidamente</string>
+    <string name="network_monitor">Monitor de Rede</string>
+    <string name="network_monitor_desc">Monitore o uso de dados e as velocidades em tempo real</string>
+    <string name="disk_monitor">Monitor de Disco</string>
+    <string name="disk_monitor_desc">Monitore a atividade de leitura e escrita no armazenamento em tempo real</string>
+    <string name="process_pin">Fixar Processo</string>
+    <string name="process_pin_desc">Fixe processos para mostrá-los no topo</string>
+    <string name="upgrade_to_pro">Atualizar para o Pro</string>
+    <string name="help">Ajuda</string>
+    <string name="back">Voltar</string>
+    <string name="search">Buscar</string>
+    <string name="what_you_get">O QUE VOCÊ GANHA</string>
+    <string name="secure_payment">Pagamento seguro via Google Play</string>
+    <string name="task_manager_uppercase">GERENCIADOR DE TAREFAS</string>
+    <string name="pro_version_tagline">Tudo o que você precisa para entender seu dispositivo a fundo.</string>
+    <string name="one_time_purchase">Compra única</string>
+    <string name="purchase_in_progress">Compra em andamento…</string>
+    <string name="permanent_pro_access">Pague uma vez, tenha acesso Pro permanente.</string>
+    <string name="processing">Processando…</string>
+    <string name="upgrade_now">Atualizar Agora</string>
+    <string name="pro_unlocked">Pro Desbloqueado</string>
+    <string name="thanks_support">Obrigado por apoiar o Task Manager!</string>
+
+    <!-- Processes Screen -->
+    <string name="sort_by_ram">Ordenar por RAM</string>
+    <string name="sort_by_cpu">Ordenar por CPU</string>
+    <string name="sort_by_name">Ordenar por Nome (A-z)</string>
+    <string name="refresh">Atualizar</string>
+    <string name="terminate">Encerrar?</string>
+    <string name="terminate_confirm">Tem certeza de que deseja encerrar o processo \'%s\'?</string>
+    <string name="filters">Filtros</string>
+    <string name="sort">Ordenar</string>
+
+    <!-- Process Info Screen -->
+    <string name="unknown">Desconhecido</string>
+    <string name="go_back">voltar</string>
+    <string name="unpin_desc">Desafixar este processo do topo</string>
+    <string name="pin_desc">Fixar este processo no topo</string>
+    <string name="pid">PID</string>
+    <string name="parent_not_found">Não foi possível encontrar o processo pai pelo seu PID</string>
+    <string name="app_info">Informações do aplicativo</string>
+    <string name="app_info_desc">Configurações de informações do aplicativo</string>
+    <string name="debloater_info">Informações do Debloater</string>
+    <string name="no_info_debloater">Nenhuma informação disponível para este processo</string>
+
+    <!-- Resource Host Screen -->
+    <string name="cpu">CPU</string>
+    <string name="ram">RAM</string>
+    <string name="gpu">GPU</string>
+    <string name="disk">DISCO</string>
+    <string name="net">REDE</string>
+    <string name="bat">BAT</string>
+    <string name="not_implemented">Este recurso não foi implementado</string>
+
+    <!-- CPU Screen -->
+    <string name="processor_info">Informações do Processador</string>
+    <string name="soc">SoC</string>
+    <string name="architecture">Arquitetura</string>
+    <string name="abi">ABI</string>
+    <string name="cores">Núcleos</string>
+    <string name="governor">Governor</string>
+    <string name="temperature">Temperatura</string>
+    <string name="system_stats">Estatísticas do Sistema</string>
+    <string name="uptime">Tempo de Atividade</string>
+    <string name="min">Mín</string>
+    <string name="current">Atual</string>
+    <string name="max">Máx</string>
+    <string name="temp_c_estimated">%1$s°C (estimado)</string>
+    <string name="cores_count">%1$d núcleos</string>
+
+    <!-- RAM Screen -->
+    <string name="ram_label">RAM: %1$s/%2$s (%3$d%%)</string>
+    <string name="swap_label">SWAP: %1$s/%2$s (%3$d%%)</string>
+
+    <!-- GPU Screen -->
+    <string name="vendor">Fabricante</string>
+    <string name="gpu_model">Modelo do GPU</string>
+    <string name="opengl">OpenGL</string>
+    <string name="vulkan">Vulkan</string>
+    <string name="vulkan_api">API Vulkan</string>
+    <string name="supported">Suportado</string>
+    <string name="not_supported">Não Suportado</string>
+    <string name="no_data">N/A</string>
+    <string name="gpu_usage_label">GPU - %s</string>
+    <string name="cpu_usage_label">CPU - %s</string>
+
+    <!-- Misc -->
+    <string name="please_wait">Por favor, aguarde</string>
+    <string name="ms_unit">%1$dms</string>
+
+</resources>

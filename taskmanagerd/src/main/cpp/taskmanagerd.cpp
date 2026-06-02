@@ -386,35 +386,22 @@ struct DiskInfo {
 
 std::vector<DiskInfo> listDisks() {
     std::vector<DiskInfo> disks;
-    const std::string path = "/sys/class/block/";
-    if (!fs::exists(path)) return disks;
+    // /sys/block is the standard place for whole block devices
+    const std::string path = "/sys/block/";
+    const std::string altPath = "/sys/class/block/";
+    
+    std::string targetPath = fs::exists(path) ? path : altPath;
 
-    for (const auto& entry : fs::directory_iterator(path)) {
+    for (const auto& entry : fs::directory_iterator(targetPath)) {
         std::string name = entry.path().filename().string();
 
-        // Fast string filters first — no syscalls
         if (name.find("loop") == 0 || name.find("ram") == 0 ||
-            name.find("zram") == 0 || name.find("dm-") == 0 ||
-            name.find("vd") == 0 ||
-            name.find("rpmb") != std::string::npos ||
+            name.find("zram") == 0 || name.find("rpmb") != std::string::npos ||
             name.find("boot") != std::string::npos) continue;
 
-        // Use symlink target to detect partitions — no extra stat() call
-        // Partitions resolve to: .../block/sda/sda1  (parent dir = disk name)
-        // Whole disks resolve to: .../block/sda
-        std::error_code ec;
-        fs::path target = fs::read_symlink(entry.path(), ec);
-        if (!ec) {
-            // If the parent directory name matches a disk name, it's a partition
-            std::string parentName = target.parent_path().filename().string();
-            if (parentName != "block" && !parentName.empty() &&
-                parentName.find_first_of("0123456789") == std::string::npos == false) {
-                // parent is like "sda", meaning this entry is "sda1" → skip
-                continue;
-            }
-        }
+        // If using /sys/class/block, we must skip partitions
+        if (targetPath == altPath && fs::exists(entry.path() / "partition")) continue;
 
-        // Now read files only for candidates that passed all filters
         DiskInfo info;
         info.name = name;
 
@@ -423,15 +410,18 @@ std::vector<DiskInfo> listDisks() {
         if (sizeFile >> sectors) info.sizeBytes = sectors * 512;
         else info.sizeBytes = 0;
 
-        if (info.sizeBytes <= 100LL * 1024 * 1024) continue; // skip early
+        if (info.sizeBytes <= 10LL * 1024 * 1024) continue;
 
-        std::ifstream modelFile(entry.path() / "device/model");
-        if (modelFile) std::getline(modelFile, info.model);
-        else {
-            std::ifstream nameFile(entry.path() / "device/name");
-            if (nameFile) std::getline(nameFile, info.model);
-            else info.model = name;
+        // Try to get model from various places
+        std::vector<std::string> modelPaths = {"device/model", "device/name", "device/type"};
+        info.model = "";
+        for (const auto& mp : modelPaths) {
+            std::ifstream mf(entry.path() / mp);
+            if (mf && std::getline(mf, info.model) && !info.model.empty()) break;
         }
+        
+        if (info.model.empty()) info.model = name;
+        
         info.model.erase(std::find_if(info.model.rbegin(), info.model.rend(),
                                       [](unsigned char c) { return !std::isspace(c); }).base(), info.model.end());
 

@@ -6,7 +6,7 @@
     <string name="shizuku_not_running">Shizuku 不在运行</string>
     <string name="shizuku_not_installed">Shizuku 尚未安装</string>
     <string name="su_not_in_path">在 \$PATH 中未找到 su</string>
-    <string name="daemon_not_started">守护进程启动失败</string>
+    <string name="daemon_not_started">守护进程未启动</string>
     <string name="port_busy">无法获取可用端口：%port</string>
     <string name="starting_daemon">守护进程启动中…</string>
     <string name="apply">应用</string>
@@ -49,17 +49,154 @@
     <string name="settings">设置</string>
     <string name="intro">TaskManager 需要提升权限才能正常运行。请选择您想要使用的工作模式。</string>
     <string name="noob">此应用需要特殊权限来管理系统任务。\n您的设备目前没有此访问权限。\n要继续使用，请：\n\n• 安装 Shizuku 应用并启动，或\n• 使用已取得 Root 权限的设备。</string>
-    <string name="theme">Theme</string>
-    <string name="dynamic_theme">Dynamic Theme</string>
-    <string name="ad_desc">To change the theme, please watch a short ad video. This helps keep the app free for everyone.</string>
-    <string name="ok">Ok</string>
-    <string name="ad">Ad</string>
-    <string name="privacy_policy">Privacy Policy</string>
-    <string name="privacy_desc">Privacy Policy of TaskManager</string>
-    <string name="graph_update">Graph update delay</string>
-    <string name="autumn">Autumn</string>
-    <string name="frostfall">Frostfall</string>
-    <string name="spring">Spring</string>
+    <string name="theme">主题</string>
+    <string name="dynamic_theme">动态色彩</string>
+    <string name="ad_desc">要更改主题，请观看一个广告短视频。这有助于使本应用程序对所有人免费。</string>
+    <string name="ok">OK</string>
+    <string name="ad">广告</string>
+    <string name="privacy_policy">隐私政策</string>
+    <string name="privacy_desc">TaskManager 的隐私政策</string>
+    <string name="graph_update">图表更新延迟</string>
+    <string name="autumn">秋</string>
+    <string name="frostfall">霜降</string>
+    <string name="spring">春</string>
     <string name="root">Root</string>
     <string name="shizuku">Shizuku</string>
+    <string name="title_taskmanager_pro">TaskManager Pro</string>
+    <string name="pin">置顶</string>
+    <string name="unpin">取消置顶</string>
+    <string name="theme_mode">主题模式</string>
+    <string name="auto">跟随系统</string>
+    <string name="light">亮</string>
+    <string name="dark">暗</string>
+
+    <!-- Settings -->
+    <string name="daemon">守护进程</string>
+    <string name="daemon_desc">TaskManagerD 设置</string>
+    <string name="graph">图表</string>
+    <string name="graph_desc">CPU、RAM、SWAP 图表设置</string>
+    <string name="procs_desc">「进程」界面设置</string>
+    <string name="themes">主题</string>
+    <string name="themes_desc">look and feel</string>
+    <string name="pro_version">Pro 版</string>
+    <string name="pro_version_desc">Unlock exclusive features</string>
+    <string name="about">关于</string>
+    <string name="about_desc">应用程序信息</string>
+
+    <!-- About -->
+    <string name="developer">开发者</string>
+    <string name="view_github">View github profile</string>
+    <string name="build_info">Build Info</string>
+    <string name="version">版本</string>
+    <string name="version_code">版本号</string>
+    <string name="git_hash">Git Commit hash</string>
+    <string name="build_type">Build Type</string>
+    <string name="community">Community</string>
+    <string name="full">Full</string>
+    <string name="is_pro">Is Pro</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="copied_to_clipboard">已复制到剪贴板</string>
+
+    <!-- Process Settings -->
+    <string name="pull_to_refresh">下拉刷新</string>
+    <string name="pull_to_refresh_desc">通过下拉刷新进程列表</string>
+    <string name="confirm_stop">结束进程前确认</string>
+    <string name="confirm_stop_desc">在结束进程前进行额外确认</string>
+    <string name="default_to_process">将「进程」设为默认页面</string>
+    <string name="default_to_process_desc">默认展示「进程」页面</string>
+    <string name="auto_refresh">自动刷新</string>
+    <string name="auto_refresh_desc">自动刷新进程列表</string>
+
+    <!-- Pro Version Screen -->
+    <string name="battery_stats">电池状态</string>
+    <string name="battery_stats_desc">查看充电进度、充电状态和电池运行状况</string>
+    <string name="network_monitor">网络监视器</string>
+    <string name="network_monitor_desc">查看实时网速和数据使用量</string>
+    <string name="disk_monitor">磁盘监视器</string>
+    <string name="disk_monitor_desc">实时监视磁盘读写活动</string>
+    <string name="process_pin">置顶进程</string>
+    <string name="process_pin_desc">将进程置顶</string>
+    <string name="upgrade_to_pro">升级到 Pro 版</string>
+    <string name="help">帮助</string>
+    <string name="back">返回</string>
+    <string name="search">搜索</string>
+    <string name="what_you_get">WHAT YOU GET</string>
+    <string name="secure_payment">通过 Google Play 安全支付</string>
+    <string name="task_manager_uppercase">TASK MANAGER</string>
+    <string name="pro_version_tagline">Everything you need to understand your device, deeply.</string>
+    <string name="one_time_purchase">仅需一次购买</string>
+    <string name="purchase_in_progress">正在支付...</string>
+    <string name="permanent_pro_access">一次购买即可获得永久的 Pro 版授权</string>
+    <string name="processing">处理中…</string>
+    <string name="upgrade_now">现在就升级</string>
+    <string name="pro_unlocked">已解锁 Pro 版</string>
+    <string name="thanks_support">感谢支持 Task Manager！</string>
+
+    <!-- Processes Screen -->
+    <string name="sort_by_ram">以 RAM 占用排序</string>
+    <string name="sort_by_cpu">以 CPU 占用排序</string>
+    <string name="sort_by_name">以名称排序 (A-z)</string>
+    <string name="refresh">刷新</string>
+    <string name="terminate">Terminate?</string>
+    <string name="terminate_confirm">你确定要结束进程「 \'%s\' 」吗？</string>
+    <string name="filters">筛选器</string>
+    <string name="sort">排序方式</string>
+
+    <!-- Process Info Screen -->
+    <string name="unknown">未知</string>
+    <string name="go_back">go back</string>
+    <string name="unpin_desc">取消置顶该进程</string>
+    <string name="pin_desc">置顶该进程</string>
+    <string name="pid">PID</string>
+    <string name="parent_not_found">通过 PID 查找父进程失败</string>
+    <string name="app_info">应用信息</string>
+    <string name="app_info_desc">转到「设置」中的「应用信息」页面</string>
+    <string name="debloater_info">预装软件信息</string>
+    <string name="no_info_debloater">没有关于该进程的信息</string>
+
+    <!-- Resource Host Screen -->
+    <string name="cpu">CPU</string>
+    <string name="ram">RAM</string>
+    <string name="gpu">GPU</string>
+    <string name="disk">磁盘</string>
+    <string name="net">网络</string>
+    <string name="bat">电池</string>
+    <string name="not_implemented">本功能暂未实现</string>
+
+    <!-- CPU Screen -->
+    <string name="processor_info">CPU 信息</string>
+    <string name="soc">SoC</string>
+    <string name="architecture">架构</string>
+    <string name="abi">ABI</string>
+    <string name="cores">核心数</string>
+    <string name="governor">CPU 调速器</string>
+    <string name="temperature">温度</string>
+    <string name="system_stats">系统统计信息</string>
+    <string name="uptime">运行时间</string>
+    <string name="min">最小频率</string>
+    <string name="current">当前频率</string>
+    <string name="max">最大频率</string>
+    <string name="temp_c_estimated">%1$s°C (estimated)</string>
+    <string name="cores_count">%1$d 个核心</string>
+
+    <!-- RAM Screen -->
+    <string name="ram_label">RAM: %1$s/%2$s (%3$d%%)</string>
+    <string name="swap_label">SWAP: %1$s/%2$s (%3$d%%)</string>
+
+    <!-- GPU Screen -->
+    <string name="vendor">厂商</string>
+    <string name="gpu_model">GPU 型号</string>
+    <string name="opengl">OpenGL</string>
+    <string name="vulkan">Vulkan</string>
+    <string name="vulkan_api">Vulkan API</string>
+    <string name="supported">支持</string>
+    <string name="not_supported">不支持</string>
+    <string name="no_data">N/A</string>
+    <string name="gpu_usage_label">GPU - %s</string>
+    <string name="cpu_usage_label">CPU - %s</string>
+
+    <!-- Misc -->
+    <string name="please_wait">请稍等</string>
+    <string name="ms_unit">%1$dms</string>
 </resources>

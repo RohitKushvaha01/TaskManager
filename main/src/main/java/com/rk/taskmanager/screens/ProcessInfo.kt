@@ -171,7 +171,9 @@ fun drawableTobitMap(drawable: Drawable?): Bitmap? {
         if (it is BitmapDrawable) {
             it.bitmap
         } else {
-            val bitmap = createBitmap(it.intrinsicWidth, it.intrinsicHeight)
+            val width = maxOf(1, it.intrinsicWidth)
+            val height = maxOf(1, it.intrinsicHeight)
+            val bitmap = createBitmap(width, height)
             val canvas = Canvas(bitmap)
             it.setBounds(0, 0, canvas.width, canvas.height)
             it.draw(canvas)

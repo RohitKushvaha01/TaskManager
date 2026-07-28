@@ -16,7 +16,6 @@ object Settings {
     var confirmkill by BooleanPref(default = true)
     var defaultToProcessScreen by BooleanPref(default = false)
     var selectedNetInterface by StringPref(key = "selected_net_interface", default = "")
-    var selectedDisk by StringPref(key = "selected_disk", default = "")
 
     var pinnedProcesses: Set<String>
         get() = Preference.getString("pinned_processes", "").split(",").filter { it.isNotEmpty() }.toSet()

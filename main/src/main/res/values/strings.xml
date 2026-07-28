@@ -113,8 +113,7 @@
     <string name="battery_stats_desc">View charge level, status, and battery health at a glance</string>
     <string name="network_monitor">Network Monitor</string>
     <string name="network_monitor_desc">Track data usage and speeds in real time</string>
-    <string name="disk_monitor">Disk Monitor</string>
-    <string name="disk_monitor_desc">Monitor read and write activity across storage in real time</string>
+
     <string name="process_pin">Process Pin</string>
     <string name="process_pin_desc">Pin processes to show them at top</string>
     <string name="upgrade_to_pro">Upgrade to Pro</string>
@@ -159,7 +158,8 @@
     <string name="cpu">CPU</string>
     <string name="ram">RAM</string>
     <string name="gpu">GPU</string>
-    <string name="disk">DISK</string>
+
+
     <string name="net">NET</string>
     <string name="bat">BAT</string>
     <string name="not_implemented">This feature is not implemented</string>

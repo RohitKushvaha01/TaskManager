@@ -80,15 +80,6 @@ private val tabs = listOf(
     ),
 
     ResourceTab(
-        labelRes = strings.disk,
-        icon = TabIcon.Vector(Icons.Outlined.Storage),
-        content = { _, _, _ ->
-            if (bridge != null) bridge!!.DiskScreen()
-            else OpenSourceOnly()
-        }
-    ),
-
-    ResourceTab(
         labelRes = strings.net,
         icon = TabIcon.Vector(Icons.Outlined.NetworkCheck),
         content = { _, _, _ ->

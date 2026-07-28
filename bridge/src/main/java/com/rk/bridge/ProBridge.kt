@@ -15,10 +15,6 @@ interface ProBridge {
     fun isPro(): MutableState<Boolean>
     fun isPending(): MutableState<Boolean>
     fun updatePurchaseStatus()
-
-    @Composable
-    fun DiskScreen()
-
     @Composable
     fun NetScreen()
 

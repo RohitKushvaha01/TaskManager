@@ -109,8 +109,7 @@
     <string name="battery_stats_desc">Быстрый просмотр уровня заряда, статуса и здоровья аккумулятора</string>
     <string name="network_monitor">Мониторинг сети</string>
     <string name="network_monitor_desc">Отслеживание использования данных и скорости в реальном времени</string>
-    <string name="disk_monitor">Мониторинг диска</string>
-    <string name="disk_monitor_desc">Мониторинг активности чтения и записи на накопителе в реальном времени</string>
+
     <string name="process_pin">Закрепление процессов</string>
     <string name="process_pin_desc">Закрепление процессов для отображения вверху списка</string>
     <string name="upgrade_to_pro">Перейти на Pro</string>
@@ -152,7 +151,8 @@
     <string name="cpu">ЦП</string>
     <string name="ram">ОЗУ</string>
     <string name="gpu">ГП</string>
-    <string name="disk">ДИСК</string>
+
+
     <string name="net">СЕТЬ</string>
     <string name="bat">АКБ</string>
     <string name="not_implemented">Функция еще не реализована</string>

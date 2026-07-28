@@ -87,7 +87,7 @@ fun OpenSourceOnly() {
                 FeatureRow(
                     icon = Icons.Outlined.Lock,
                     title = "Get the Pro Version",
-                    subtitle = "Install the official Play Store release to access Disk monitoring, Network tools, and more."
+                    subtitle = "Install the official Play Store release to access Network tools, advanced analytics, and more."
                 )
 
                 FeatureRow(

@@ -85,13 +85,6 @@ private fun getFeatures() = listOf(
         iconBackground = Blue50
     ),
     ProFeature(
-        titleRes = strings.disk_monitor,
-        descriptionRes = strings.disk_monitor_desc,
-        icon = Icons.Outlined.Storage,
-        iconTint = Purple700,
-        iconBackground = Purple50
-    ),
-    ProFeature(
         titleRes = strings.process_pin,
         descriptionRes = strings.process_pin_desc,
         icon = Icons.Outlined.PushPin,

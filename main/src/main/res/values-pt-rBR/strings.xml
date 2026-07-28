@@ -113,8 +113,7 @@
     <string name="battery_stats_desc">Veja o nível de carga, status e integridade da bateria rapidamente</string>
     <string name="network_monitor">Monitor de Rede</string>
     <string name="network_monitor_desc">Monitore o uso de dados e as velocidades em tempo real</string>
-    <string name="disk_monitor">Monitor de Disco</string>
-    <string name="disk_monitor_desc">Monitore a atividade de leitura e escrita no armazenamento em tempo real</string>
+
     <string name="process_pin">Fixar Processo</string>
     <string name="process_pin_desc">Fixe processos para mostrá-los no topo</string>
     <string name="upgrade_to_pro">Atualizar para o Pro</string>
@@ -159,7 +158,8 @@
     <string name="cpu">CPU</string>
     <string name="ram">RAM</string>
     <string name="gpu">GPU</string>
-    <string name="disk">DISCO</string>
+
+
     <string name="net">REDE</string>
     <string name="bat">BAT</string>
     <string name="not_implemented">Este recurso não foi implementado</string>

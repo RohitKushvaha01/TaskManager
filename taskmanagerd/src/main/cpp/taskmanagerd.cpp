@@ -377,85 +377,6 @@ void getSwapUsage(long &used, long &total) {
     total = totalKB * 1024;
 }
 
-struct DiskInfo {
-    std::string name;
-    std::string model;
-    long long sizeBytes;
-    bool isRemovable;
-};
-
-std::vector<DiskInfo> listDisks() {
-    std::vector<DiskInfo> disks;
-    // /sys/block is the standard place for whole block devices
-    const std::string path = "/sys/block/";
-    const std::string altPath = "/sys/class/block/";
-    
-    std::string targetPath = fs::exists(path) ? path : altPath;
-
-    for (const auto& entry : fs::directory_iterator(targetPath)) {
-        std::string name = entry.path().filename().string();
-
-        if (name.find("loop") == 0 || name.find("ram") == 0 ||
-            name.find("zram") == 0 || name.find("rpmb") != std::string::npos ||
-            name.find("boot") != std::string::npos) continue;
-
-        // If using /sys/class/block, we must skip partitions
-        if (targetPath == altPath && fs::exists(entry.path() / "partition")) continue;
-
-        DiskInfo info;
-        info.name = name;
-
-        std::ifstream sizeFile(entry.path() / "size");
-        long long sectors = 0;
-        if (sizeFile >> sectors) info.sizeBytes = sectors * 512;
-        else info.sizeBytes = 0;
-
-        if (info.sizeBytes <= 10LL * 1024 * 1024) continue;
-
-        // Try to get model from various places
-        std::vector<std::string> modelPaths = {"device/model", "device/name", "device/type"};
-        info.model = "";
-        for (const auto& mp : modelPaths) {
-            std::ifstream mf(entry.path() / mp);
-            if (mf && std::getline(mf, info.model) && !info.model.empty()) break;
-        }
-        
-        if (info.model.empty()) info.model = name;
-        
-        info.model.erase(std::find_if(info.model.rbegin(), info.model.rend(),
-                                      [](unsigned char c) { return !std::isspace(c); }).base(), info.model.end());
-
-        std::ifstream removableFile(entry.path() / "removable");
-        int removable = 0;
-        removableFile >> removable;
-        info.isRemovable = (removable == 1);
-
-        disks.push_back(info);
-    }
-    return disks;
-}
-
-struct DiskStat {
-    unsigned long long readBytes;
-    unsigned long long writeBytes;
-};
-
-DiskStat getDiskStat(const std::string& diskName) {
-    std::ifstream diskstats("/proc/diskstats");
-    std::string line;
-    while (std::getline(diskstats, line)) {
-        std::istringstream iss(line);
-        int major, minor;
-        std::string name;
-        unsigned long long reads, readsMerged, readSectors, readTime;
-        unsigned long long writes, writesMerged, writeSectors, writeTime;
-        if (iss >> major >> minor >> name >> reads >> readsMerged >> readSectors >> readTime >> writes >> writesMerged >> writeSectors >> writeTime) {
-            if (name == diskName) return {readSectors * 512, writeSectors * 512};
-        }
-    }
-    return {0, 0};
-}
-
 struct NetStat {
     unsigned long long rxBytes;
     unsigned long long txBytes;
@@ -588,24 +509,6 @@ void processCommand(int sock, const std::string &received) {
             j_out["type"] = "CHARGE_CYCLES";
             j_out["cycles"] = getBatteryCycleCount().value_or(-1);
             send_json(sock,j_out);
-        } else if (cmd == "LIST_DISKS") {
-            auto disks = listDisks();
-            json disks_j = json::array();
-            for (const auto& d : disks) {
-                disks_j.push_back({
-                    {"name", d.name}, {"model", d.model}, {"sizeBytes", d.sizeBytes}, {"isRemovable", d.isRemovable}
-                });
-            }
-            j_out["type"] = "DISK_LIST";
-            j_out["disks"] = disks_j;
-            send_json(sock, j_out);
-        } else if (cmd == "DISK_PING") {
-            std::string diskName = j_in.value("disk", "");
-            auto stat = getDiskStat(diskName);
-            j_out["type"] = "DISK_STATS";
-            j_out["readBytes"] = stat.readBytes;
-            j_out["writeBytes"] = stat.writeBytes;
-            send_json(sock, j_out);
         } else if (cmd == "LIST_NET_INTERFACES") {
             auto interfaces = listNetInterfaces();
             json interfaces_j = json::array();

@@ -113,8 +113,7 @@
     <string name="battery_stats_desc">查看充电进度、充电状态和电池运行状况</string>
     <string name="network_monitor">网络监视器</string>
     <string name="network_monitor_desc">查看实时网速和数据使用量</string>
-    <string name="disk_monitor">磁盘监视器</string>
-    <string name="disk_monitor_desc">实时监视磁盘读写活动</string>
+
     <string name="process_pin">置顶进程</string>
     <string name="process_pin_desc">将进程置顶</string>
     <string name="upgrade_to_pro">升级到 Pro 版</string>
@@ -159,7 +158,8 @@
     <string name="cpu">CPU</string>
     <string name="ram">RAM</string>
     <string name="gpu">GPU</string>
-    <string name="disk">磁盘</string>
+
+
     <string name="net">网络</string>
     <string name="bat">电池</string>
     <string name="not_implemented">本功能暂未实现</string>

@@ -317,8 +317,8 @@ Proc readProc(int pid) {
             std::istringstream iss(line.substr(lastParen + 2));
             std::string dummy;
             for (int i = 0; i < 6; ++i) iss >> dummy;
-            for (int i = 0; i < 8; ++i) iss >> dummy;
-            iss >> dummy; // priority
+            for (int i = 0; i < 9; ++i) iss >> dummy;
+            iss >> dummy;
             iss >> p.nice;
             iss >> dummy >> dummy;
             iss >> p.startTime;

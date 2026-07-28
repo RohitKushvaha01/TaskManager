@@ -28,7 +28,7 @@ object CpuInfoReader {
     private var cachedAbi: String? = null
     private var cachedCores: Int? = null
     private var cachedArch: String? = null
-    private var cachedClustersTemplate: Map<String, List<File>>? = null
+    private var cachedClustersTemplate: List<Pair<Long, List<File>>>? = null
 
     fun read(): CpuInfo {
         val cpuDirs = if (cachedCores == null) {
@@ -42,19 +42,23 @@ object CpuInfoReader {
 
         if (cachedCores == null) {
             cachedCores = cpuDirs.size
-            val clusters = mutableMapOf<String, MutableList<File>>()
+            val clusterMap = mutableMapOf<Long, MutableList<File>>()
             cpuDirs.forEach { cpu ->
-                val clusterId = readFile("${cpu.path}/topology/physical_package_id") ?: "0"
-                clusters.getOrPut(clusterId) { mutableListOf() }.add(cpu)
+                val maxFreq = readFile("${cpu.path}/cpufreq/cpuinfo_max_freq")?.toLongOrNull()
+                    ?: readFile("${cpu.path}/cpufreq/scaling_max_freq")?.toLongOrNull()
+                    ?: 0L
+                clusterMap.getOrPut(maxFreq) { mutableListOf() }.add(cpu)
             }
-            cachedClustersTemplate = clusters
+            cachedClustersTemplate = clusterMap.entries
+                .sortedByDescending { it.key }
+                .map { it.key to it.value }
         }
 
         if (cachedSoc == null) cachedSoc = Build.HARDWARE ?: "Unknown"
         if (cachedAbi == null) cachedAbi = Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown"
         if (cachedArch == null) cachedArch = System.getProperty("os.arch") ?: "Unknown"
 
-        val clusterInfo = cachedClustersTemplate?.map { (id, cores) ->
+        val clusterInfo = cachedClustersTemplate?.mapIndexed { index, (_, cores) ->
             val cpu = cores.first()
 
             fun freq(vararg paths: String): String? {
@@ -69,7 +73,7 @@ object CpuInfoReader {
             }
 
             CpuCluster(
-                name = "Cluster $id",
+                name = "Cluster $index",
                 cores = cores.size,
 
                 minFreq = freq(

@@ -16,6 +16,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
+import kotlin.time.Duration.Companion.milliseconds
+
+private var isPingerRunner = false
 
 suspend fun CoroutineScope.graphUpdater(activity: MainActivity){
     val graphMutex = Mutex()
@@ -46,34 +49,39 @@ suspend fun CoroutineScope.graphUpdater(activity: MainActivity){
         }
     }
 
-    launch(Dispatchers.IO) {
-        var hasSupportedGPU = false
+    if (!isPingerRunner){
+        launch(Dispatchers.IO) {
+            isPingerRunner = true
+            var hasSupportedGPU = false
 
-        while (isActive) {
-            if (isConnected) {
-                if (!hasSupportedGPU) {
-                    hasSupportedGPU = activity.gpuViewModel.gpuInfo.value?.renderer?.let { renderer ->
-                        renderer.contains("mali", true) || renderer.contains("adreno", true)
-                    } ?: false
-                }
+            while (isActive) {
+                if (isConnected) {
+                    if (!hasSupportedGPU) {
+                        hasSupportedGPU = activity.gpuViewModel.gpuInfo.value?.renderer?.let { renderer ->
+                            renderer.contains("mali", true) || renderer.contains("adreno", true)
+                        } ?: false
+                    }
 
-                graphMutex.withLock {
-                    send_daemon_messages.emit(JSONObject().apply { put("cmd", "CPU_PING") }.toString())
-                    delay(16)
-                    send_daemon_messages.emit(JSONObject().apply { put("cmd", "SWAP_PING") }.toString())
+                    graphMutex.withLock {
+                        send_daemon_messages.emit(JSONObject().apply { put("cmd", "CPU_PING") }.toString())
+                        delay(16.milliseconds)
+                        send_daemon_messages.emit(JSONObject().apply { put("cmd", "SWAP_PING") }.toString())
 
-                    if (hasSupportedGPU){
-                        delay(15)
-                        send_daemon_messages.emit(JSONObject().apply { put("cmd", "GPU_PING") }.toString())
+                        if (hasSupportedGPU){
+                            delay(15.milliseconds)
+                            send_daemon_messages.emit(JSONObject().apply { put("cmd", "GPU_PING") }.toString())
+                        }
                     }
                 }
+                val delayMs = if (selectedscreen.intValue == 0 && navControllerRef.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
+                    Settings.updateFrequency.toLong()
+                } else {
+                    Settings.updateFrequency.toLong() * 2
+                }
+                delay(delayMs.milliseconds)
             }
-            val delayMs = if (selectedscreen.intValue == 0 && navControllerRef.get()?.currentDestination?.route == SettingsRoutes.Home.route) {
-                Settings.updateFrequency.toLong()
-            } else {
-                Settings.updateFrequency.toLong() * 2
-            }
-            delay(delayMs)
+
         }
     }
+
 }

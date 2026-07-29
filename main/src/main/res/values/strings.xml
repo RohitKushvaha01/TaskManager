@@ -201,4 +201,7 @@
     <string name="please_wait">Please wait</string>
     <string name="ms_unit">%1$dms</string>
 
+    <string name="usage_notif">Usage Notification</string>
+    <string name="usage_notif_Desc">Show a notification to view resource usage in background</string>
+
 </resources>

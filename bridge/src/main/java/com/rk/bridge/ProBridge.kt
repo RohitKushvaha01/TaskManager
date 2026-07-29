@@ -2,6 +2,7 @@ package com.rk.bridge
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import androidx.annotation.Keep
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -14,7 +15,13 @@ interface ProBridge {
 
     fun isPro(): MutableState<Boolean>
     fun isPending(): MutableState<Boolean>
+
+    fun isNotificationServiceRunning(): MutableState<Boolean>
     fun updatePurchaseStatus()
+
+    fun launchNotificationService(context: Context)
+    fun stopNotificationService(context: Context)
+
     @Composable
     fun NetScreen()
 

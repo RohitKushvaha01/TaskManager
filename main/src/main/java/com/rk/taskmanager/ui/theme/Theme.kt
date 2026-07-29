@@ -23,9 +23,9 @@ abstract class Theme{
 }
 
 val themes = hashMapOf(
-    0 to Flame,
+    0 to Wave,
     1 to Leaf,
-    2 to Wave,
+    2 to Flame,
     3 to Cosmos
 )
 

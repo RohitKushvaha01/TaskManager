@@ -1,10 +1,21 @@
 package com.rk.taskmanager.screens
 
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,7 +43,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.rk.bridge.bridge
 import com.rk.taskmanager.R
 import com.rk.taskmanager.MainActivity
 import com.rk.taskmanager.ProcessViewModel
@@ -47,14 +60,24 @@ import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 
 var selectedscreen = mutableIntStateOf(if (Settings.defaultToProcessScreen) 1 else 0)
 var showFilter = mutableStateOf(false)
 var showSort = mutableStateOf(false)
 
+fun Context.openAppSettings() {
+    val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", packageName, null)
+    }
+    startActivity(intent)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(modifier: Modifier = Modifier, navController: NavController, viewModel: ProcessViewModel,gpuViewModel: GpuViewModel) {
+
+    val context = LocalContext.current
     if (isConnected) {
         Scaffold(
             modifier = modifier.fillMaxSize(),
@@ -64,6 +87,67 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
                         TopAppBar(
                             title = { Text(stringResource(strings.app_name)) },
                             actions = {
+                                IconButton(
+                                    enabled = bridge != null,
+                                    modifier = Modifier.padding(8.dp),
+                                    onClick = {
+                                        fun Activity.requestNotificationPermissionOrOpenSettings() {
+                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+
+                                            if (ContextCompat.checkSelfPermission(
+                                                    this,
+                                                    Manifest.permission.POST_NOTIFICATIONS
+                                                ) == PackageManager.PERMISSION_GRANTED
+                                            ) {
+                                                return
+                                            }
+
+                                            val prefs = getSharedPreferences("permissions", MODE_PRIVATE)
+                                            val requestedBefore = prefs.getBoolean("notification_requested", false)
+
+                                            if (!requestedBefore) {
+                                                prefs.edit {
+                                                    putBoolean(
+                                                        "notification_requested",
+                                                        true
+                                                    )
+                                                }
+                                                MainActivity.instance?.notificationPermissionLauncher?.launch(
+                                                    Manifest.permission.POST_NOTIFICATIONS
+                                                )
+                                            } else {
+                                                Toast.makeText(context, "Please grant notification permission to use this feature", Toast.LENGTH_LONG).show()
+                                                openAppSettings()
+                                            }
+                                        }
+
+                                        (context as? Activity)?.requestNotificationPermissionOrOpenSettings()
+                                        if (bridge?.isPro()?.value == true){
+                                            if (bridge!!.isNotificationServiceRunning().value){
+                                                bridge?.stopNotificationService(context)
+                                            }else{
+                                                bridge?.launchNotificationService(context)
+                                            }
+
+                                        }else{
+                                            Toast.makeText(context, "This is a pro feature", Toast.LENGTH_SHORT).show()
+                                        }
+                                        //check for pro access
+                                        //ask the bridge to launch live notification service
+                                    }) {
+                                    Icon(
+                                        imageVector = if (bridge == null){
+                                            Icons.Filled.Notifications
+                                        }else{
+                                            if (bridge!!.isNotificationServiceRunning().value){
+                                                Icons.Filled.NotificationsOff
+                                            }else{
+                                                Icons.Filled.Notifications
+                                            }
+                                        },
+                                        contentDescription = null
+                                    )
+                                }
 
                                 IconButton(
                                     modifier = Modifier.padding(8.dp),

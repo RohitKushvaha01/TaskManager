@@ -1,10 +1,12 @@
 package com.rk.taskmanager
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.lifecycle.lifecycleScope
@@ -16,15 +18,27 @@ import com.rk.taskmanager.screens.gpu.GpuViewModel
 import com.rk.commons.settings.Settings
 import com.rk.taskmanager.settings.SettingsRoutes
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 
 class MainActivity : ComponentActivity() {
 
     val viewModel: ProcessViewModel by viewModels()
     val gpuViewModel: GpuViewModel by viewModels()
+
+    val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                // Permission granted
+            } else {
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     companion object {
         var scope: CoroutineScope? = null
@@ -33,7 +47,7 @@ class MainActivity : ComponentActivity() {
             private set
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -42,7 +56,7 @@ class MainActivity : ComponentActivity() {
         instance = this
 
 
-        lifecycleScope.launch { graphUpdater(this@MainActivity) }
+        GlobalScope.launch { graphUpdater(this@MainActivity) }
 
 
         setContent {
@@ -56,7 +70,7 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch(Dispatchers.Main) {
                 val daemonResult = startDaemon(context = this@MainActivity, Settings.workingMode)
                 if (daemonResult != DaemonResult.OK) {
-                    delay(3000)
+                    delay(3000.milliseconds)
 
                     if (isConnected.not()){
                         if (navControllerRef.get()?.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){

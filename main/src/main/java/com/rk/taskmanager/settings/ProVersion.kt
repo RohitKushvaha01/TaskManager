@@ -91,6 +91,13 @@ private fun getFeatures() = listOf(
         iconTint = Teal700,
         iconBackground = Teal50
     ),
+    ProFeature(
+        titleRes = strings.usage_notif,
+        descriptionRes = strings.usage_notif_Desc,
+        icon = Icons.Outlined.Notifications,
+        iconTint = Coral700,
+        iconBackground = Coral50
+    ),
 )
 
 

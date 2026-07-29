@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.IOException
 import java.net.InetAddress
@@ -110,8 +111,7 @@ object DaemonServer {
                     runCatching {
                         val reader = input.bufferedReader()
                         while (isActive) {
-                            val message = reader.readLine()
-                            if (message == null) break
+                            val message = reader.readLine() ?: break
                             if (message.isNotEmpty()) {
                                 received_messages.emit(message.trim())
                             }
@@ -119,11 +119,13 @@ object DaemonServer {
                     }.onFailure { it.printStackTrace() }
                 }
 
-                val writerJob = launch(Dispatchers.IO) {
+                val writerJob = launch {
                     runCatching {
-                        send_daemon_messages.asSharedFlow().collect {
-                            client.outputStream.write("$it\n".toByteArray())
-                            client.outputStream.flush()
+                        send_daemon_messages.collect { message ->
+                            withContext(Dispatchers.IO) {
+                                client.outputStream.write("$message\n".toByteArray())
+                                client.outputStream.flush()
+                            }
                         }
                     }.onFailure {
                         log("Writer error: ${it.message}")
@@ -145,7 +147,10 @@ object DaemonServer {
     private suspend fun cleanupClient() {
         log("Cleaning up client resources")
         try {
-            currentClient?.close()
+            withContext(Dispatchers.IO) {
+                currentClient?.close()
+            }
+
         } catch (_: IOException) {
             log("WARNING: Failed to close client socket")
         }
@@ -162,7 +167,9 @@ object DaemonServer {
         acceptJob = null
         cleanupClient()
         try {
-            server?.close()
+            withContext(Dispatchers.IO) {
+                server?.close()
+            }
             log("Server socket closed")
         } catch (_: IOException) {
             log("WARNING: Failed to close server socket")

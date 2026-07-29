@@ -1,4 +1,4 @@
-package com.rk.taskmanager.ui.theme.spring
+package com.rk.taskmanager.ui.theme.cosmos
 
 import androidx.annotation.Keep
 import androidx.compose.material3.darkColorScheme
@@ -7,9 +7,9 @@ import com.rk.commons.strings
 import com.rk.taskmanager.ui.theme.Theme
 
 @Keep
-object Spring : Theme() {
-    override val nameRes: Int = strings.spring
-    override val lightScheme = lightColorScheme(
+object Cosmos : Theme() {
+   override val nameRes: Int = strings.cosmos
+   override val lightScheme = lightColorScheme(
         primary = primaryLight,
         onPrimary = onPrimaryLight,
         primaryContainer = primaryContainerLight,
@@ -47,7 +47,7 @@ object Spring : Theme() {
         surfaceContainerHighest = surfaceContainerHighestLight,
     )
 
-    override val darkScheme = darkColorScheme(
+     override val darkScheme = darkColorScheme(
         primary = primaryDark,
         onPrimary = onPrimaryDark,
         primaryContainer = primaryContainerDark,

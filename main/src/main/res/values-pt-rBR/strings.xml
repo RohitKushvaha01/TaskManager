@@ -57,9 +57,10 @@
     <string name="privacy_policy">Política de Privacidade</string>
     <string name="privacy_desc">Política de Privacidade do TaskManager</string>
     <string name="graph_update">Atraso na atualização do gráfico</string>
-    <string name="autumn">Outono</string>
-    <string name="frostfall">Inverno</string>
-    <string name="spring">Primavera</string>
+    <string name="flame">Flame</string>
+    <string name="leaf">Leaf</string>
+    <string name="wave">Wave</string>
+    <string name="cosmos">Cosmos</string>
     <string name="root">Root</string>
     <string name="shizuku">Shizuku</string>
     <string name="title_taskmanager_pro">TaskManager Pro</string>

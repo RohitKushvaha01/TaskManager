@@ -57,9 +57,10 @@
     <string name="privacy_policy">Gizlilik Politikası</string>
     <string name="privacy_desc">TaskManager Gizlilik Politikası</string>
     <string name="graph_update">Grafik güncelleme gecikmesi</string>
-    <string name="autumn">Autumn</string>
-    <string name="frostfall">Frostfall</string>
-    <string name="spring">Spring</string>
+    <string name="flame">Flame</string>
+    <string name="leaf">Leaf</string>
+    <string name="wave">Wave</string>
+    <string name="cosmos">Cosmos</string>
     <string name="root">Root</string>
     <string name="shizuku">Shizuku</string>
 

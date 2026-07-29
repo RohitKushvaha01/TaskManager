@@ -1,4 +1,4 @@
-package com.rk.taskmanager.ui.theme.spring
+package com.rk.taskmanager.ui.theme.leaf
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF4C662B)

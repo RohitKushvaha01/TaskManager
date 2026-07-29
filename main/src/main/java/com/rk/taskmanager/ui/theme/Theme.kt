@@ -11,9 +11,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import com.rk.commons.settings.Settings
-import com.rk.taskmanager.ui.theme.autumn.Autumn
-import com.rk.taskmanager.ui.theme.frostfall.Frostfall
-import com.rk.taskmanager.ui.theme.spring.Spring
+import com.rk.taskmanager.ui.theme.cosmos.Cosmos
+import com.rk.taskmanager.ui.theme.flame.Flame
+import com.rk.taskmanager.ui.theme.leaf.Leaf
+import com.rk.taskmanager.ui.theme.wave.Wave
 
 abstract class Theme{
     abstract val nameRes:Int
@@ -22,9 +23,10 @@ abstract class Theme{
 }
 
 val themes = hashMapOf(
-    0 to Frostfall,
-    1 to Autumn,
-    2 to Spring
+    0 to Flame,
+    1 to Leaf,
+    2 to Wave,
+    3 to Cosmos
 )
 
 var currentTheme = mutableIntStateOf(Settings.theme)

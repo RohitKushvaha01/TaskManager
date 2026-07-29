@@ -57,9 +57,10 @@
     <string name="privacy_policy">隐私政策</string>
     <string name="privacy_desc">TaskManager 的隐私政策</string>
     <string name="graph_update">图表更新延迟</string>
-    <string name="autumn">秋</string>
-    <string name="frostfall">霜降</string>
-    <string name="spring">春</string>
+    <string name="flame">Flame</string>
+    <string name="leaf">Leaf</string>
+    <string name="wave">Wave</string>
+    <string name="cosmos">Cosmos</string>
     <string name="root">Root</string>
     <string name="shizuku">Shizuku</string>
     <string name="title_taskmanager_pro">TaskManager Pro</string>

@@ -1,4 +1,4 @@
-package com.rk.taskmanager.ui.theme.frostfall
+package com.rk.taskmanager.ui.theme.wave
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF415F91)

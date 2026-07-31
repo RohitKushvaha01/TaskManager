@@ -7,7 +7,6 @@
     <string name="shizuku_not_installed">Shizuku не установлен</string>
     <string name="su_not_in_path">\'su\' отсутствует или работает некорректно</string>
     <string name="daemon_not_started">Не удалось запустить демон</string>
-    <string name="port_busy">"Не удалось занять свободный порт: получен %port"</string>
     <string name="starting_daemon">Запуск демона…</string>
     <string name="apply">Применить</string>
     <string name="cancel">Отмена</string>

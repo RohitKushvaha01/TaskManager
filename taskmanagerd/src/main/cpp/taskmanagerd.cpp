@@ -1,4 +1,3 @@
-#include <arpa/inet.h>
 #include <cerrno>
 #include <csignal>
 #include <cstdio>
@@ -8,11 +7,8 @@
 #include <fcntl.h>
 #include <climits>
 #include <pwd.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/un.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -148,22 +144,23 @@ std::string now_str() {
 }
 
 void log_line(const std::string &line) {
-    std::cout << "[" << now_str() << "] " << line << std::endl;
+    std::string msg = "[" + now_str() + "] " + line + "\n";
+    write(STDERR_FILENO, msg.c_str(), msg.size());
 }
 
-bool send_msg(int sock, const std::string &msg) {
+bool send_msg(const std::string &msg) {
     std::string data = msg + "\n";
     size_t total = 0;
     while (total < data.size()) {
-        ssize_t sent = send(sock, data.data() + total, data.size() - total, MSG_NOSIGNAL);
-        if (sent <= 0) return false;
-        total += sent;
+        ssize_t written = write(STDOUT_FILENO, data.data() + total, data.size() - total);
+        if (written <= 0) return false;
+        total += written;
     }
     return true;
 }
 
-bool send_json(int sock, const json &j) {
-    return send_msg(sock, j.dump());
+bool send_json(const json &j) {
+    return send_msg(j.dump());
 }
 
 struct CpuStat {
@@ -440,7 +437,7 @@ struct NetStatSnapshot {
 static std::unordered_map<std::string, NetStatSnapshot> netStatCache;
 
 
-void processCommand(int sock, const std::string &received) {
+void processCommand(const std::string &received) {
     try {
         json j_in = json::parse(received);
         std::string cmd = j_in.value("cmd", "");
@@ -448,13 +445,13 @@ void processCommand(int sock, const std::string &received) {
 
         if (cmd == "PING") {
             j_out["type"] = "PONG";
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "KILL") {
             int pid = j_in.value("pid", -1);
             bool success = (pid > 0) && killProcess(pid);
             j_out["type"] = "KILL_RESULT";
             j_out["success"] = success;
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "FORCE_STOP") {
             std::string pkg = j_in.value("pkg", "");
             std::regex pkg_regex("^[a-zA-Z0-9._]+$");
@@ -465,13 +462,13 @@ void processCommand(int sock, const std::string &received) {
             }
             j_out["type"] = "KILL_RESULT";
             j_out["success"] = success;
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "KILL_GROUP") {
             int pgid = j_in.value("pgid", -1);
             bool success = (pgid > 0) ? killProcessGroup(pgid) : false;
             j_out["type"] = "KILL_RESULT";
             j_out["success"] = success;
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "STOP_SELF" || cmd == "BUSY") {
             keep_running = 0;
         } else if (cmd == "LIST_PROCESS") {
@@ -480,35 +477,35 @@ void processCommand(int sock, const std::string &received) {
             for (const auto &p : procs) procs_j.push_back(procToJson(p));
             j_out["type"] = "PROCESS_LIST";
             j_out["processes"] = procs_j;
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "CPU_PING") {
             j_out["type"] = "CPU_USAGE";
             j_out["usage"] = calculateCpuUsage();
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "SWAP_PING") {
             long used, total;
             getSwapUsage(used, total);
             j_out["type"] = "SWAP_USAGE";
             j_out["used"] = used;
             j_out["total"] = total;
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "GPU_PING") {
             j_out["type"] = "GPU_USAGE";
             j_out["usage"] = calculateGpuUsage();
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "CTEMP_PING") {
             j_out["type"] = "CPU_TEMP";
             j_out["temp"] = getCpuTemperatureCelsius();
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "PING_PID_CPU") {
             int pid = j_in.value("pid", -1);
             j_out["type"] = "PROCESS_CPU_USAGE";
             j_out["usage"] = calculateProcessCpuUsage(pid);
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if(cmd == "BAT_CHARGE_CYCLES"){
             j_out["type"] = "CHARGE_CYCLES";
             j_out["cycles"] = getBatteryCycleCount().value_or(-1);
-            send_json(sock,j_out);
+            send_json(j_out);
         } else if (cmd == "LIST_NET_INTERFACES") {
             auto interfaces = listNetInterfaces();
             json interfaces_j = json::array();
@@ -517,7 +514,7 @@ void processCommand(int sock, const std::string &received) {
             }
             j_out["type"] = "NET_INTERFACE_LIST";
             j_out["interfaces"] = interfaces_j;
-            send_json(sock, j_out);
+            send_json(j_out);
         } else if (cmd == "NET_PING") {
             std::string iface = j_in.value("interface", "");
             auto now = std::chrono::steady_clock::now();
@@ -538,17 +535,15 @@ void processCommand(int sock, const std::string &received) {
                     j_out["txBytesPerSec"] = 0;
                 }
             } else {
-                // First call — no delta yet
                 j_out["rxBytesPerSec"] = 0;
                 j_out["txBytesPerSec"] = 0;
             }
 
-            // Update cache
             netStatCache[iface] = {curr.rxBytes, curr.txBytes, now};
 
-            j_out["rxBytes"] = curr.rxBytes; // keep cumulative if needed
+            j_out["rxBytes"] = curr.rxBytes;
             j_out["txBytes"] = curr.txBytes;
-            send_json(sock, j_out);
+            send_json(j_out);
         } else {
             log_line("Unknown command: " + cmd);
         }
@@ -557,93 +552,33 @@ void processCommand(int sock, const std::string &received) {
     }
 }
 
-void daemonize() {
-    pid_t pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
-    if (setsid() < 0) exit(EXIT_FAILURE);
-    pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
-    umask(0);
-    if (chdir("/") < 0) exit(EXIT_FAILURE);
-    close(STDIN_FILENO); close(STDOUT_FILENO); close(STDERR_FILENO);
-    open("/dev/null", O_RDONLY); open("/dev/null", O_RDWR); open("/dev/null", O_RDWR);
-}
-
-int main(int argc, char* argv[]) {
-    bool dFlag = false;
-    int port = -1;
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "-D") dFlag = true;
-        else if (arg == "-p" && i + 1 < argc) port = std::atoi(argv[++i]);
-    }
-    if (port <= 0) { std::cerr << "ERROR: Valid port must be specified with -p" << std::endl; return 1; }
-
+int main() {
     signal(SIGINT, handle_sigint);
     signal(SIGTERM, handle_sigint);
-
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) { log_line("ERROR: socket creation failed"); return 1; }
-
-    int flags = fcntl(sock, F_GETFL, 0);
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
-
-    struct sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
-
-    if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0 && errno != EINPROGRESS) {
-        log_line("ERROR: connection failed: " + std::string(strerror(errno)));
-        close(sock); return 1;
-    }
-
-    fcntl(sock, F_SETFL, flags);
-    log_line("Connected to server.");
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
-
-    int epoll_fd = epoll_create1(0);
-    struct epoll_event ev;
-    ev.events = EPOLLIN | EPOLLET;
-    ev.data.fd = sock;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sock, &ev);
+    signal(SIGPIPE, SIG_IGN);
 
     const size_t BUF_SIZE = 8192;
     std::unique_ptr<char[]> buf(new char[BUF_SIZE]);
     std::string recv_buffer;
-    struct epoll_event events[1];
-
-    if (dFlag) daemonize();
 
     while (keep_running) {
-        int n = epoll_wait(epoll_fd, events, 1, 1000);
-        if (n < 0 && errno != EINTR) break;
-        if (n <= 0) continue;
-
-        if (events[0].events & (EPOLLERR | EPOLLHUP)) {
-            if (!(events[0].events & EPOLLIN)) { keep_running = 0; break; }
-        }
-
-        if (events[0].events & EPOLLIN) {
-            while (true) {
-                ssize_t r = recv(sock, buf.get(), BUF_SIZE - 1, 0);
-                if (r > 0) {
-                    buf[r] = '\0';
-                    recv_buffer.append(buf.get(), r);
-                    size_t pos;
-                    while ((pos = recv_buffer.find('\n')) != std::string::npos) {
-                        std::string message = recv_buffer.substr(0, pos);
-                        recv_buffer.erase(0, pos + 1);
-                        if (!message.empty()) processCommand(sock, message);
-                    }
-                } else if (r == 0) { keep_running = 0; break; }
-                else { if (errno != EAGAIN && errno != EWOULDBLOCK) keep_running = 0; break; }
+        ssize_t r = read(STDIN_FILENO, buf.get(), BUF_SIZE - 1);
+        if (r > 0) {
+            buf[r] = '\0';
+            recv_buffer.append(buf.get(), r);
+            size_t pos;
+            while ((pos = recv_buffer.find('\n')) != std::string::npos) {
+                std::string message = recv_buffer.substr(0, pos);
+                recv_buffer.erase(0, pos + 1);
+                if (!message.empty()) processCommand(message);
             }
+        } else if (r == 0) {
+            break;
+        } else {
+            if (errno == EINTR) continue;
+            break;
         }
     }
 
-    close(epoll_fd); close(sock);
     return 0;
 }

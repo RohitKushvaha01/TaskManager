@@ -7,7 +7,6 @@
     <string name="shizuku_not_installed">Shizuku não está instalado</string>
     <string name="su_not_in_path">\'su\' não existe ou não está funcionando corretamente</string>
     <string name="daemon_not_started">Falha ao iniciar o daemon</string>
-    <string name="port_busy">"Não foi possível obter uma porta aberta: obtida %port"</string>
     <string name="starting_daemon">Iniciando daemon…</string>
     <string name="apply">Aplicar</string>
     <string name="cancel">Cancelar</string>

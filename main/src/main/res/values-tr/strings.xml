@@ -7,7 +7,6 @@
     <string name="shizuku_not_installed">Shizuku yüklü değil</string>
     <string name="su_not_in_path">su $PATH içinde mevcut değil</string>
     <string name="daemon_not_started">Arka plan programı başlatılamadı</string>
-    <string name="port_busy">"Açık bir port alınamıyor: %port alındı"</string>
     <string name="starting_daemon">Arka plan programı başlatılıyor…</string>
     <string name="apply">Uygula</string>
     <string name="cancel">İptal</string>

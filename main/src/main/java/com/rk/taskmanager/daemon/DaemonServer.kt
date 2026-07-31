@@ -5,8 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -14,11 +14,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import java.io.IOException
-import java.net.InetAddress
-import java.net.ServerSocket
-import java.net.Socket
+import java.io.InputStream
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -30,151 +28,78 @@ var isConnected by mutableStateOf(false)
 
 object DaemonServer {
 
-    private var server: ServerSocket? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     val received_messages =
         MutableSharedFlow<String>(extraBufferCapacity = 10, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    private var acceptJob: Job? = null
-    private var clientJob: Job? = null
-    private var currentClient: Socket? = null
+    private var readerJob: Job? = null
+    private var writerJob: Job? = null
 
     private fun log(msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
         println("[$ts] [DaemonServer] $msg")
     }
 
-    suspend fun start(): Pair<Int, Exception?> {
-        if (server != null && server!!.isBound) {
-            log("Server already running, ignoring start request")
-            return Pair(server!!.localPort, null)
+    suspend fun start(input: InputStream, output: OutputStream): Boolean {
+        if (readerJob?.isActive == true) {
+            log("Daemon already running, ignoring start request")
+            return true
         }
 
         return try {
-            server = ServerSocket(0, 1, InetAddress.getByName("0.0.0.0"))
-            log("Server started on port: ${server!!.localPort}")
-            startAccepting()
-            Pair(server!!.localPort, null)
+            startHandling(input, output)
+            true
         } catch (e: IOException) {
-            log("ERROR: Failed to start server: ${e.message}")
+            log("ERROR: Failed to start daemon I/O: ${e.message}")
             e.printStackTrace()
-            server = null
-            Pair(-1, e)
+            false
         }
     }
 
-    private fun startAccepting() {
-        acceptJob = scope.launch {
-            val srv = server ?: return@launch
-            log("Accept loop started, waiting for client...")
-            while (isActive && server != null && server!!.isBound) {
-                try {
-                    val client = srv.accept()
-                    log("Incoming client connection")
-
-                    if (currentClient != null) {
-                        log("Client rejected (already connected)")
-                        try {
-                            val busy = JSONObject().apply { put("cmd", "BUSY") }
-                            client.outputStream.write("${busy}\n".toByteArray())
-                            client.outputStream.flush()
-                        } catch (_: IOException) {}
-                        client.close()
-                        continue
-                    }
-
-                    log("Client accepted")
-                    currentClient = client
-                    handleClient(client)
-
-                } catch (e: IOException) {
-                    if (server != null && server!!.isBound) {
-                        log("ERROR in accept loop: ${e.message}")
-                        e.printStackTrace()
-                    }
-                    break
-                }
-            }
-            log("Accept loop terminated")
-        }
-    }
-
-    private fun handleClient(client: Socket) {
-        clientJob = scope.launch {
+    private fun startHandling(input: InputStream, output: OutputStream) {
+        readerJob = scope.launch {
             isConnected = true
-            log("Client handler started")
-            val input = client.inputStream
-
+            log("Daemon I/O started")
             try {
-                val readerJob = launch(Dispatchers.IO) {
-                    runCatching {
-                        val reader = input.bufferedReader()
-                        while (isActive) {
-                            val message = reader.readLine() ?: break
-                            if (message.isNotEmpty()) {
-                                received_messages.emit(message.trim())
-                            }
-                        }
-                    }.onFailure { it.printStackTrace() }
-                }
-
-                val writerJob = launch {
-                    runCatching {
-                        send_daemon_messages.collect { message ->
-                            withContext(Dispatchers.IO) {
-                                client.outputStream.write("$message\n".toByteArray())
-                                client.outputStream.flush()
-                            }
-                        }
-                    }.onFailure {
-                        log("Writer error: ${it.message}")
-                        it.printStackTrace()
+                val reader = input.bufferedReader()
+                while (isActive) {
+                    val message = reader.readLine() ?: break
+                    if (message.isNotEmpty()) {
+                        received_messages.emit(message.trim())
                     }
                 }
-
-                readerJob.join()
-                writerJob.cancelAndJoin()
-                cleanupClient()
-
             } catch (e: IOException) {
-                log("ERROR while handling client: ${e.message}")
+                log("Reader error: ${e.message}")
+                e.printStackTrace()
+            } finally {
+                isConnected = false
+                log("Reader terminated")
+            }
+        }
+
+        writerJob = scope.launch {
+            try {
+                send_daemon_messages.collect { message ->
+                    withContext(Dispatchers.IO) {
+                        output.write("$message\n".toByteArray())
+                        output.flush()
+                    }
+                }
+            } catch (e: IOException) {
+                log("Writer error: ${e.message}")
                 e.printStackTrace()
             }
         }
     }
 
-    private suspend fun cleanupClient() {
-        log("Cleaning up client resources")
-        try {
-            withContext(Dispatchers.IO) {
-                currentClient?.close()
-            }
-
-        } catch (_: IOException) {
-            log("WARNING: Failed to close client socket")
-        }
-        currentClient = null
-        clientJob?.cancelAndJoin()
-        clientJob = null
-        isConnected = false
-    }
-
     suspend fun stop() {
-        log("Stopping server...")
+        log("Stopping daemon I/O...")
         isConnected = false
-        acceptJob?.cancelAndJoin()
-        acceptJob = null
-        cleanupClient()
-        try {
-            withContext(Dispatchers.IO) {
-                server?.close()
-            }
-            log("Server socket closed")
-        } catch (_: IOException) {
-            log("WARNING: Failed to close server socket")
-        }
-        server = null
-        log("Server stopped")
+        readerJob?.cancelAndJoin()
+        readerJob = null
+        writerJob?.cancelAndJoin()
+        writerJob = null
+        log("Daemon I/O stopped")
     }
 }

@@ -134,4 +134,29 @@ object ShizukuShell {
                 Pair(-1,e.message.toString())
             }
         }
+
+    @Keep
+    @Throws(
+        InvocationTargetException::class,
+        IllegalAccessException::class,
+        NoSuchMethodException::class
+    )
+    suspend fun startStreamingProcess(cmd: Array<String?>, env: Array<String?>?, dir: String?): ShizukuRemoteProcess =
+        withContext(Dispatchers.IO) {
+
+            val method = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            )
+
+            method.isAccessible = true
+
+            val result: ShizukuRemoteProcess? =
+                checkNotNull(method.invoke(null, cmd, env, dir) as ShizukuRemoteProcess?)
+
+            Log.e("Shizuku_startProcess", "Process started")
+            return@withContext result!!
+        }
 }

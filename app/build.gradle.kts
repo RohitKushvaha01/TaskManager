@@ -72,11 +72,11 @@ android {
     defaultConfig {
         applicationId = "com.rk.taskmanager"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
 
         //versioning
-        versionCode = 51
-        versionName = "1.5.1"
+        versionCode = 52
+        versionName = "1.5.2"
         vectorDrawables {
             useSupportLibrary = true
         }

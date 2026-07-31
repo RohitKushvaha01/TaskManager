@@ -369,7 +369,7 @@ fun ProcessInfo(
                     var name by remember { mutableStateOf(strings.loading.getString()) }
 
 
-                    LaunchedEffect(Unit) {
+                    LaunchedEffect(proc) {
                         name = getApkNameFromPackage(
                             TaskManager.requireContext(),
                             proc!!.proc.cmdLine
@@ -404,7 +404,7 @@ fun ProcessInfo(
                         }
                     }
 
-                    LaunchedEffect(Unit) {
+                    LaunchedEffect(proc) {
                         while (isActive) {
                             val cmd = JSONObject().apply {
                                 put("cmd", "PING_PID_CPU")

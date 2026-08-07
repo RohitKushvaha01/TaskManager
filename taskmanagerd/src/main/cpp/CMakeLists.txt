@@ -17,5 +17,6 @@ target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
 
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
         "-Wl,--build-id=none"
+        "-Wl,--threads=1"
         "-s"
 )

@@ -1,5 +1,6 @@
 package com.rk.taskmanager.daemon
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -38,6 +39,7 @@ object DaemonServer {
 
     private fun log(msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
+        Log.d("DaemonServer", "[$ts] $msg")
         println("[$ts] [DaemonServer] $msg")
     }
 
@@ -66,6 +68,7 @@ object DaemonServer {
                 while (isActive) {
                     val message = reader.readLine() ?: break
                     if (message.isNotEmpty()) {
+                        Log.d("DaemonServer", "RECV: $message")
                         received_messages.emit(message.trim())
                     }
                 }
@@ -81,6 +84,7 @@ object DaemonServer {
         writerJob = scope.launch {
             try {
                 send_daemon_messages.collect { message ->
+                    Log.d("DaemonServer", "SEND: $message")
                     withContext(Dispatchers.IO) {
                         output.write("$message\n".toByteArray())
                         output.flush()

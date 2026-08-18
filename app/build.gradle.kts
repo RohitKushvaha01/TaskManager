@@ -12,7 +12,7 @@ plugins {
 
 android {
     namespace = "com.rk.taskmanager.app"
-    compileSdk = 36
+    compileSdk = 37
 
     lint {
         disable += "MissingTranslation"
@@ -75,8 +75,8 @@ android {
         targetSdk = 37
 
         //versioning
-        versionCode = 52
-        versionName = "1.5.2"
+        versionCode = 53
+        versionName = "1.5.3"
         vectorDrawables {
             useSupportLibrary = true
         }

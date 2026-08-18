@@ -68,7 +68,6 @@ object DaemonServer {
                 while (isActive) {
                     val message = reader.readLine() ?: break
                     if (message.isNotEmpty()) {
-                        Log.d("DaemonServer", "RECV: $message")
                         received_messages.emit(message.trim())
                     }
                 }
@@ -84,7 +83,6 @@ object DaemonServer {
         writerJob = scope.launch {
             try {
                 send_daemon_messages.collect { message ->
-                    Log.d("DaemonServer", "SEND: $message")
                     withContext(Dispatchers.IO) {
                         output.write("$message\n".toByteArray())
                         output.flush()

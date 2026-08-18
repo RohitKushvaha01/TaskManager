@@ -113,6 +113,8 @@
     <string name="battery_stats_desc">Veja o nível de carga, status e integridade da bateria rapidamente</string>
     <string name="network_monitor">Monitor de Rede</string>
     <string name="network_monitor_desc">Monitore o uso de dados e as velocidades em tempo real</string>
+    <string name="charge_cycles_unavailable">Ciclos de carga indisponíveis</string>
+    <string name="charge_cycles_read_error">Seu dispositivo não permite ler os ciclos de carga</string>
 
     <string name="process_pin">Fixar Processo</string>
     <string name="process_pin_desc">Fixe processos para mostrá-los no topo</string>
@@ -194,6 +196,8 @@
     <string name="not_supported">Não Suportado</string>
     <string name="no_data">N/A</string>
     <string name="gpu_usage_label">GPU - %s</string>
+    <string name="gpu_usage_unavailable">Seu dispositivo não suporta ler o uso da GPU</string>
+    <string name="gpu_usage_unavailable_help">Uso da GPU indisponível</string>
     <string name="cpu_usage_label">CPU - %s</string>
 
     <!-- Misc -->

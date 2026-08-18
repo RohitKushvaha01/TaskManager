@@ -109,6 +109,8 @@
     <string name="battery_stats_desc">Быстрый просмотр уровня заряда, статуса и здоровья аккумулятора</string>
     <string name="network_monitor">Мониторинг сети</string>
     <string name="network_monitor_desc">Отслеживание использования данных и скорости в реальном времени</string>
+    <string name="charge_cycles_unavailable">Циклы зарядки недоступны</string>
+    <string name="charge_cycles_read_error">Ваше устройство не позволяет читать циклы зарядки</string>
 
     <string name="process_pin">Закрепление процессов</string>
     <string name="process_pin_desc">Закрепление процессов для отображения вверху списка</string>
@@ -184,6 +186,8 @@
     <string name="not_supported">Не поддерживается</string>
     <string name="no_data">Н/Д</string>
     <string name="gpu_usage_label">GPU — %s</string>
+    <string name="gpu_usage_unavailable">Ваше устройство не поддерживает чтение данных об использовании GPU</string>
+    <string name="gpu_usage_unavailable_help">Использование GPU недоступно</string>
     <string name="cpu_usage_label">CPU — %s</string>
 
     <string name="please_wait">Пожалуйста, подождите</string>

@@ -28,6 +28,7 @@ fun SettingsToggle(
     modifier: Modifier = Modifier,
     label: String? = null,
     description: String? = null,
+    descriptionContent: (@Composable () -> Unit)? = null,
     @DrawableRes iconRes: Int? = null,
     default: Boolean,
     reactiveSideEffect: ((checked: Boolean) -> Boolean)? = null,
@@ -111,15 +112,21 @@ fun SettingsToggle(
                    }
                 }
             },
-            description = { description?.let {
-                if (selection){
-                    SelectionContainer {
-                        Text(text = it, style = MaterialTheme.typography.bodyMedium)
+            description = {
+                if (descriptionContent != null) {
+                    descriptionContent()
+                } else {
+                    description?.let {
+                        if (selection) {
+                            SelectionContainer {
+                                Text(text = it, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        } else {
+                            Text(text = it, style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
-                }else{
-                    Text(text = it, style = MaterialTheme.typography.bodyMedium)
                 }
-            } },
+            },
             enabled = true,
             applyPaddings = applyPaddingsNoSwitch,
             endWidget = endWidget,

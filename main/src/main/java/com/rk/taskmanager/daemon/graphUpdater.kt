@@ -52,25 +52,15 @@ suspend fun CoroutineScope.graphUpdater(activity: MainActivity){
     if (!isPingerRunner){
         launch(Dispatchers.IO) {
             isPingerRunner = true
-            var hasSupportedGPU = false
 
             while (isActive) {
                 if (isConnected) {
-                    if (!hasSupportedGPU) {
-                        hasSupportedGPU = activity.gpuViewModel.gpuInfo.value?.renderer?.let { renderer ->
-                            renderer.contains("mali", true) || renderer.contains("adreno", true)
-                        } ?: false
-                    }
-
                     graphMutex.withLock {
                         send_daemon_messages.emit(JSONObject().apply { put("cmd", "CPU_PING") }.toString())
                         delay(16.milliseconds)
                         send_daemon_messages.emit(JSONObject().apply { put("cmd", "SWAP_PING") }.toString())
-
-                        if (hasSupportedGPU){
-                            delay(15.milliseconds)
-                            send_daemon_messages.emit(JSONObject().apply { put("cmd", "GPU_PING") }.toString())
-                        }
+                        delay(15.milliseconds)
+                        send_daemon_messages.emit(JSONObject().apply { put("cmd", "GPU_PING") }.toString())
                     }
                 }
                 val delayMs = if (selectedscreen.intValue == 0 && navControllerRef.get()?.currentDestination?.route == SettingsRoutes.Home.route) {

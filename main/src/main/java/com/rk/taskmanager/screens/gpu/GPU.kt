@@ -51,6 +51,7 @@ import com.rk.taskmanager.navControllerRef
 import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.commons.strings
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 val gpuGraphHandler = GraphDataHandler(seriesCount = 1)
@@ -58,7 +59,7 @@ private var gpuUsage by mutableIntStateOf(-1)
 
 suspend fun updateGpuGraph(usage: Int) {
     gpuUsage = usage
-    gpuGraphHandler.update(usage) {
+    gpuGraphHandler.update(max(usage, 0)) {
         selectedscreen.intValue == 0 && navControllerRef.get()?.currentDestination?.route == SettingsRoutes.Home.route
     }
 }

@@ -196,18 +196,86 @@ int calculateCpuUsage() {
     return std::clamp((int)usage, 0, 100);
 }
 
-int readInt(const char* path) {
+// Parses files that expose GPU busy time. Supports several formats:
+//   - single percentage value ("50")
+//   - busy/total pairs separated by whitespace, '@' or '/' ("1234 5678", "1234@5678")
+// Returns usage 0..100, or -1 when the file is unreadable/unsupported.
+static int readBusyPercentageFile(const std::string& path) {
     std::ifstream file(path);
-    int value = -1;
-    if (file.is_open()) { file >> value; file.close(); }
-    return value;
+    std::string line;
+    if (!std::getline(file, line)) return -1;
+
+    for (char& c : line) {
+        if (!std::isdigit(static_cast<unsigned char>(c))) c = ' ';
+    }
+
+    std::istringstream iss(line);
+    long a = -1, b = -1;
+    if (!(iss >> a)) return -1;
+    if (iss >> b) {
+        if (b > 0) return std::clamp((int)(a * 100 / b), 0, 100);
+    } else if (a >= 0 && a <= 100) {
+        return (int)a;
+    }
+    return -1;
+}
+
+// Scans /sys/class/devfreq for a GPU-related node exposing a "load" file.
+// Works on many SoCs (Exynos, MediaTek, Kirin, etc.).
+static int readDevfreqGpuLoad() {
+    const fs::path base("/sys/class/devfreq");
+    std::error_code ec;
+    if (!fs::is_directory(base, ec)) return -1;
+
+    for (const auto& entry : fs::directory_iterator(base, ec)) {
+        if (ec) break;
+        std::string name = toLower(entry.path().filename().string());
+        if (name.find("gpu") == std::string::npos &&
+            name.find("kgsl") == std::string::npos &&
+            name.find("mali") == std::string::npos &&
+            name.find("midgard") == std::string::npos &&
+            name.find("panfrost") == std::string::npos) {
+            continue;
+        }
+        int load = readBusyPercentageFile((entry.path() / "load").string());
+        if (load >= 0) return load;
+    }
+    return -1;
 }
 
 int calculateGpuUsage() {
-    int usage = readInt("/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage");
+    // Qualcomm Adreno (KGSL)
+    int usage = readBusyPercentageFile("/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage");
     if (usage >= 0) return usage;
-    usage = readInt("/sys/class/misc/mali0/device/utilization");
+    usage = readBusyPercentageFile("/sys/class/kgsl/kgsl-3d0/gpubusy");
     if (usage >= 0) return usage;
+    usage = readBusyPercentageFile("/sys/class/kgsl/kgsl-3d0/gpu_busy");
+    if (usage >= 0) return usage;
+
+    // ARM Mali
+    usage = readBusyPercentageFile("/sys/class/misc/mali0/device/utilization");
+    if (usage >= 0) return usage;
+    usage = readBusyPercentageFile("/sys/class/misc/mali0/device/gpu_busy_percentage");
+    if (usage >= 0) return usage;
+    usage = readBusyPercentageFile("/proc/mali/utilization");
+    if (usage >= 0) return usage;
+
+    // Samsung Exynos / generic
+    usage = readBusyPercentageFile("/sys/kernel/gpu/gpu_busy");
+    if (usage >= 0) return usage;
+    usage = readBusyPercentageFile("/sys/kernel/gpu/gpu_busy_percentage");
+    if (usage >= 0) return usage;
+
+    // Root-only debugfs paths
+    usage = readBusyPercentageFile("/sys/kernel/debug/kgsl/kgsl-3d0/gpubusy");
+    if (usage >= 0) return usage;
+    usage = readBusyPercentageFile("/d/kgsl/kgsl-3d0/gpubusy");
+    if (usage >= 0) return usage;
+
+    // Generic devfreq load
+    usage = readDevfreqGpuLoad();
+    if (usage >= 0) return usage;
+
     return -1;
 }
 

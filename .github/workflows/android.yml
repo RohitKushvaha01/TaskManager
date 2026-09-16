@@ -32,6 +32,24 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # Keep the NDK version in sync with `ndk` in gradle/libs.versions.toml. The NDK release and
+      # clang/LLD version strings are embedded in libtaskmanagerd.so, so building with a different
+      # NDK changes the native libraries and breaks reproducible builds.
+      #
+      # `compileSdk { version = release(37) { minorApiLevel = 0 } }` in app/build.gradle.kts needs
+      # platforms/android-37.0, which is not preinstalled on the runner either.
+      - name: Install pinned build dependencies
+        run: |
+          NDK_VERSION=$(sed -n 's/^ndk = "\(.*\)"/\1/p' gradle/libs.versions.toml)
+          SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager "$ANDROID_HOME"/tools/bin/sdkmanager 2>/dev/null | head -1)
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found under $ANDROID_HOME"
+            exit 1
+          fi
+          echo "Using $SDKMANAGER"
+          yes | "$SDKMANAGER" --install "ndk;$NDK_VERSION" "platforms;android-37.0"
+          "$SDKMANAGER" --list_installed | grep -E "ndk;|platforms;android-37.0"
+
       - name: Set Commit Hash
         id: commit_hash
         run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV

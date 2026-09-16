@@ -5,7 +5,7 @@ plugins {
 android {
     namespace = "com.rk.taskmanagerd"
     compileSdk = 36
-    ndkVersion = "28.0.13004108"
+    ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
         minSdk = 26

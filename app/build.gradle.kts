@@ -12,7 +12,15 @@ plugins {
 
 android {
     namespace = "com.rk.taskmanager.app"
-    compileSdk = 37
+    // 37 resolves to platforms/android-37; the stable platform is android-37.0.
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 0
+        }
+    }
+    // The app module runs stripReleaseDebugSymbols over the packaged native libs, so it must use
+    // the same NDK that built them (see taskmanagerd) or stripping differs between machines.
+    ndkVersion = libs.versions.ndk.get()
 
     lint {
         disable += "MissingTranslation"

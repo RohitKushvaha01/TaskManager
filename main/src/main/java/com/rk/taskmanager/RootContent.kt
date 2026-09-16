@@ -22,6 +22,7 @@ import com.rk.commons.settings.Settings
 import com.rk.taskmanager.settings.SettingsRoutes
 import com.rk.taskmanager.settings.SettingsScreen
 import com.rk.taskmanager.settings.Themes
+import com.rk.taskmanager.settings.Units
 import com.rk.taskmanager.ui.theme.TaskManagerTheme
 import java.lang.ref.WeakReference
 
@@ -71,6 +72,10 @@ fun MainActivity.RootContent(modifier: Modifier = Modifier) {
 
                 composable(SettingsRoutes.Themes.route){
                     Themes()
+                }
+
+                composable(SettingsRoutes.Units.route){
+                    Units()
                 }
 
                 composable(SettingsRoutes.About.route){

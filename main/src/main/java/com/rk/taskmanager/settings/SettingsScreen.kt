@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -94,6 +95,17 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
             },
             onNavigate = {
                 navController.navigate(SettingsRoutes.Themes.route)
+            },
+        )
+
+        PreferenceCategory(
+            label = stringResource(strings.units),
+            description = stringResource(strings.units_desc),
+            startWidget = {
+                Icon(imageVector = Icons.Outlined.Straighten,null, tint = MaterialTheme.colorScheme.primary)
+            },
+            onNavigate = {
+                navController.navigate(SettingsRoutes.Units.route)
             },
         )
 

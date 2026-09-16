@@ -29,6 +29,7 @@ import com.rk.bridge.bridge
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
 import com.rk.taskmanager.navControllerRef
+import com.rk.taskmanager.screens.battery.BatteryScreen
 import com.rk.taskmanager.screens.cpu.CPU
 import com.rk.taskmanager.screens.gpu.GPU
 import com.rk.taskmanager.screens.gpu.GpuViewModel
@@ -93,9 +94,9 @@ private val tabs = listOf(
     ResourceTab(
         labelRes = strings.bat,
         icon = TabIcon.Vector(Icons.Outlined.BatteryChargingFull),
-        content = { _, _, _ ->
+        content = { modifier, _, _ ->
             if (bridge != null) bridge!!.BatteryScreen()
-            else OpenSourceOnly()
+            else BatteryScreen(modifier)
         }
     )
 

@@ -33,6 +33,7 @@ import com.rk.commons.ui.InfoCard
 import com.rk.commons.ui.InfoItem
 import com.rk.commons.ui.SectionHeader
 import com.rk.commons.utils.CpuInfoReader
+import com.rk.commons.utils.formatTemperature
 import com.rk.components.SettingsToggle
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.daemon.daemon_messages
@@ -40,6 +41,7 @@ import com.rk.taskmanager.daemon.send_daemon_messages
 import com.rk.taskmanager.navControllerRef
 import com.rk.taskmanager.screens.selectedscreen
 import com.rk.taskmanager.settings.SettingsRoutes
+import com.rk.taskmanager.settings.useImperialUnits
 import com.rk.commons.strings
 import com.rk.commons.getString
 import kotlinx.coroutines.Dispatchers
@@ -161,7 +163,13 @@ fun CPU(modifier: Modifier = Modifier, viewModel: ProcessViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            InfoItem(stringResource(strings.temperature), if (temperature.toIntOrNull() != null) stringResource(strings.temp_c_estimated, temperature) else temperature)
+                            val temperatureValue = temperature.toIntOrNull()
+                            InfoItem(
+                                stringResource(strings.temperature),
+                                if (temperatureValue != null) {
+                                    "${formatTemperature(temperatureValue, useImperialUnits)} (${stringResource(strings.estimated)})"
+                                } else temperature
+                            )
                         }
                     }
                 }

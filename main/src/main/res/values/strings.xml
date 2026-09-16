@@ -82,6 +82,13 @@
     <string name="pro_version_desc">Unlock exclusive features</string>
     <string name="about">About</string>
     <string name="about_desc">Application info</string>
+    <string name="units">Units</string>
+    <string name="units_desc">Measurement units used across the app</string>
+    <string name="unit_system">Unit system</string>
+    <string name="metric">Metric</string>
+    <string name="metric_desc">Celsius (°C)</string>
+    <string name="imperial">Imperial</string>
+    <string name="imperial_desc">Fahrenheit (°F)</string>
 
     <!-- About -->
     <string name="developer">Developer</string>

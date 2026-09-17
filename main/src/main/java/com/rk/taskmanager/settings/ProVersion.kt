@@ -1,6 +1,7 @@
 package com.rk.taskmanager.settings
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -31,6 +32,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
 import com.rk.commons.strings
+import kotlin.time.Duration.Companion.milliseconds
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -99,7 +101,7 @@ fun ProVersion(modifier: Modifier = Modifier) {
     // Poll for status updates when purchase is pending
     LaunchedEffect(isPending || isPro.not()) {
         while (isActive && (isPending || isPro.not())) {
-            delay(3000)
+            delay(3000.milliseconds)
             bridge?.updatePurchaseStatus()
         }
     }
@@ -117,14 +119,20 @@ fun ProVersion(modifier: Modifier = Modifier) {
                 actions = {
                     TextButton(
                         onClick = {
-                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = "mailto:".toUri()
-                                putExtra(Intent.EXTRA_EMAIL, arrayOf("kushvahar173+taskmanager@gmail.com"))
-                                putExtra(Intent.EXTRA_SUBJECT, "Help Needed")
-                                putExtra(Intent.EXTRA_TEXT, "Describe your issue here...")
+                            runCatching {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = "mailto:".toUri()
+                                    putExtra(Intent.EXTRA_EMAIL, arrayOf("kushvahar173+taskmanager@gmail.com"))
+                                    putExtra(Intent.EXTRA_SUBJECT, "Help Needed")
+                                    putExtra(Intent.EXTRA_TEXT, "Describe your issue here...")
+                                }
+
+                                context.startActivity(intent)
+                            }.onFailure {
+                                it.printStackTrace()
+                                Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                             }
 
-                            context.startActivity(intent)
                         }
                     ) {
                         Text(stringResource(strings.help), fontSize = 13.sp)

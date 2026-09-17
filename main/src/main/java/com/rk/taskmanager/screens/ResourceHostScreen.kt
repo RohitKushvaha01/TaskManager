@@ -1,6 +1,5 @@
 package com.rk.taskmanager.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -10,13 +9,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.NetworkCheck
-import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,18 +25,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rk.bridge.OpenSourceOnly
-import com.rk.bridge.ProBridge
 import com.rk.bridge.bridge
+import com.rk.commons.strings
 import com.rk.taskmanager.ProcessViewModel
 import com.rk.taskmanager.R
-import com.rk.taskmanager.navControllerRef
-import com.rk.taskmanager.screens.battery.BatteryScreen
 import com.rk.taskmanager.screens.cpu.CPU
 import com.rk.taskmanager.screens.gpu.GPU
 import com.rk.taskmanager.screens.gpu.GpuViewModel
 import com.rk.taskmanager.screens.ram.RAM
-import com.rk.taskmanager.settings.SettingsRoutes
-import com.rk.commons.strings
 
 private data class ResourceTab(
     val labelRes: Int,

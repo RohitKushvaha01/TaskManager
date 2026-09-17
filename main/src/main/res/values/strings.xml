@@ -214,4 +214,6 @@
     <string name="usage_notif">Usage Notification</string>
     <string name="usage_notif_Desc">Show a notification to view resource usage in background</string>
 
+    <string name="task_manager_pro_uppercase">TASK MANAGER PRO</string>
+
 </resources>

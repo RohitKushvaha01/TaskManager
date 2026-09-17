@@ -1,8 +1,6 @@
 package com.rk.taskmanager.settings
 
 import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,71 +32,50 @@ import kotlinx.coroutines.launch
 import androidx.core.net.toUri
 import com.rk.commons.strings
 
-// ── Palette ──────────────────────────────────────────────────────────────────
-
-private val Purple50  = Color(0xFFEEEDFE)
-private val Purple600 = Color(0xFF534AB7)
-private val Purple700 = Color(0xFF4840A0)
-private val Purple300 = Color(0xFF7F77DD)
-private val Purple200 = Color(0xFFAFA9EC)
-
-private val Teal50    = Color(0xFFE1F5EE)
-private val Teal700   = Color(0xFF0F6E56)
-
-private val Blue50    = Color(0xFFE6F1FB)
-private val Blue700   = Color(0xFF185FA5)
-
-private val Amber50   = Color(0xFFFAEEDA)
-private val Amber700  = Color(0xFF854F0B)
-
-private val Coral50   = Color(0xFFFAECE7)
-private val Coral700  = Color(0xFF993C1D)
-
-private val Green50  = Color(0xFFEAF3DE)
-private val Green700 = Color(0xFF3B6D11)
-
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 private data class ProFeature(
     val titleRes: Int,
     val descriptionRes: Int,
     val icon: ImageVector,
-    val iconTint: Color,
-    val iconBackground: Color
+    val container: Color,
+    val content: Color
 )
 
 @Composable
-private fun getFeatures() = listOf(
-    ProFeature(
-        titleRes = strings.battery_stats,
-        descriptionRes = strings.battery_stats_desc,
-        icon = Icons.Outlined.BatteryChargingFull,
-        iconTint = Green700,
-        iconBackground = Green50
-    ),
-    ProFeature(
-        titleRes = strings.network_monitor,
-        descriptionRes = strings.network_monitor_desc,
-        icon = Icons.Outlined.NetworkCheck,
-        iconTint = Blue700,
-        iconBackground = Blue50
-    ),
-    ProFeature(
-        titleRes = strings.process_pin,
-        descriptionRes = strings.process_pin_desc,
-        icon = Icons.Outlined.PushPin,
-        iconTint = Teal700,
-        iconBackground = Teal50
-    ),
-    ProFeature(
-        titleRes = strings.usage_notif,
-        descriptionRes = strings.usage_notif_Desc,
-        icon = Icons.Outlined.Notifications,
-        iconTint = Coral700,
-        iconBackground = Coral50
-    ),
-)
-
+private fun getFeatures(): List<ProFeature> {
+    val scheme = MaterialTheme.colorScheme
+    return listOf(
+        ProFeature(
+            titleRes = strings.battery_stats,
+            descriptionRes = strings.battery_stats_desc,
+            icon = Icons.Outlined.BatteryChargingFull,
+            container = scheme.primaryContainer,
+            content = scheme.onPrimaryContainer
+        ),
+        ProFeature(
+            titleRes = strings.network_monitor,
+            descriptionRes = strings.network_monitor_desc,
+            icon = Icons.Outlined.NetworkCheck,
+            container = scheme.secondaryContainer,
+            content = scheme.onSecondaryContainer
+        ),
+        ProFeature(
+            titleRes = strings.process_pin,
+            descriptionRes = strings.process_pin_desc,
+            icon = Icons.Outlined.PushPin,
+            container = scheme.tertiaryContainer,
+            content = scheme.onTertiaryContainer
+        ),
+        ProFeature(
+            titleRes = strings.usage_notif,
+            descriptionRes = strings.usage_notif_Desc,
+            icon = Icons.Outlined.Notifications,
+            container = scheme.primaryContainer,
+            content = scheme.onPrimaryContainer
+        ),
+    )
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -108,10 +84,10 @@ private fun getFeatures() = listOf(
 fun ProVersion(modifier: Modifier = Modifier) {
     val activity = LocalActivity.current
     var price by remember { mutableStateOf<String?>(null) }
-    
+
     val proState = remember { bridge?.isPro() } ?: remember { mutableStateOf(false) }
     val isPro by proState
-    
+
     val pendingState = remember { bridge?.isPending() } ?: remember { mutableStateOf(false) }
     val isPending by pendingState
     val context = LocalContext.current
@@ -119,7 +95,7 @@ fun ProVersion(modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         price = bridge?.getProVersionPrice()
     }
-    
+
     // Poll for status updates when purchase is pending
     LaunchedEffect(isPending || isPro.not()) {
         while (isActive && (isPending || isPro.not())) {
@@ -135,11 +111,11 @@ fun ProVersion(modifier: Modifier = Modifier) {
                     Text(
                         text = stringResource(strings.upgrade_to_pro),
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.SemiBold
                     )
                 },
                 actions = {
-                    OutlinedButton(
+                    TextButton(
                         onClick = {
                             val intent = Intent(Intent.ACTION_SENDTO).apply {
                                 data = "mailto:".toUri()
@@ -149,11 +125,9 @@ fun ProVersion(modifier: Modifier = Modifier) {
                             }
 
                             context.startActivity(intent)
-                        },
-                        shape = RoundedCornerShape(8.dp),
-
+                        }
                     ) {
-                        Text(stringResource(strings.help), fontSize = 12.sp)
+                        Text(stringResource(strings.help), fontSize = 13.sp)
                     }
                 },
                 navigationIcon = {
@@ -178,30 +152,35 @@ fun ProVersion(modifier: Modifier = Modifier) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            // ── Hero banner ───────────────────────────────────────────────
             HeroBanner()
 
-            Spacer(modifier = Modifier.height(4.dp))
+            // ── Feature list ──────────────────────────────────────────────
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(strings.what_you_get),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.8.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
 
-            // ── Section label ─────────────────────────────────────────────
-            Text(
-                text = stringResource(strings.what_you_get),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.5.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            // ── Feature rows ──────────────────────────────────────────────
-            getFeatures().forEach { feature ->
-                FeatureRow(feature = feature)
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column {
+                        getFeatures().forEach { feature ->
+                            FeatureRow(feature = feature)
+                        }
+                    }
+                }
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
 
             // ── Purchase card or Unlocked card ────────────────────────────
             if (isPro) {
@@ -221,12 +200,23 @@ fun ProVersion(modifier: Modifier = Modifier) {
 
             // ── Footer note ───────────────────────────────────────────────
             if (!isPro) {
-                Text(
-                    text = stringResource(strings.secure_payment),
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Lock,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = stringResource(strings.secure_payment),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }
@@ -236,13 +226,14 @@ fun ProVersion(modifier: Modifier = Modifier) {
 
 @Composable
 private fun HeroBanner() {
+    val scheme = MaterialTheme.colorScheme
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(28.dp))
             .background(
                 brush = Brush.linearGradient(
-                    colors = listOf(Purple600, Purple300, Purple200)
+                    colors = listOf(scheme.primary, scheme.tertiary)
                 )
             )
             .padding(24.dp)
@@ -250,40 +241,36 @@ private fun HeroBanner() {
         // Decorative circles
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(120.dp)
                 .align(Alignment.TopEnd)
-                .offset(x = 20.dp, y = (-20).dp)
+                .offset(x = 36.dp, y = (-36).dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.08f))
+                .background(scheme.onPrimary.copy(alpha = 0.10f))
         )
         Box(
             modifier = Modifier
-                .size(70.dp)
+                .size(64.dp)
                 .align(Alignment.BottomEnd)
-                .offset(x = (-30).dp, y = 20.dp)
+                .offset(x = (-8).dp, y = 28.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.06f))
+                .background(scheme.onPrimary.copy(alpha = 0.08f))
         )
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                text = stringResource(strings.task_manager_uppercase),
-                fontSize = 11.sp,
+                text = stringResource(strings.task_manager_pro_uppercase),
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Medium,
-                letterSpacing = 0.5.sp,
-                color = Color.White.copy(alpha = 0.85f)
+                letterSpacing = 0.8.sp,
+                color = scheme.onPrimary.copy(alpha = 0.85f)
             )
-            Text(
-                text = stringResource(strings.pro_version),
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = stringResource(strings.pro_version_tagline),
                 fontSize = 13.sp,
-                color = Color.White.copy(alpha = 0.8f),
+                color = scheme.onPrimary.copy(alpha = 0.85f),
                 lineHeight = 18.sp
             )
         }
@@ -294,51 +281,45 @@ private fun HeroBanner() {
 
 @Composable
 private fun FeatureRow(feature: ProFeature) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
-        ),
-        modifier = Modifier.fillMaxWidth()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        // Icon pill
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(feature.container),
+            contentAlignment = Alignment.Center
         ) {
-            // Icon pill
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(feature.iconBackground),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = feature.icon,
-                    contentDescription = null,
-                    tint = feature.iconTint,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                imageVector = feature.icon,
+                contentDescription = null,
+                tint = feature.content,
+                modifier = Modifier.size(22.dp)
+            )
+        }
 
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = stringResource(feature.titleRes),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = stringResource(feature.descriptionRes),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 16.sp
-                )
-            }
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = stringResource(feature.titleRes),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = stringResource(feature.descriptionRes),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 16.sp
+            )
         }
     }
 }
@@ -352,14 +333,10 @@ private fun PurchaseCard(
     enabled: Boolean,
     onPurchase: () -> Unit
 ) {
+    val scheme = MaterialTheme.colorScheme
     Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
-        ),
+        shape = RoundedCornerShape(24.dp),
+        color = scheme.surfaceContainerHigh,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -371,18 +348,23 @@ private fun PurchaseCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         text = stringResource(strings.one_time_purchase),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.SemiBold,
+                        color = scheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(strings.permanent_pro_access),
+                        fontSize = 12.sp,
+                        color = scheme.onSurfaceVariant
                     )
                     if (isPending) {
                         Text(
                             text = stringResource(strings.purchase_in_progress),
                             fontSize = 12.sp,
-                            color = Amber700,
+                            color = scheme.primary,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -391,41 +373,31 @@ private fun PurchaseCard(
                 if (price != null) {
                     Text(
                         text = price,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Purple600
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = scheme.primary
                     )
                 } else {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
-                        color = Purple600
+                        color = scheme.primary
                     )
                 }
             }
 
-            Text(
-                text = stringResource(strings.permanent_pro_access),
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
             Button(
                 onClick = onPurchase,
                 enabled = enabled && price != null && !isPending,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Purple600,
-                    contentColor = Color.White,
-                    disabledContainerColor = Purple200,
-                    disabledContentColor = Color.White.copy(alpha = 0.7f)
-                ),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
                 Text(
                     text = if (isPending) stringResource(strings.processing) else stringResource(strings.upgrade_now),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -436,14 +408,10 @@ private fun PurchaseCard(
 
 @Composable
 private fun UnlockedCard() {
+    val scheme = MaterialTheme.colorScheme
     Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
-        ),
+        shape = RoundedCornerShape(24.dp),
+        color = scheme.primaryContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -455,28 +423,28 @@ private fun UnlockedCard() {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Teal50),
+                    .background(scheme.primary),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Check,
                     contentDescription = null,
-                    tint = Teal700,
+                    tint = scheme.onPrimary,
                     modifier = Modifier.size(24.dp)
                 )
             }
 
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = stringResource(strings.pro_unlocked),
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.SemiBold,
+                    color = scheme.onPrimaryContainer
                 )
                 Text(
                     text = stringResource(strings.thanks_support),
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = scheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
             }
         }

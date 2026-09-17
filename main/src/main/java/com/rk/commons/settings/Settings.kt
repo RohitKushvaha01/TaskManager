@@ -1,5 +1,11 @@
 package com.rk.commons.settings
 
+object BatteryCurrentUnit {
+    const val UNKNOWN = -1
+    const val MICROAMPS = 0
+    const val MILLIAMPS = 1
+}
+
 object Settings {
     var procAutoRefresh by BooleanPref(key = "proc_auto_refresh", default = true)
     var theme by IntPref(default = 0)
@@ -17,6 +23,7 @@ object Settings {
     var defaultToProcessScreen by BooleanPref(default = false)
     var selectedNetInterface by StringPref(key = "selected_net_interface", default = "")
     var useImperialUnits by BooleanPref(key = "use_imperial_units", default = false)
+    var batteryCurrentUnit by IntPref(key = "battery_current_unit", default = BatteryCurrentUnit.UNKNOWN)
 
     var pinnedProcesses: Set<String>
         get() = Preference.getString("pinned_processes", "").split(",").filter { it.isNotEmpty() }.toSet()

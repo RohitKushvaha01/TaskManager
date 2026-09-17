@@ -89,6 +89,11 @@
     <string name="metric_desc">Celsius (°C)</string>
     <string name="imperial">Imperial</string>
     <string name="imperial_desc">Fahrenheit (°F)</string>
+    <string name="battery_current">Battery current</string>
+    <string name="battery_current_microamps">Microamps (µA)</string>
+    <string name="battery_current_microamps_desc">Device reports current in microamps</string>
+    <string name="battery_current_milliamps">Milliamps (mA)</string>
+    <string name="battery_current_milliamps_desc">Device reports current in milliamps</string>
 
     <!-- About -->
     <string name="developer">Developer</string>

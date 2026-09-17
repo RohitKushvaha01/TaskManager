@@ -96,7 +96,7 @@ private val tabs = listOf(
         icon = TabIcon.Vector(Icons.Outlined.BatteryChargingFull),
         content = { modifier, _, _ ->
             if (bridge != null) bridge!!.BatteryScreen()
-            else BatteryScreen(modifier)
+            else OpenSourceOnly()
         }
     )
 

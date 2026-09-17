@@ -98,6 +98,7 @@ import java.text.DateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 fun elapsedFromStartTime(startTimeTicks: Long): String {
     val processStartMillis = startTimeToMillis(startTimeTicks)
@@ -196,7 +197,7 @@ suspend fun killProc(proc: ProcessViewModel.Process): Boolean {
 
     killResult = withContext(Dispatchers.IO) {
         runCatching {
-            withTimeout(3000L) {
+            withTimeout(3000L.milliseconds) {
                 val resultDeferred = async {
                     daemon_messages.first { message ->
                         try {

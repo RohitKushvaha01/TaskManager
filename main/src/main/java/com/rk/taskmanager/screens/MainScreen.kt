@@ -61,6 +61,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
+import kotlin.time.Duration.Companion.milliseconds
 
 var selectedscreen = mutableIntStateOf(if (Settings.defaultToProcessScreen) 1 else 0)
 var showFilter = mutableStateOf(false)
@@ -259,7 +260,7 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
                 scope.launch(Dispatchers.Main) {
                     val daemonResult = startDaemon(context = MainActivity.instance!!, Settings.workingMode)
                     if (daemonResult != DaemonResult.OK) {
-                        delay(2000)
+                        delay(2000.milliseconds)
                         if (isConnected.not()){
                             if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
                                 navController.navigate(SettingsRoutes.SelectWorkingMode.route)
@@ -276,7 +277,7 @@ fun MainScreen(modifier: Modifier = Modifier, navController: NavController, view
                 val context = LocalContext.current
 
                 LaunchedEffect(isConnected) {
-                    delay(5000)
+                    delay(5000.milliseconds)
                     if (isConnected.not()){
                         if (navController.currentDestination?.route != SettingsRoutes.SelectWorkingMode.route){
                             navController.navigate(SettingsRoutes.SelectWorkingMode.route)

@@ -21,7 +21,7 @@ class TaskManager : Application() {
                     "apps.db"
                 )
                     .createFromAsset("databases/apps.db")
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(false)
                     .build()
                     .also { INSTANCE = it }
             }

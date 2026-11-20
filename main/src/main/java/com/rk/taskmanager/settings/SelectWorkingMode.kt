@@ -39,6 +39,8 @@ import kotlinx.coroutines.withContext
 enum class WorkingMode(val id:Int,val nameRes: Int?){
     ROOT(0,strings.root),
     SHIZUKU(1,strings.shizuku),
+    SHIZUKU_AIDL(2,strings.shizuku_aidl),
+    SHIZUKU_SERVICE(3,strings.shizuku_service),
     NOT_SET(-1,null)
 }
 

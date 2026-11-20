@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,6 +37,7 @@ object DaemonServer {
 
     private var readerJob: Job? = null
     private var writerJob: Job? = null
+    private var daemonProcess: Process? = null
 
     private fun log(msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
@@ -43,18 +45,33 @@ object DaemonServer {
         println("[$ts] [DaemonServer] $msg")
     }
 
-    suspend fun start(input: InputStream, output: OutputStream): Boolean {
+    suspend fun start(process: Process): Boolean {
         if (readerJob?.isActive == true) {
             log("Daemon already running, ignoring start request")
+            // This process will never be used; don't leak it (or its remote binder).
+            runCatching { process.destroy() }
+                .onFailure { log("Failed to destroy unused process: ${it.message}") }
             return true
         }
 
         return try {
+            val input = process.inputStream
+            val output = process.outputStream
+            // Keep the Process referenced: for Shizuku, the IRemoteProcess binder is
+            // what keeps the remote process alive.
+            daemonProcess = process
             startHandling(input, output)
             true
-        } catch (e: IOException) {
+        } catch (e: CancellationException) {
+            daemonProcess = null
+            runCatching { process.destroy() }
+            throw e
+        } catch (e: Exception) {
             log("ERROR: Failed to start daemon I/O: ${e.message}")
             e.printStackTrace()
+            daemonProcess = null
+            runCatching { process.destroy() }
+                .onFailure { log("Failed to destroy process: ${it.message}") }
             false
         }
     }
@@ -98,6 +115,13 @@ object DaemonServer {
     suspend fun stop() {
         log("Stopping daemon I/O...")
         isConnected = false
+        // Destroy first: the reader is blocked in a non-cancellable readLine(), and
+        // killing the process closes the pipe so the reader can finish.
+        daemonProcess?.let { process ->
+            runCatching { process.destroy() }
+                .onFailure { log("Failed to destroy daemon process: ${it.message}") }
+        }
+        daemonProcess = null
         readerJob?.cancelAndJoin()
         readerJob = null
         writerJob?.cancelAndJoin()

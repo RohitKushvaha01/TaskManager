@@ -422,7 +422,7 @@ fun ProcessInfo(
                             proc!!.proc.cpuUsage.roundToInt().toString()
                         } else {
                             cpuUsage.intValue
-                        }).toString() + "% (${strings.estimated.getString()})"
+                        }).toString() + "%"
                     )
                     TextCard(
                         text = stringResource(strings.is_foreground),

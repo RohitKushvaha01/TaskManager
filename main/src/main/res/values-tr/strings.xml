@@ -62,5 +62,7 @@
     <string name="cosmos">Cosmos</string>
     <string name="root">Root</string>
     <string name="shizuku">Shizuku</string>
+    <string name="shizuku_aidl">Shizuku (AIDL)</string>
+    <string name="shizuku_service">Shizuku (Service)</string>
 
 </resources>

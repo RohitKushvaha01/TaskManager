@@ -23,7 +23,7 @@ suspend fun startDaemon(
 
         try {
             when (mode) {
-                WorkingMode.SHIZUKU.id -> {
+                WorkingMode.SHIZUKU.id, WorkingMode.SHIZUKU_AIDL.id -> {
                     if (!ShizukuShell.isShizukuRunning()) {
                         return@withContext DaemonResult.SHIZUKU_NOT_RUNNING
                     }
@@ -32,13 +32,47 @@ suspend fun startDaemon(
                         return@withContext DaemonResult.SHIZUKU_PERMISSION_DENIED
                     }
 
-                    val process = ShizukuShell.startStreamingProcess(
-                        cmd = arrayOf(daemonFile.absolutePath),
-                        env = arrayOf(),
-                        dir = "/"
+                    // SHIZUKU keeps the legacy reflection path; SHIZUKU_AIDL calls the
+                    // IShizukuService.newProcess AIDL transaction directly.
+                    val process: Process = if (mode == WorkingMode.SHIZUKU_AIDL.id) {
+                        ShizukuShell.startStreamingProcessAidl(
+                            cmd = arrayOf(daemonFile.absolutePath),
+                            env = arrayOf(),
+                            dir = "/"
+                        )
+                    } else {
+                        ShizukuShell.startStreamingProcess(
+                            cmd = arrayOf(daemonFile.absolutePath),
+                            env = arrayOf(),
+                            dir = "/"
+                        )
+                    }
+
+                    val started = DaemonServer.start(process)
+                    if (!started) {
+                        return@withContext DaemonResult.DAEMON_REFUSED.also {
+                            it.message = "Failed to start daemon I/O"
+                        }
+                    }
+
+                    DaemonResult.OK
+                }
+
+                WorkingMode.SHIZUKU_SERVICE.id -> {
+                    if (!ShizukuShell.isShizukuRunning()) {
+                        return@withContext DaemonResult.SHIZUKU_NOT_RUNNING
+                    }
+
+                    if (!ShizukuShell.isPermissionGranted()) {
+                        return@withContext DaemonResult.SHIZUKU_PERMISSION_DENIED
+                    }
+
+                    val process = ShizukuShell.startStreamingProcessService(
+                        context = context,
+                        daemonPath = daemonFile.absolutePath
                     )
 
-                    val started = DaemonServer.start(process.inputStream, process.outputStream)
+                    val started = DaemonServer.start(process)
                     if (!started) {
                         return@withContext DaemonResult.DAEMON_REFUSED.also {
                             it.message = "Failed to start daemon I/O"
@@ -62,7 +96,7 @@ suspend fun startDaemon(
                     processBuilder.directory(File("/"))
 
                     val process = processBuilder.start()
-                    val started = DaemonServer.start(process.inputStream, process.outputStream)
+                    val started = DaemonServer.start(process)
                     if (!started) {
                         return@withContext DaemonResult.DAEMON_REFUSED.also {
                             it.message = "Failed to start daemon I/O"

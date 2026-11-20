@@ -32,6 +32,7 @@ android {
 
     buildFeatures {
         compose = true
+        aidl = true
     }
 
     buildTypes {
